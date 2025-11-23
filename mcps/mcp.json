@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+      "context7": {
+        "command": "npx",
+        "args": ["-y", "@upstash/context7-mcp"]
+      },
+      "perplexity": {
+        "command": "npx",
+        "args": ["-y", "@perplexity-ai/mcp-server"],
+        "env": {
+          "PERPLEXITY_API_KEY": "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"
+        }
+      },
+      "firecrawl": {
+        "command": "npx",
+        "args": ["-y", "firecrawl-mcp"],
+        "env": {
+          "FIRECRAWL_API_KEY": "fc-f3a171d66a3048ae94ef194d968b9760"
+        }
+      }
+    }
+  }

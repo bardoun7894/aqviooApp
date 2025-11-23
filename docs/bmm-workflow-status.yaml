@@ -1,0 +1,84 @@
+# Workflow Status Template
+
+# This tracks progress through BMM methodology Analysis, Planning, and Solutioning phases.
+# Implementation phase is tracked separately in sprint-status.yaml
+
+# STATUS DEFINITIONS:
+# ==================
+# Initial Status (before completion):
+#   - required: Must be completed to progress
+#   - optional: Can be completed but not required
+#   - recommended: Strongly suggested but not required
+#   - conditional: Required only if certain conditions met (e.g., if_has_ui)
+#
+# Completion Status:
+#   - {file-path}: File created/found (e.g., "docs/product-brief.md")
+#   - skipped: Optional/conditional workflow that was skipped
+
+generated: "2025-11-22"
+project: "Aqvioo mobile"
+project_type: "greenfield"
+selected_track: "bmad-method"
+field_type: "greenfield"
+workflow_path: "method-greenfield.yaml"
+workflow_status:
+  - phase: "Discovery"
+    items:
+      - id: "brainstorm-project"
+        status: "docs/brainstorming-session-results-2025-11-22.md"
+        agent: "analyst"
+        command: "brainstorm-project"
+      - id: "research"
+        status: "required"
+        agent: "analyst"
+        command: "research"
+        note: "API/Library Documentation Checks"
+      - id: "product-brief"
+        status: "skipped"
+        agent: "analyst"
+        command: "product-brief"
+
+  - phase: "Planning"
+    items:
+      - id: "prd"
+        status: "required"
+        agent: "pm"
+        command: "prd"
+      - id: "validate-prd"
+        status: "optional"
+        agent: "pm"
+        command: "validate-prd"
+      - id: "create-design"
+        status: "docs/ux-design-specification.md"
+        agent: "ux-designer"
+        command: "create-design"
+
+  - phase: "Solutioning"
+    items:
+      - id: "create-architecture"
+        status: "docs/architecture.md"
+        agent: "architect"
+        command: "create-architecture"
+      - id: "create-epics-and-stories"
+        status: "docs/epics.md"
+        agent: "pm"
+        command: "create-epics-and-stories"
+      - id: "test-design"
+        status: "recommended"
+        agent: "tea"
+        command: "test-design"
+      - id: "validate-architecture"
+        status: "optional"
+        agent: "architect"
+        command: "validate-architecture"
+      - id: "implementation-readiness"
+        status: "required"
+        agent: "architect"
+        command: "implementation-readiness"
+
+  - phase: "Implementation"
+    items:
+      - id: "sprint-planning"
+        status: "docs/sprint-status.yaml"
+        agent: "sm"
+        command: "sprint-planning"

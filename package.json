@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@perplexity-ai/mcp-server": "^0.5.1",
+    "@upstash/context7-mcp": "^1.0.29",
+    "firecrawl-mcp": "^3.6.2"
+  }
+}

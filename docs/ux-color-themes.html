@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqvioo Color Theme Explorer</title>
+    <style>
+        :root {
+            --primary: #7C3AED;
+            --primary-dark: #6D28D9;
+            --white: #FFFFFF;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--gray-900);
+            margin-bottom: 30px;
+        }
+
+        .themes-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .theme-card {
+            width: 375px;
+            height: 812px; /* iPhone X size */
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Light Theme - Subtle Glass */
+        .theme-light {
+            background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+            color: var(--gray-800);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .theme-light .primary-btn {
+            background: linear-gradient(90deg, #7C3AED, #6D28D9);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Dark Theme - Vibrant Glass */
+        .theme-dark {
+            background: linear-gradient(135deg, #2E1065 0%, #000000 100%); /* Deep Purple to Black-ish (but not pure black) */
+            color: white;
+        }
+
+        /* Vibrant blob for dark mode background */
+        .theme-dark::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 300px;
+            height: 300px;
+            background: #7C3AED;
+            filter: blur(80px);
+            border-radius: 50%;
+            opacity: 0.6;
+            z-index: 0;
+        }
+
+        .theme-dark .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 20px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-dark .primary-btn {
+            background: linear-gradient(90deg, #A78BFA, #7C3AED);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            width: 100%;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5); /* Glow effect */
+        }
+
+        /* Common UI Elements */
+        .header {
+            padding: 40px 20px 20px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .logo-placeholder {
+            width: 60px;
+            height: 60px;
+            background: #7C3AED;
+            border-radius: 15px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 15px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .theme-light .input-field {
+            background: rgba(255,255,255,0.5);
+            color: var(--gray-800);
+        }
+
+        .theme-dark .input-field {
+            background: rgba(0,0,0,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+            opacity: 0.7;
+        }
+
+        .theme-title {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--gray-800);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Aqvioo Design Themes</h1>
+
+    <div class="themes-container">
+        
+        <!-- Light Theme -->
+        <div>
+            <div class="theme-card theme-light">
+                <div class="header">
+                    <div class="logo-placeholder">A</div>
+                    <h2>Create Magic</h2>
+                    <p>Turn your ideas into reality</p>
+                </div>
+
+                <div class="glass-card">
+                    <span class="label">Your Idea</span>
+                    <input type="text" class="input-field" value="A futuristic city with flying cars..." readonly>
+                    <button class="primary-btn">Generate Video</button>
+                </div>
+
+                <div class="glass-card">
+                    <span class="label">Recent</span>
+                    <div style="height: 60px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-bottom: 10px;"></div>
+                    <div style="height: 60px; background: rgba(0,0,0,0.05); border-radius: 10px;"></div>
+                </div>
+            </div>
+            <div class="theme-title">Light Theme: Subtle Glass</div>
+        </div>
+
+        <!-- Dark Theme -->
+        <div>
+            <div class="theme-card theme-dark">
+                <div class="header">
+                    <div class="logo-placeholder">A</div>
+                    <h2>Create Magic</h2>
+                    <p style="opacity: 0.8">Turn your ideas into reality</p>
+                </div>
+
+                <div class="glass-card">
+                    <span class="label">Your Idea</span>
+                    <input type="text" class="input-field" value="A futuristic city with flying cars..." readonly>
+                    <button class="primary-btn">Generate Video</button>
+                </div>
+
+                <div class="glass-card">
+                    <span class="label">Recent</span>
+                    <div style="height: 60px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 10px;"></div>
+                    <div style="height: 60px; background: rgba(255,255,255,0.05); border-radius: 10px;"></div>
+                </div>
+            </div>
+            <div class="theme-title">Dark Theme: Vibrant Glass</div>
+        </div>
+
+    </div>
+
+</body>
+</html>
