@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:rive/rive.dart';
+
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/presentation/widgets/glass_container.dart';
 import '../providers/creation_provider.dart';
+import '../widgets/magic_animation.dart';
 
 class MagicLoadingScreen extends ConsumerWidget {
   const MagicLoadingScreen({super.key});
@@ -15,24 +18,23 @@ class MagicLoadingScreen extends ConsumerWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: AppColors.deepBackground,
         body: Stack(
           children: [
-            // Rive Animation (Background/Center)
-            Center(
-              child: SizedBox(
-                height: 300,
-                width: 300,
-                child: RiveAnimation.asset(
-                  'assets/rive/magic.riv', // Ensure this asset exists or use placeholder
-                  fit: BoxFit.contain,
-                  placeHolder: const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primaryPurple,
-                    ),
-                  ),
-                ),
+            // Animated Gradient Background
+            Container(
+              decoration: const BoxDecoration(
+                gradient: AppTheme.primaryGradient,
               ),
+            ),
+
+            // Glass Overlay Pattern
+            Positioned.fill(
+              child: Container(color: Colors.black.withValues(alpha: 0.2)),
+            ),
+
+            // Magic Animation (Centered)
+            const Center(
+              child: MagicAnimation(size: 300, color: AppColors.primaryPurple),
             ),
 
             // Status Text
@@ -40,22 +42,30 @@ class MagicLoadingScreen extends ConsumerWidget {
               bottom: 100,
               left: 24,
               right: 24,
-              child: Column(
-                children: [
-                  Text(
-                    state.currentStepMessage ?? "Creating Magic...",
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              child: GlassContainer(
+                opacity: 0.1,
+                blur: 10,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(
+                      state.currentStepMessage ?? "Creating Magic...",
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: AppColors.darkGray,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    backgroundColor: Colors.white.withValues(alpha: 0.1),
-                    color: AppColors.primaryPurple,
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    LinearProgressIndicator(
+                      backgroundColor: AppColors.primaryPurple.withValues(
+                        alpha: 0.1,
+                      ),
+                      color: AppColors.primaryPurple,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

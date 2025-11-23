@@ -29,9 +29,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/home';
       }
 
-      if (isSplash && !isLoggedIn) {
-        return '/login';
-      }
+      // if (isSplash && !isLoggedIn) {
+      //   return '/login';
+      // }
 
       if (isLogin && isLoggedIn) {
         return '/home';

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aqvioo - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#6A0DAD",
+              "background-light": "#E6E6FA",
+              "background-dark": "#171121",
+            },
+            fontFamily: {
+              "display": ["Space Grotesk", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .glassmorphism {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased">
+<div class="relative flex h-auto min-h-screen w-full flex-col font-display group/design-root overflow-x-hidden bg-gradient-to-br from-[#E6E6FA] to-white">
+<div class="flex flex-col grow justify-between p-6 @container">
+<!-- Header/Logo -->
+<header class="flex justify-center items-center pt-8">
+<div class="flex items-center gap-2">
+<svg class="w-8 h-8 text-primary" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"></path>
+<path d="M10.09 15.59L11.5 17L16.5 12L11.5 7L10.09 8.41L13.67 12L10.09 15.59Z" fill="currentColor"></path>
+</svg>
+<h1 class="text-3xl font-bold text-[#333333]">Aqvioo</h1>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col justify-center w-full max-w-md mx-auto py-8">
+<!-- Glassmorphism Card -->
+<div class="w-full glassmorphism rounded-xl p-8 shadow-lg">
+<div class="text-center">
+<h1 class="text-[#333333] tracking-light text-[28px] font-bold leading-tight">Welcome Back</h1>
+<p class="text-[#888888] text-base font-normal leading-normal pt-2 pb-8">We'll send a verification code to this number.</p>
+</div>
+<!-- Phone Input Section -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<!-- Country Code -->
+<div class="relative">
+<button class="flex items-center justify-center h-14 w-20 rounded-xl bg-white/50 text-[#333333] font-medium border border-transparent focus:outline-none focus:ring-2 focus:ring-primary/50">
+<span>+1</span>
+<span class="material-symbols-outlined text-lg">arrow_drop_down</span>
+</button>
+</div>
+<!-- Phone Number Field -->
+<label class="flex flex-col flex-1">
+<p class="text-[#333333] text-sm font-medium leading-normal sr-only">Phone Number</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#333333] focus:outline-0 focus:ring-2 focus:ring-primary/50 border-transparent bg-white/50 h-14 placeholder:text-[#888888] p-4 text-base font-normal leading-normal" placeholder="(555) 000-0000" type="tel" value=""/>
+</label>
+</div>
+<!-- Send OTP Button -->
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 flex-1 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] shadow-md hover:opacity-90 transition-opacity">
+<span class="truncate">Send OTP</span>
+</button>
+</div>
+</div>
+<!-- Alternative Actions -->
+<div class="mt-12 text-center">
+<button class="flex items-center justify-center gap-2 w-full text-primary font-semibold text-base py-3 rounded-lg hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">person_outline</span>
+<span>Continue as Guest</span>
+</button>
+<div class="flex items-center my-6">
+<hr class="flex-grow border-t border-gray-300"/>
+<span class="mx-4 text-sm text-[#888888]">or</span>
+<hr class="flex-grow border-t border-gray-300"/>
+</div>
+<div class="flex justify-center items-center gap-6">
+<!-- Social Login Icons can be added here if needed -->
+<button class="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+<img alt="Google logo" class="h-6 w-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMvf1wHRAoZjPC88pR9lp-JmDGiWQ9f42sIsmnuhF8ILszkXH52kW4GGuAQAHYXS0u-3c6FLdrFJo7n2lkD_mkw3Jr1Ui7sqY81Vnlm-MdfhGzU1C2LzhdlBBbDRdkceb6lX58ysgWYDdPzn5Q0SEEjgLLChszZNuICRPwmydjVjg1ehsRjC5ac7gXLYgv25ZyEwVJ2xxEOdMXXVkryz6zYflsNGAuFDixqJgV9QYJ21FWdYEojWUU1ub8baFWVhYbKQhTkGgLSWQ"/>
+</button>
+<button class="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+<img alt="Apple logo" class="h-6 w-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcqWtSDgjhaXv4mEbv3dGoOp5psDHGrNUuZw5VvHEVEAOnt9v8YhSlx74JlYB_P2X7ZyijVcHa00Yy8iDYCDOwaAIO_6LkNXx_ctn_zwkfi8PxUnrkdlh2s7kFCnQz63lRI-u5FZtqUjNNrE4ybDwz0Q9b-fqGC8o_8gNbnCw_pShpmjxDugBJ3O-pJPo5huyFwtX4wiMaN7I00PC1BW0Lm6_RBoukyElK1zhMSFi4H_FfT9NbkUovENRAXVhmGYxEVsFFSx5IbKI"/>
+</button>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>
