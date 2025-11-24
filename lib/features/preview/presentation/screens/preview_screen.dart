@@ -7,6 +7,7 @@ import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/file_utils.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
   final String? videoUrl;
@@ -21,6 +22,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   bool _isPlaying = false;
+  bool _isDownloading = false;
 
   @override
   void initState() {
@@ -41,8 +43,17 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
         videoPlayerController: _videoPlayerController!,
         autoPlay: false,
         looping: true,
-        showControls: false, // We'll use custom controls
+        showControls: false,
       );
+    });
+
+    // Listen to playback state changes
+    _videoPlayerController!.addListener(() {
+      if (mounted) {
+        setState(() {
+          _isPlaying = _videoPlayerController!.value.isPlaying;
+        });
+      }
     });
   }
 
@@ -60,8 +71,65 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
       } else {
         _videoPlayerController?.play();
       }
-      _isPlaying = !_isPlaying;
     });
+  }
+
+  Future<void> _handleDownload() async {
+    if (widget.videoUrl == null || _isDownloading) return;
+
+    setState(() => _isDownloading = true);
+
+    try {
+      // Download the file to temp directory
+      await FileUtils.downloadFile(widget.videoUrl!);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+                'Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.'),
+            backgroundColor: AppColors.primaryPurple,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
+  }
+
+  Future<void> _handleShare() async {
+    if (widget.videoUrl == null) return;
+
+    try {
+      await FileUtils.shareVideo(widget.videoUrl!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Share failed: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -74,14 +142,13 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
+      backgroundColor: AppColors.backgroundLight,
       body: Stack(
         children: [
-          // Video/Content Preview Area
+          // Video Preview Area
           if (_chewieController != null)
             Positioned.fill(child: Chewie(controller: _chewieController!))
           else
-            // Placeholder gradient when no video
             Positioned.fill(
               child: Container(
                 decoration: const BoxDecoration(
@@ -89,9 +156,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFFFF6B9D),
-                      Color(0xFFFFA06B),
-                      Color(0xFFFFD06B),
+                      Color(0xFFA855F7),
+                      Color(0xFF8B5CF6),
+                      Color(0xFF6366F1),
                     ],
                   ),
                 ),
@@ -138,7 +205,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                           child: Text(
                             'Preview',
-                            style: Theme.of(context).textTheme.titleMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
                                 ?.copyWith(
                                   color: const Color(0xFF1F2937),
                                   fontWeight: FontWeight.bold,
@@ -149,9 +218,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                     ),
                     _buildGlassButton(
                       icon: Icons.ios_share,
-                      onTap: () {
-                        // Handle share
-                      },
+                      onTap: _handleShare,
                     ),
                   ],
                 ),
@@ -202,30 +269,46 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value:
-                                    _videoPlayerController != null &&
-                                        _videoPlayerController!
-                                                .value
-                                                .duration
-                                                .inMilliseconds >
-                                            0
-                                    ? _videoPlayerController!
-                                              .value
-                                              .position
-                                              .inMilliseconds /
+                            child: GestureDetector(
+                              onTapDown: (details) {
+                                if (_videoPlayerController == null) return;
+                                final box =
+                                    context.findRenderObject() as RenderBox?;
+                                if (box == null) return;
+                                final localX = details.localPosition.dx;
+                                final width = box.size.width - 100;
+                                final position =
+                                    (localX / width).clamp(0.0, 1.0);
+                                final duration =
+                                    _videoPlayerController!.value.duration;
+                                _videoPlayerController!.seekTo(
+                                  Duration(
+                                    milliseconds:
+                                        (duration.inMilliseconds * position)
+                                            .toInt(),
+                                  ),
+                                );
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: _videoPlayerController != null &&
+                                          _videoPlayerController!.value.duration
+                                                  .inMilliseconds >
+                                              0
+                                      ? _videoPlayerController!
+                                              .value.position.inMilliseconds /
                                           _videoPlayerController!
-                                              .value
-                                              .duration
-                                              .inMilliseconds
-                                    : 0.4,
-                                backgroundColor: Colors.white.withOpacity(0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF00D5FF),
+                                              .value.duration.inMilliseconds
+                                      : 0.0,
+                                  backgroundColor:
+                                      Colors.white.withOpacity(0.3),
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                    AppColors.primaryPurple,
+                                  ),
+                                  minHeight: 6,
                                 ),
-                                minHeight: 6,
                               ),
                             ),
                           ),
@@ -252,10 +335,10 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildControlButton(
-                            icon: Icons.download,
-                            onTap: () {
-                              // Handle download
-                            },
+                            icon: _isDownloading
+                                ? Icons.downloading
+                                : Icons.download,
+                            onTap: _isDownloading ? null : _handleDownload,
                           ),
                           _buildControlButton(
                             icon: Icons.content_cut,
@@ -269,20 +352,21 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                             child: Container(
                               width: 64,
                               height: 64,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF00D5FF),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryPurple,
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x4000D5FF),
+                                    color: AppColors.primaryPurple
+                                        .withOpacity(0.4),
                                     blurRadius: 12,
-                                    offset: Offset(0, 4),
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
                               child: Icon(
                                 _isPlaying ? Icons.pause : Icons.play_arrow,
-                                color: const Color(0xFF1F2937),
+                                color: Colors.white,
                                 size: 36,
                               ),
                             ),
@@ -339,18 +423,21 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
 
   Widget _buildControlButton({
     required IconData icon,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+      child: Opacity(
+        opacity: onTap == null ? 0.5 : 1.0,
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Icon(icon, color: const Color(0xFF374151), size: 24),
         ),
-        child: Icon(icon, color: const Color(0xFF374151), size: 24),
       ),
     );
   }

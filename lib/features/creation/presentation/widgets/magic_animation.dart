@@ -25,7 +25,7 @@ class _MagicAnimationState extends State<MagicAnimation>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: const Duration(milliseconds: 2000),
     )..repeat();
   }
 
@@ -44,7 +44,7 @@ class _MagicAnimationState extends State<MagicAnimation>
         animation: _controller,
         builder: (context, child) {
           return CustomPaint(
-            painter: _MagicPainter(
+            painter: _PulsingCirclesPainter(
               animationValue: _controller.value,
               color: widget.color,
             ),
@@ -55,57 +55,50 @@ class _MagicAnimationState extends State<MagicAnimation>
   }
 }
 
-class _MagicPainter extends CustomPainter {
+class _PulsingCirclesPainter extends CustomPainter {
   final double animationValue;
   final Color color;
 
-  _MagicPainter({required this.animationValue, required this.color});
+  _PulsingCirclesPainter({required this.animationValue, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+    final maxRadius = size.width / 2;
 
-    // Draw rotating outer circle
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(animationValue * 2 * math.pi);
-    canvas.drawCircle(Offset.zero, radius * 0.8, paint);
+    // Draw 3 pulsing circles with different phases
+    for (int i = 0; i < 3; i++) {
+      final phase = (animationValue + i * 0.33) % 1.0;
+      final radius = maxRadius * phase;
+      final opacity = (1.0 - phase) * 0.6;
 
-    // Draw inner star/polygon
-    final path = Path();
-    const int points = 5;
-    final double innerRadius = radius * 0.4;
-    final double outerRadius = radius * 0.8;
+      final paint = Paint()
+        ..color = color.withOpacity(opacity)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0;
 
-    for (int i = 0; i < points * 2; i++) {
-      final double r = (i % 2 == 0) ? outerRadius : innerRadius;
-      final double angle = (i * math.pi) / points;
-      if (i == 0) {
-        path.moveTo(r * math.cos(angle), r * math.sin(angle));
-      } else {
-        path.lineTo(r * math.cos(angle), r * math.sin(angle));
-      }
+      canvas.drawCircle(center, radius, paint);
     }
-    path.close();
-    canvas.drawPath(path, paint);
-    canvas.restore();
 
-    // Draw pulsing center
-    final pulseRadius =
-        radius * 0.2 * (0.8 + 0.2 * math.sin(animationValue * 4 * math.pi));
-    final fillPaint = Paint()
-      ..color = color.withValues(alpha: 0.5)
+    // Draw central glowing core
+    final coreSize = 12.0 + (math.sin(animationValue * 2 * math.pi) * 4.0);
+    final corePaint = Paint()
+      ..color = color.withOpacity(0.8)
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    canvas.drawCircle(center, coreSize, corePaint);
+
+    // Draw solid core
+    final solidCorePaint = Paint()
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, pulseRadius, fillPaint);
+
+    canvas.drawCircle(center, coreSize * 0.7, solidCorePaint);
   }
 
   @override
-  bool shouldRepaint(covariant _MagicPainter oldDelegate) {
+  bool shouldRepaint(covariant _PulsingCirclesPainter oldDelegate) {
     return oldDelegate.animationValue != animationValue;
   }
 }

@@ -22,6 +22,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   File? _selectedImage;
   final _picker = ImagePicker();
   int _selectedTab = 0; // 0 = Ideas, 1 = History
+  int _currentStep = 0; // 0 = Idea, 1 = Style, 2 = Finalize
+  String _selectedStyle = 'Cinematic';
+  String _selectedDuration = '15s';
+  String _selectedAspectRatio = '16:9';
 
   @override
   void dispose() {
@@ -136,11 +140,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(
                         child: Text(
                           'Aqvioo',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: const Color(0xFF18181B),
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: const Color(0xFF18181B),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -153,36 +157,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
+                // Step Indicators
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildStepIndicator('Idea', 0, _currentStep >= 0),
+                      _buildStepConnector(_currentStep >= 1),
+                      _buildStepIndicator('Style', 1, _currentStep >= 1),
+                      _buildStepConnector(_currentStep >= 2),
+                      _buildStepIndicator('Finalize', 2, _currentStep >= 2),
+                    ],
+                  ),
+                ),
+
                 // Main Content Area
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Glassmorphic Input Card
+                    child: _buildStepContent(),
                         Container(
                           constraints: const BoxConstraints(maxWidth: 560),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(24),
-                            color: Colors.white.withOpacity(0.4),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.4),
+                                Colors.white.withOpacity(0.1),
+                              ],
+                            ),
                             border: Border.all(
                               color: Colors.white.withOpacity(0.2),
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
+                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
                                 color: Colors.black.withOpacity(0.05),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                               child: Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(20),
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -192,55 +222,102 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       controller: _promptController,
                                       maxLines: 5,
                                       style: const TextStyle(
-                                        color: Color(0xFF52525B),
+                                        color: Color(0xFF18181B),
                                         fontSize: 16,
+                                        height: 1.5,
                                       ),
-                                      decoration: const InputDecoration(
+                                      decoration: InputDecoration(
                                         hintText:
-                                            "Describe your video or image idea... e.g., 'A 15-second promo for a summer sale'",
+                                            "Describe your video idea... e.g., 'A futuristic city with flying cars'",
                                         hintStyle: TextStyle(
-                                          color: Color(0xFF71717A),
+                                          color: const Color(0xFF71717A)
+                                              .withOpacity(0.8),
+                                          fontSize: 16,
                                         ),
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.all(12),
+                                        contentPadding: EdgeInsets.zero,
+                                        prefixIcon: Container(
+                                          padding: const EdgeInsets.only(
+                                            right: 12,
+                                            bottom: 80,
+                                          ),
+                                          child: const Icon(
+                                            Icons.auto_awesome,
+                                            color: AppColors.primaryPurple,
+                                            size: 24,
+                                          ),
+                                        ),
                                       ),
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    // Divider
+                                    Container(
+                                      height: 1,
+                                      color: Colors.white.withOpacity(0.2),
                                     ),
 
                                     const SizedBox(height: 16),
 
-                                    // Upload Image Button
-                                    SizedBox(
-                                      height: 40,
-                                      child: ElevatedButton.icon(
-                                        onPressed: _pickImage,
-                                        icon: const Icon(
-                                          Icons.upload_file,
-                                          size: 20,
-                                        ),
-                                        label: Text(
-                                          _selectedImage == null
-                                              ? 'Upload Image'
-                                              : 'Image Selected',
-                                        ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white
-                                              .withOpacity(0.5),
-                                          foregroundColor: const Color(
-                                            0xFF52525B,
-                                          ),
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            side: BorderSide(
-                                              color: Colors.white.withOpacity(
-                                                0.3,
+                                    // Action Bar
+                                    Row(
+                                      children: [
+                                        // Upload Button
+                                        Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: _pickImage,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 8,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white
+                                                    .withOpacity(0.5),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.white
+                                                      .withOpacity(0.3),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    _selectedImage == null
+                                                        ? Icons
+                                                            .add_photo_alternate_outlined
+                                                        : Icons.check_circle,
+                                                    size: 18,
+                                                    color:
+                                                        AppColors.primaryPurple,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    _selectedImage == null
+                                                        ? 'Add Image'
+                                                        : 'Image Added',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Color(0xFF52525B),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
+                                        const Spacer(),
+                                        // Character Count or other indicator could go here
+                                      ],
                                     ),
 
                                     // Image Preview
@@ -250,11 +327,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         children: [
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(
-                                              12,
+                                              16,
                                             ),
                                             child: Image.file(
                                               _selectedImage!,
-                                              height: 150,
+                                              height: 120,
                                               width: double.infinity,
                                               fit: BoxFit.cover,
                                             ),
@@ -262,15 +339,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                           Positioned(
                                             top: 8,
                                             right: 8,
-                                            child: IconButton(
-                                              onPressed: () => setState(
-                                                () => _selectedImage = null,
-                                              ),
-                                              icon: const Icon(Icons.close),
-                                              style: IconButton.styleFrom(
-                                                backgroundColor: Colors.black
-                                                    .withOpacity(0.5),
-                                                foregroundColor: Colors.white,
+                                            child: Material(
+                                              color:
+                                                  Colors.black.withOpacity(0.6),
+                                              shape: const CircleBorder(),
+                                              child: InkWell(
+                                                customBorder:
+                                                    const CircleBorder(),
+                                                onTap: () => setState(
+                                                  () => _selectedImage = null,
+                                                ),
+                                                child: const Padding(
+                                                  padding: EdgeInsets.all(6),
+                                                  child: Icon(
+                                                    Icons.close,
+                                                    color: Colors.white,
+                                                    size: 16,
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -309,7 +395,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _selectedTab == 0
                                   ? 'Your creative ideas will appear here'
                                   : 'Your generation history will appear here',
-                              style: Theme.of(context).textTheme.bodyMedium
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
                                   ?.copyWith(color: const Color(0xFF71717A)),
                               textAlign: TextAlign.center,
                             ),
@@ -320,9 +408,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
-                // Bottom Generate Button - Sticky
+                // Bottom Action Button
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.only(bottom: 24, top: 16, left: 16, right: 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -333,28 +421,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                   ),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    height: 48,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _generate,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: AppColors.primaryPurple.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_currentStep > 0)
+                        Expanded(
+                          child: SizedBox(
+                            height: 56,
+                            child: OutlinedButton(
+                              onPressed: () => setState(() => _currentStep--),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.primaryPurple,
+                                side: BorderSide(color: AppColors.primaryPurple),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                'Back',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Generate',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                      if (_currentStep > 0) const SizedBox(width: 12),
+                      Expanded(
+                        flex: _currentStep == 0 ? 1 : 2,
+                        child: SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _currentStep == 2 ? _generate : () => setState(() => _currentStep++),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryPurple,
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                              shadowColor: AppColors.primaryPurple.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: Text(
+                              _currentStep == 2 ? 'Generate' : 'Next',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                       ),
                     ),
                   ),
@@ -377,11 +492,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: isSelected
-                  ? const Color(0xFF18181B)
-                  : const Color(0xFF71717A),
-              fontWeight: FontWeight.bold,
-            ),
+                  color: isSelected
+                      ? const Color(0xFF18181B)
+                      : const Color(0xFF71717A),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Container(
@@ -393,6 +508,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStepIndicator(String label, int step, bool isActive) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isActive ? AppColors.primaryPurple : const Color(0xFF71717A),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 6,
+          width: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(3),
+            gradient: isActive
+                ? const LinearGradient(
+                    colors: [
+                      AppColors.primaryPurple,
+                      Color(0xFF8B5CF6),
+                    ],
+                  )
+                : null,
+            color: isActive ? null : Colors.white.withOpacity(0.5),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryPurple.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepConnector(bool isActive) {
+    return Container(
+      width: 24,
+      height: 2,
+      margin: const EdgeInsets.only(top: 18),
+      decoration: BoxDecoration(
+        color: isActive
+            ? AppColors.primaryPurple.withOpacity(0.3)
+            : Colors.white.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(1),
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
 
 class FileUtils {
@@ -19,20 +18,6 @@ class FileUtils {
     } catch (e) {
       print("Error downloading file: $e");
       return null;
-    }
-  }
-
-  static Future<bool> saveVideoToGallery(String url) async {
-    try {
-      final file = await downloadFile(url);
-      if (file != null) {
-        final result = await ImageGallerySaver.saveFile(file.path);
-        return result != null && result['isSuccess'];
-      }
-      return false;
-    } catch (e) {
-      print("Error saving to gallery: $e");
-      return false;
     }
   }
 
