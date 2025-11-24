@@ -131,7 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const Icon(
                         Icons.auto_awesome_mosaic,
                         size: 28,
-                        color: Color(0xFF18181B),
+                        color: AppColors.primaryPurple,
                       ),
                       Expanded(
                         child: Text(
@@ -146,7 +146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.account_circle, size: 28),
-                        color: const Color(0xFF18181B),
+                        color: AppColors.primaryPurple,
                         onPressed: () {},
                       ),
                     ],

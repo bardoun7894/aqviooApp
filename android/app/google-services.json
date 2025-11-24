@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "651649539964",
+    "project_id": "beldify-b445b",
+    "storage_bucket": "beldify-b445b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651649539964:android:802828cdb6df4de826cef9",
+        "android_client_info": {
+          "package_name": "com.aqvioo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651649539964-bge3vcpskv1fqgoo42ib57e3sq2solc7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWHiozXHu9h4by4WsjYmpgZwRUvVQ97G4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651649539964-bge3vcpskv1fqgoo42ib57e3sq2solc7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

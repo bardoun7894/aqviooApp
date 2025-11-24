@@ -1,4 +1,4 @@
-name: mobileapp
+name: akvioo
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -45,7 +45,7 @@ dependencies:
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
-  firebase_storage: ^13.0.4
+  # firebase_storage: ^13.0.4  # Not needed - using Kie.AI for video storage
 
   # UI & Assets
   google_fonts: ^6.2.1
@@ -64,7 +64,7 @@ dependencies:
   share_plus: ^12.0.1
   shared_preferences: ^2.2.3
   path_provider: ^2.1.3
-  image_gallery_saver: ^2.0.3
+  # image_gallery_saver:  ^2.0.3  # REMOVED - causing Kotlin compilation error
   http: ^1.2.1
 
   # Payments
