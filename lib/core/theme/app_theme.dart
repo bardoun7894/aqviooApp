@@ -117,8 +117,7 @@ class AppTheme {
         color: borderColor ?? AppColors.white.withOpacity(0.5),
         width: borderWidth,
       ),
-      boxShadow:
-          boxShadow ??
+      boxShadow: boxShadow ??
           [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -138,47 +137,46 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: AppColors.primaryPurple,
         secondary: secondaryBlue,
-        surface: Colors.white,
-        background: AppColors.backgroundLight, // Updated
+        surface: Colors.white, // Updated
       ),
-      textTheme: GoogleFonts.spaceGroteskTextTheme().copyWith(
-        // Changed to Space Grotesk
-        displayLarge: GoogleFonts.spaceGrotesk(
+      textTheme: GoogleFonts.cairoTextTheme().copyWith(
+        // Changed to Cairo for Arabic support
+        displayLarge: GoogleFonts.cairo(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: AppColors.darkGray,
         ),
-        displayMedium: GoogleFonts.spaceGrotesk(
+        displayMedium: GoogleFonts.cairo(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: AppColors.darkGray,
         ),
-        headlineLarge: GoogleFonts.spaceGrotesk(
+        headlineLarge: GoogleFonts.cairo(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: AppColors.darkGray,
         ),
-        headlineMedium: GoogleFonts.spaceGrotesk(
+        headlineMedium: GoogleFonts.cairo(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: AppColors.darkGray,
         ),
-        titleLarge: GoogleFonts.spaceGrotesk(
+        titleLarge: GoogleFonts.cairo(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: AppColors.darkGray,
         ),
-        titleMedium: GoogleFonts.spaceGrotesk(
+        titleMedium: GoogleFonts.cairo(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: AppColors.darkGray,
         ),
-        bodyLarge: GoogleFonts.spaceGrotesk(
+        bodyLarge: GoogleFonts.cairo(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: AppColors.darkGray,
         ),
-        bodyMedium: GoogleFonts.spaceGrotesk(
+        bodyMedium: GoogleFonts.cairo(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: AppColors.darkGray,
@@ -233,55 +231,53 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryPurple,
         secondary: secondaryBlue,
-        surface: Color(0xFF1E1E2C),
-        background: AppColors.backgroundDark, // Updated
+        surface: Color(0xFF1E1E2C), // Updated
       ),
-      textTheme:
-          GoogleFonts.spaceGroteskTextTheme(
-                ThemeData.dark().textTheme,
-              ) // Changed to Space Grotesk
-              .copyWith(
-                displayLarge: GoogleFonts.spaceGrotesk(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                displayMedium: GoogleFonts.spaceGrotesk(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                headlineLarge: GoogleFonts.spaceGrotesk(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                headlineMedium: GoogleFonts.spaceGrotesk(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                titleLarge: GoogleFonts.spaceGrotesk(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                titleMedium: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-                bodyLarge: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-                bodyMedium: GoogleFonts.spaceGrotesk(
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
+      textTheme: GoogleFonts.cairoTextTheme(
+        ThemeData.dark().textTheme,
+      ) // Changed to Cairo for Arabic support
+          .copyWith(
+        displayLarge: GoogleFonts.cairo(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        displayMedium: GoogleFonts.cairo(
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        headlineLarge: GoogleFonts.cairo(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+        headlineMedium: GoogleFonts.cairo(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        titleLarge: GoogleFonts.cairo(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        titleMedium: GoogleFonts.cairo(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+        bodyLarge: GoogleFonts.cairo(
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+          color: Colors.white.withOpacity(0.9),
+        ),
+        bodyMedium: GoogleFonts.cairo(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+          color: Colors.white.withOpacity(0.9),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryPurple,

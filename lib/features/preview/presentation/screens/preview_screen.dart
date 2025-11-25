@@ -11,8 +11,13 @@ import '../../../../core/utils/file_utils.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
   final String? videoUrl;
+  final String? thumbnailUrl;
 
-  const PreviewScreen({super.key, this.videoUrl});
+  const PreviewScreen({
+    super.key,
+    this.videoUrl,
+    this.thumbnailUrl,
+  });
 
   @override
   ConsumerState<PreviewScreen> createState() => _PreviewScreenState();
@@ -21,7 +26,7 @@ class PreviewScreen extends ConsumerStatefulWidget {
 class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
-  bool _isPlaying = false;
+  bool _isPlaying = true;
   bool _isDownloading = false;
 
   @override
@@ -41,9 +46,21 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
     setState(() {
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
-        autoPlay: false,
+        autoPlay: true,
         looping: true,
         showControls: false,
+        placeholder: widget.thumbnailUrl != null
+            ? Center(
+                child: Image.network(
+                  widget.thumbnailUrl!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox(),
+                ),
+              )
+            : null,
       );
     });
 

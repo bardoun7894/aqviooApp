@@ -1,0 +1,108 @@
+{
+  "@@locale": "en",
+  "appTitle": "Aqvioo",
+  "@appTitle": {
+    "description": "The application title"
+  },
+  "stepIdea": "Idea",
+  "@stepIdea": {
+    "description": "First step label in creation wizard"
+  },
+  "stepStyle": "Style",
+  "@stepStyle": {
+    "description": "Second step label in creation wizard"
+  },
+  "stepFinalize": "Finalize",
+  "@stepFinalize": {
+    "description": "Third step label in creation wizard"
+  },
+  "ideaStepPlaceholder": "Describe your video idea... e.g., 'A futuristic city with flying cars'",
+  "@ideaStepPlaceholder": {
+    "description": "Placeholder text for idea input field"
+  },
+  "addImage": "Add Image",
+  "@addImage": {
+    "description": "Button text to add an image"
+  },
+  "imageAdded": "Image Added",
+  "@imageAdded": {
+    "description": "Button text when image is added"
+  },
+  "buttonBack": "Back",
+  "@buttonBack": {
+    "description": "Back button text"
+  },
+  "buttonNext": "Next",
+  "@buttonNext": {
+    "description": "Next button text"
+  },
+  "promptRequired": "Please enter a prompt to continue",
+  "@promptRequired": {
+    "description": "Error message when prompt is empty"
+  },
+  "errorMessage": "Error: {message}",
+  "@errorMessage": {
+    "description": "Generic error message",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "myCreations": "My Creations",
+  "@myCreations": {
+    "description": "My Creations screen title"
+  },
+  "videoLength": "Video Length",
+  "@videoLength": {
+    "description": "Video length label"
+  },
+  "aspectRatio": "Aspect Ratio",
+  "@aspectRatio": {
+    "description": "Aspect ratio label"
+  },
+  "voiceGender": "Voice Gender",
+  "@voiceGender": {
+    "description": "Voice gender label"
+  },
+  "male": "Male",
+  "@male": {
+    "description": "Male voice option"
+  },
+  "female": "Female",
+  "@female": {
+    "description": "Female voice option"
+  },
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration label"
+  },
+  "seconds": "seconds",
+  "@seconds": {
+    "description": "Seconds unit"
+  },
+  "generate": "Generate",
+  "@generate": {
+    "description": "Generate button text"
+  },
+  "creating": "Creating",
+  "@creating": {
+    "description": "Creating status text"
+  },
+  "generatingVideo": "Generating your video...",
+  "@generatingVideo": {
+    "description": "Generating video message"
+  },
+  "preview": "Preview",
+  "@preview": {
+    "description": "Preview button text"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Share button text"
+  },
+  "download": "Download",
+  "@download": {
+    "description": "Download button text"
+  }
+}

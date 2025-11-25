@@ -97,35 +97,36 @@ class MagicLoadingScreen extends ConsumerWidget {
                           context,
                           icon: Icons.auto_awesome,
                           label: 'Script',
-                          isActive:
-                              state.status == CreationStatus.generatingScript,
+                          isActive: state.status ==
+                              CreationWizardStatus.generatingScript,
                           isCompleted: state.status.index >
-                              CreationStatus.generatingScript.index,
+                              CreationWizardStatus.generatingScript.index,
                         ),
                         _buildStepConnector(
                           isActive: state.status.index >
-                              CreationStatus.generatingScript.index,
+                              CreationWizardStatus.generatingScript.index,
                         ),
                         _buildStepIndicator(
                           context,
                           icon: Icons.graphic_eq,
                           label: 'Audio',
-                          isActive:
-                              state.status == CreationStatus.generatingAudio,
+                          isActive: state.status ==
+                              CreationWizardStatus.generatingAudio,
                           isCompleted: state.status.index >
-                              CreationStatus.generatingAudio.index,
+                              CreationWizardStatus.generatingAudio.index,
                         ),
                         _buildStepConnector(
                           isActive: state.status.index >
-                              CreationStatus.generatingAudio.index,
+                              CreationWizardStatus.generatingAudio.index,
                         ),
                         _buildStepIndicator(
                           context,
                           icon: Icons.video_library,
                           label: 'Video',
-                          isActive:
-                              state.status == CreationStatus.generatingVideo,
-                          isCompleted: state.status == CreationStatus.success,
+                          isActive: state.status ==
+                              CreationWizardStatus.generatingVideo,
+                          isCompleted:
+                              state.status == CreationWizardStatus.success,
                         ),
                       ],
                     ),
@@ -167,7 +168,79 @@ class MagicLoadingScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 24),
+
+                  // Info Message
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.white.withOpacity(0.8),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              "You can safely exit the app. Your video will continue generating in the background.",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Minimize Button
+                  TextButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(creationControllerProvider.notifier)
+                          .minimizeTask();
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.arrow_back, color: Colors.white70),
+                    label: const Text(
+                      'Check later in My Creations',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: BorderSide(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),

@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/animated_gradient_blob.dart';
 import '../../../creation/presentation/providers/creation_provider.dart';
+
+import '../widgets/style_configuration_step.dart';
+import '../widgets/review_finalize_step.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -19,35 +23,75 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _promptController = TextEditingController();
-  File? _selectedImage;
+  final _pageController = PageController();
   final _picker = ImagePicker();
-  int _selectedTab = 0; // 0 = Ideas, 1 = History
-  int _currentStep = 0; // 0 = Idea, 1 = Style, 2 = Finalize
-  String _selectedStyle = 'Cinematic';
-  String _selectedDuration = '15s';
-  String _selectedAspectRatio = '16:9';
+  File? _selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize prompt from config if exists
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final config = ref.read(creationControllerProvider).config;
+      if (config.prompt.isNotEmpty) {
+        _promptController.text = config.prompt;
+      }
+    });
+  }
 
   @override
   void dispose() {
     _promptController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+      _selectedImage = File(pickedFile.path);
+      ref
+          .read(creationControllerProvider.notifier)
+          .updateImagePath(pickedFile.path);
+      setState(() {});
     }
   }
 
-  void _generate() {
-    final prompt = _promptController.text.trim();
-    if (prompt.isEmpty) {
+  void _removeImage() {
+    setState(() {
+      _selectedImage = null;
+    });
+    ref.read(creationControllerProvider.notifier).updateImagePath(null);
+  }
+
+  bool _canProceedToNextStep() {
+    final config = ref.read(creationControllerProvider).config;
+    final currentStep = ref.read(creationControllerProvider).wizardStep;
+
+    switch (currentStep) {
+      case 0: // Idea step
+        // Check the text controller directly since config isn't updated until we click Next
+        return _promptController.text.trim().isNotEmpty;
+      case 1: // Style step
+        return config.isValid;
+      default:
+        return false;
+    }
+  }
+
+  void _goToNextStep() {
+    if (_canProceedToNextStep()) {
+      // Update prompt in config before moving forward
+      if (ref.read(creationControllerProvider).wizardStep == 0) {
+        ref
+            .read(creationControllerProvider.notifier)
+            .updatePrompt(_promptController.text.trim());
+      }
+      ref.read(creationControllerProvider.notifier).goToNextStep();
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please enter a prompt'),
+          content: Text(AppLocalizations.of(context)!.promptRequired),
           backgroundColor: AppColors.primaryPurple,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -55,40 +99,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       );
-      return;
     }
-
-    ref
-        .read(creationControllerProvider.notifier)
-        .generateVideo(prompt: prompt, imagePath: _selectedImage?.path);
   }
 
   @override
   Widget build(BuildContext context) {
     final creationState = ref.watch(creationControllerProvider);
+    final wizardStep = creationState.wizardStep;
 
-    // Listen for state changes to navigate
-    ref.listen(creationControllerProvider, (previous, next) {
-      if (next.status == CreationStatus.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${next.errorMessage}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        );
-      } else if (next.status == CreationStatus.generatingScript) {
-        context.push('/magic-loading');
-      } else if (next.status == CreationStatus.success) {
-        if (GoRouter.of(context).canPop()) {
-          context.pop();
+    // Listen for wizard step changes to animate PageView
+    ref.listen<CreationState>(
+      creationControllerProvider,
+      (previous, next) {
+        if (previous?.wizardStep != next.wizardStep) {
+          _pageController.animateToPage(
+            next.wizardStep,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
-        context.push('/preview', extra: next.videoUrl);
-      }
-    });
+
+        // Navigate to magic loading or preview
+        if (next.status == CreationWizardStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.errorMessage(next.errorMessage ?? '')),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          );
+        } else if (next.status == CreationWizardStatus.generatingScript) {
+          context.push('/magic-loading');
+        } else if (next.status == CreationWizardStatus.success) {
+          if (GoRouter.of(context).canPop()) {
+            context.pop();
+          }
+          if (next.videoUrl != null) {
+            context.push('/preview', extra: next.videoUrl);
+          } else {
+            // Background task started - Stay on this screen or user can minimize
+            // No action needed here as MagicLoadingScreen handles the UI
+          }
+        }
+      },
+    );
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -139,7 +196,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          'Aqvioo',
+                          AppLocalizations.of(context)!.appTitle,
                           style:
                               Theme.of(context).textTheme.titleLarge?.copyWith(
                                     color: const Color(0xFF18181B),
@@ -149,9 +206,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.account_circle, size: 28),
+                        icon:
+                            const Icon(Icons.movie_creation_outlined, size: 28),
                         color: AppColors.primaryPurple,
-                        onPressed: () {},
+                        onPressed: () => context.push('/my-creations'),
                       ),
                     ],
                   ),
@@ -162,349 +220,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildStepIndicator('Idea', 0, _currentStep >= 0),
-                      _buildStepConnector(_currentStep >= 1),
-                      _buildStepIndicator('Style', 1, _currentStep >= 1),
-                      _buildStepConnector(_currentStep >= 2),
-                      _buildStepIndicator('Finalize', 2, _currentStep >= 2),
+                      Expanded(
+                        child: _buildStepIndicator(AppLocalizations.of(context)!.stepIdea, 0, wizardStep >= 0),
+                      ),
+                      Expanded(
+                        child: _buildStepIndicator(AppLocalizations.of(context)!.stepStyle, 1, wizardStep >= 1),
+                      ),
+                      Expanded(
+                        child:
+                            _buildStepIndicator(AppLocalizations.of(context)!.stepFinalize, 2, wizardStep >= 2),
+                      ),
                     ],
                   ),
                 ),
 
-                // Main Content Area
+                // PageView with 3 steps
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildStepContent(),
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 560),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withOpacity(0.4),
-                                Colors.white.withOpacity(0.1),
-                              ],
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    // Text Input
-                                    TextField(
-                                      controller: _promptController,
-                                      maxLines: 5,
-                                      style: const TextStyle(
-                                        color: Color(0xFF18181B),
-                                        fontSize: 16,
-                                        height: 1.5,
-                                      ),
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            "Describe your video idea... e.g., 'A futuristic city with flying cars'",
-                                        hintStyle: TextStyle(
-                                          color: const Color(0xFF71717A)
-                                              .withOpacity(0.8),
-                                          fontSize: 16,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.zero,
-                                        prefixIcon: Container(
-                                          padding: const EdgeInsets.only(
-                                            right: 12,
-                                            bottom: 80,
-                                          ),
-                                          child: const Icon(
-                                            Icons.auto_awesome,
-                                            color: AppColors.primaryPurple,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    // Divider
-                                    Container(
-                                      height: 1,
-                                      color: Colors.white.withOpacity(0.2),
-                                    ),
-
-                                    const SizedBox(height: 16),
-
-                                    // Action Bar
-                                    Row(
-                                      children: [
-                                        // Upload Button
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: _pickImage,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 8,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white
-                                                    .withOpacity(0.5),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withOpacity(0.3),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    _selectedImage == null
-                                                        ? Icons
-                                                            .add_photo_alternate_outlined
-                                                        : Icons.check_circle,
-                                                    size: 18,
-                                                    color:
-                                                        AppColors.primaryPurple,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    _selectedImage == null
-                                                        ? 'Add Image'
-                                                        : 'Image Added',
-                                                    style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Color(0xFF52525B),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        // Character Count or other indicator could go here
-                                      ],
-                                    ),
-
-                                    // Image Preview
-                                    if (_selectedImage != null) ...[
-                                      const SizedBox(height: 16),
-                                      Stack(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            child: Image.file(
-                                              _selectedImage!,
-                                              height: 120,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                          Positioned(
-                                            top: 8,
-                                            right: 8,
-                                            child: Material(
-                                              color:
-                                                  Colors.black.withOpacity(0.6),
-                                              shape: const CircleBorder(),
-                                              child: InkWell(
-                                                customBorder:
-                                                    const CircleBorder(),
-                                                onTap: () => setState(
-                                                  () => _selectedImage = null,
-                                                ),
-                                                child: const Padding(
-                                                  padding: EdgeInsets.all(6),
-                                                  child: Icon(
-                                                    Icons.close,
-                                                    color: Colors.white,
-                                                    size: 16,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Tabs
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 560),
-                          child: Row(
-                            children: [
-                              _buildTab('Ideas', 0),
-                              const SizedBox(width: 32),
-                              _buildTab('History', 1),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Tab Content Placeholder
-                        Container(
-                          constraints: const BoxConstraints(maxWidth: 560),
-                          padding: const EdgeInsets.all(32),
-                          child: Center(
-                            child: Text(
-                              _selectedTab == 0
-                                  ? 'Your creative ideas will appear here'
-                                  : 'Your generation history will appear here',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(color: const Color(0xFF71717A)),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Bottom Action Button
-                Container(
-                  padding: const EdgeInsets.only(bottom: 24, top: 16, left: 16, right: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        AppColors.backgroundLight.withOpacity(0),
-                        AppColors.backgroundLight,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
                     children: [
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: SizedBox(
-                            height: 56,
-                            child: OutlinedButton(
-                              onPressed: () => setState(() => _currentStep--),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primaryPurple,
-                                side: BorderSide(color: AppColors.primaryPurple),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: const Text(
-                                'Back',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (_currentStep > 0) const SizedBox(width: 12),
-                      Expanded(
-                        flex: _currentStep == 0 ? 1 : 2,
-                        child: SizedBox(
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: _currentStep == 2 ? _generate : () => setState(() => _currentStep++),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryPurple,
-                              foregroundColor: Colors.white,
-                              elevation: 4,
-                              shadowColor: AppColors.primaryPurple.withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(
-                              _currentStep == 2 ? 'Generate' : 'Next',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                      ),
-                    ),
+                      _buildIdeaStep(), // Step 0
+                      const StyleConfigurationStep(), // Step 1
+                      const ReviewFinalizeStep(), // Step 2
+                    ],
                   ),
                 ),
+
+                // Bottom Navigation Buttons
+                _buildBottomButtons(wizardStep),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(String label, int index) {
-    final isSelected = _selectedTab == index;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: isSelected
-                      ? const Color(0xFF18181B)
-                      : const Color(0xFF71717A),
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 3,
-            width: 60,
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF18181B) : Colors.transparent,
-              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ],
@@ -554,16 +300,259 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildStepConnector(bool isActive) {
+  Widget _buildIdeaStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Glassmorphic Input Card
+          Container(
+            constraints: const BoxConstraints(maxWidth: 560),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.6),
+                  Colors.white.withOpacity(0.3),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Text Input
+                      TextField(
+                        controller: _promptController,
+                        maxLines: 5,
+                        style: const TextStyle(
+                          color: Color(0xFF18181B),
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)!.ideaStepPlaceholder,
+                          hintStyle: TextStyle(
+                            color: const Color(0xFF71717A).withOpacity(0.8),
+                            fontSize: 16,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          prefixIcon: Container(
+                            padding: const EdgeInsets.only(
+                              right: 12,
+                              bottom: 80,
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: AppColors.primaryPurple,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Divider
+                      Container(
+                        height: 1,
+                        color: Colors.white.withOpacity(0.2),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Upload Button
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _pickImage,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _selectedImage == null
+                                      ? Icons.add_photo_alternate_outlined
+                                      : Icons.check_circle,
+                                  size: 18,
+                                  color: AppColors.primaryPurple,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _selectedImage == null
+                                      ? AppLocalizations.of(context)!.addImage
+                                      : AppLocalizations.of(context)!.imageAdded,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF52525B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Image Preview
+                      if (_selectedImage != null) ...[
+                        const SizedBox(height: 16),
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                _selectedImage!,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Material(
+                                color: Colors.black.withOpacity(0.6),
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: _removeImage,
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomButtons(int currentStep) {
     return Container(
-      width: 24,
-      height: 2,
-      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.primaryPurple.withOpacity(0.3)
-            : Colors.white.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(1),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.backgroundLight.withOpacity(0),
+            AppColors.backgroundLight,
+          ],
+        ),
+      ),
+      child: Row(
+        children: [
+          // Back Button
+          if (currentStep > 0)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () {
+                  ref
+                      .read(creationControllerProvider.notifier)
+                      .goToPreviousStep();
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryPurple,
+                  side: BorderSide(color: AppColors.primaryPurple),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.buttonBack,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+          if (currentStep > 0) const SizedBox(width: 12),
+
+          // Next Button (only show for step 0 and 1)
+          if (currentStep < 2)
+            Expanded(
+              flex: currentStep > 0 ? 2 : 1,
+              child: ElevatedButton(
+                onPressed: _canProceedToNextStep() ? _goToNextStep : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                  disabledBackgroundColor:
+                      AppColors.primaryPurple.withOpacity(0.5),
+                  disabledForegroundColor: Colors.white.withOpacity(0.7),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.buttonNext,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

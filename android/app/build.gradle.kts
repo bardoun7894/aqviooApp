@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.aqvioo.app"
-        minSdk = 23  // Firebase minimum requirement
+        minSdk = flutter.minSdkVersion  // Firebase minimum requirement
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"

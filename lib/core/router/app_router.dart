@@ -7,6 +7,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/creation/presentation/screens/magic_loading_screen.dart';
 import '../../features/preview/presentation/screens/preview_screen.dart';
+import '../../features/creation/presentation/screens/my_creations_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -57,9 +58,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/preview',
         builder: (context, state) {
-          final videoUrl = state.extra as String;
-          return PreviewScreen(videoUrl: videoUrl);
+          String? videoUrl;
+          String? thumbnailUrl;
+
+          if (state.extra is Map<String, dynamic>) {
+            final args = state.extra as Map<String, dynamic>;
+            videoUrl = args['videoUrl'] as String?;
+            thumbnailUrl = args['thumbnailUrl'] as String?;
+          } else if (state.extra is String) {
+            videoUrl = state.extra as String;
+          }
+
+          if (videoUrl == null) return const HomeScreen();
+          return PreviewScreen(
+            videoUrl: videoUrl,
+            thumbnailUrl: thumbnailUrl,
+          );
         },
+      ),
+      GoRoute(
+        path: '/my-creations',
+        builder: (context, state) => const MyCreationsScreen(),
       ),
     ],
   );
@@ -69,8 +88,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
     _subscription = stream.asBroadcastStream().listen(
-      (dynamic _) => notifyListeners(),
-    );
+          (dynamic _) => notifyListeners(),
+        );
   }
 
   late final dynamic _subscription;
