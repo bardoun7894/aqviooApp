@@ -76,6 +76,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ref.read(creationControllerProvider.notifier).updateImagePath(null);
   }
 
+  void _enhancePrompt() {
+    final currentText = _promptController.text;
+    if (currentText.isEmpty) return;
+
+    // Mock AI Enhancement
+    final enhancedText = "$currentText (Enhanced with AI magic ✨)";
+
+    _promptController.text = enhancedText;
+    ref.read(creationControllerProvider.notifier).updatePrompt(enhancedText);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Prompt enhanced! ✨'),
+        backgroundColor: AppColors.primaryPurple,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   bool _canProceedToNextStep() {
     final config = ref.read(creationControllerProvider).config;
     final currentStep = ref.read(creationControllerProvider).wizardStep;
@@ -398,32 +421,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             borderRadius: 24,
             blurIntensity: 15,
             opacity: 0.6,
-            borderColor: AppColors.white.withOpacity(0.8),
+            borderColor:
+                AppColors.primaryPurple.withOpacity(0.3), // Visible border
+            borderWidth: 1.5,
             padding: const EdgeInsets.all(24),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  controller: _promptController,
-                  minLines: 5,
-                  maxLines: 10,
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
-                    height: 1.5,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.ideaStepPlaceholder,
-                    hintStyle: GoogleFonts.outfit(
-                      color: AppColors.textHint,
-                      fontSize: 18,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Describe your video',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
+                    // Enhance Button
+                    TextButton.icon(
+                      onPressed: _enhancePrompt,
+                      icon: const Icon(
+                        Icons.auto_awesome,
+                        size: 16,
+                        color: AppColors.primaryPurple,
+                      ),
+                      label: Text(
+                        'Enhance',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryPurple,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        backgroundColor:
+                            AppColors.primaryPurple.withOpacity(0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  constraints: const BoxConstraints(minHeight: 150),
+                  child: TextField(
+                    controller: _promptController,
+                    maxLines: null,
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      color: AppColors.textPrimary,
+                      height: 1.5,
+                    ),
+                    decoration: InputDecoration(
+                      hintText:
+                          AppLocalizations.of(context)!.ideaStepPlaceholder,
+                      hintStyle: GoogleFonts.outfit(
+                        color: AppColors.textHint,
+                        fontSize: 18,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: (value) => setState(() {}),
                   ),
-                  onChanged: (value) => setState(() {}),
                 ),
                 const SizedBox(height: 24),
 
@@ -459,32 +528,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ],
                   )
                 else
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryPurple.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.primaryPurple.withOpacity(0.2),
-                          style: BorderStyle.solid,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_photo_alternate_rounded,
-                              color: AppColors.primaryPurple),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Add Reference Image",
-                            style: GoogleFonts.outfit(
-                              color: AppColors.primaryPurple,
-                              fontWeight: FontWeight.w600,
-                            ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryPurple.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primaryPurple.withOpacity(0.2),
+                            width: 1.5,
                           ),
-                        ],
+                        ),
+                        child: Icon(
+                          Icons.add_photo_alternate_rounded,
+                          color: AppColors.primaryPurple,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),
@@ -538,63 +601,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (currentStep > 0) const SizedBox(width: 16),
           Expanded(
             flex: 2,
-            child: AnimatedBuilder(
-              animation: _orbController,
-              builder: (context, child) {
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryPurple
-                            .withOpacity(0.4 + (_orbController.value * 0.2)),
-                        blurRadius: 12 + (_orbController.value * 8),
-                        spreadRadius: _orbController.value * 2,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _canProceedToNextStep() ? _goToNextStep : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
-                    ).copyWith(
-                      backgroundColor:
-                          MaterialStateProperty.resolveWith((states) {
-                        if (states.contains(MaterialState.disabled)) {
-                          return AppColors.mediumGray.withOpacity(0.3);
-                        }
-                        return null; // Use gradient
-                      }),
-                    ),
-                    child: Ink(
-                      decoration: BoxDecoration(
-                        gradient: _canProceedToNextStep()
-                            ? AppColors.iridescentGradient
-                            : null,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Container(
-                        alignment: Alignment.center,
-                        constraints: const BoxConstraints(minHeight: 56),
-                        child: Text(
-                          AppLocalizations.of(context)!.buttonNext,
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
+            child: ElevatedButton(
+              onPressed: _canProceedToNextStep() ? _goToNextStep : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ).copyWith(
+                backgroundColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return AppColors.mediumGray.withOpacity(0.3);
+                  }
+                  return AppColors.primaryPurple;
+                }),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!.buttonNext,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                );
-              },
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 20),
+                ],
+              ),
             ),
           ),
         ],

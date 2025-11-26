@@ -13,6 +13,7 @@ class NeumorphicContainer extends StatelessWidget {
   final double intensity;
   final bool isConcave;
   final BoxShape shape;
+  final Border? border;
   final VoidCallback? onTap;
 
   const NeumorphicContainer({
@@ -28,6 +29,7 @@ class NeumorphicContainer extends StatelessWidget {
     this.intensity = 0.7,
     this.isConcave = false,
     this.shape = BoxShape.rectangle,
+    this.border,
     this.onTap,
   });
 
@@ -45,13 +47,14 @@ class NeumorphicContainer extends StatelessWidget {
       borderRadius:
           shape == BoxShape.circle ? null : BorderRadius.circular(borderRadius),
       shape: shape,
+      border: border,
       boxShadow: [
         // Top Left Shadow (Light)
         BoxShadow(
           color: isConcave ? darkShadow : lightShadow,
           offset:
               Offset(isConcave ? depth : -depth, isConcave ? depth : -depth),
-          blurRadius: depth * 2,
+          blurRadius: depth.abs() * 2,
           spreadRadius: 0.0,
         ),
         // Bottom Right Shadow (Dark)
@@ -59,7 +62,7 @@ class NeumorphicContainer extends StatelessWidget {
           color: isConcave ? lightShadow : darkShadow,
           offset:
               Offset(isConcave ? -depth : depth, isConcave ? -depth : depth),
-          blurRadius: depth * 2,
+          blurRadius: depth.abs() * 2,
           spreadRadius: 0.0,
         ),
       ],
