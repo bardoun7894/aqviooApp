@@ -1,52 +1,63 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/creation_item.dart';
 
 class CreationRepository {
-  static const String _storageKey = 'user_creations';
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String? get _userId => _auth.currentUser?.uid;
 
   Future<List<CreationItem>> getCreations() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? creationsJson = prefs.getString(_storageKey);
-
-    if (creationsJson == null) return [];
+    final uid = _userId;
+    if (uid == null) return [];
 
     try {
-      final List<dynamic> decoded = json.decode(creationsJson);
-      return decoded.map((item) => CreationItem.fromMap(item)).toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Sort by newest
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('creations')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => CreationItem.fromMap(doc.data()))
+          .toList();
     } catch (e) {
-      print('Error loading creations: $e');
+      print('Error loading creations from Firestore: $e');
       return [];
     }
   }
 
   Future<void> saveCreation(CreationItem creation) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<CreationItem> currentList = await getCreations();
+    final uid = _userId;
+    if (uid == null) return;
 
-    // Check if exists and update, or add new
-    final index = currentList.indexWhere((item) => item.id == creation.id);
-    if (index >= 0) {
-      currentList[index] = creation;
-    } else {
-      currentList.insert(0, creation);
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('creations')
+          .doc(creation.id)
+          .set(creation.toMap());
+    } catch (e) {
+      print('Error saving creation to Firestore: $e');
     }
-
-    await _saveList(prefs, currentList);
   }
 
   Future<void> deleteCreation(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<CreationItem> currentList = await getCreations();
+    final uid = _userId;
+    if (uid == null) return;
 
-    currentList.removeWhere((item) => item.id == id);
-    await _saveList(prefs, currentList);
-  }
-
-  Future<void> _saveList(
-      SharedPreferences prefs, List<CreationItem> list) async {
-    final String encoded = json.encode(list.map((e) => e.toMap()).toList());
-    await prefs.setString(_storageKey, encoded);
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('creations')
+          .doc(id)
+          .delete();
+    } catch (e) {
+      print('Error deleting creation from Firestore: $e');
+    }
   }
 }

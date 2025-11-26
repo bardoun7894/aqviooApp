@@ -62,7 +62,8 @@ class _StyleConfigurationStepState
       children: [
         Expanded(
           child: _buildOutputTypeCard(
-            label: '📹 Video',
+            label: 'Video',
+            icon: Icons.videocam_outlined,
             isSelected: currentType == OutputType.video,
             onTap: () => controller.updateOutputType(OutputType.video),
           ),
@@ -70,7 +71,8 @@ class _StyleConfigurationStepState
         const SizedBox(width: 12),
         Expanded(
           child: _buildOutputTypeCard(
-            label: '🖼️ Image',
+            label: 'Image',
+            icon: Icons.image_outlined,
             isSelected: currentType == OutputType.image,
             onTap: () => controller.updateOutputType(OutputType.image),
           ),
@@ -81,34 +83,41 @@ class _StyleConfigurationStepState
 
   Widget _buildOutputTypeCard({
     required String label,
+    required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple.withOpacity(0.1)
-              : Colors.white.withOpacity(0.5),
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
+            color:
+                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
+            width: 1.5,
           ),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color:
-                isSelected ? AppColors.primaryPurple : const Color(0xFF52525B),
-          ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected ? Colors.white : const Color(0xFF6B7280),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : const Color(0xFF1F2937),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -185,14 +194,13 @@ class _StyleConfigurationStepState
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primaryPurple
-                  : Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(20),
+              color: isSelected ? AppColors.primaryPurple : Colors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
                     ? AppColors.primaryPurple
-                    : Colors.white.withOpacity(0.3),
+                    : const Color(0xFFE5E7EB),
+                width: 1.5,
               ),
             ),
             child: Text(
@@ -242,15 +250,12 @@ class _StyleConfigurationStepState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple.withOpacity(0.1)
-              : Colors.white.withOpacity(0.5),
+          color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
+            color:
+                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
+            width: 1.5,
           ),
         ),
         child: Column(
@@ -325,15 +330,12 @@ class _StyleConfigurationStepState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple.withOpacity(0.1)
-              : Colors.white.withOpacity(0.5),
+          color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
+            color:
+                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
+            width: 1.5,
           ),
         ),
         child: Column(
@@ -419,26 +421,39 @@ class _StyleConfigurationStepState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple.withOpacity(0.1)
-              : Colors.white.withOpacity(0.5),
+          color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
+            color:
+                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
+            width: 1.5,
           ),
         ),
-        child: Text(
-          gender == VoiceGender.female ? '👩 Female' : '👨 Male',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color:
-                isSelected ? AppColors.primaryPurple : const Color(0xFF52525B),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              gender == VoiceGender.female
+                  ? Icons.person_outline
+                  : Icons.person_outline,
+              size: 18,
+              color: isSelected
+                  ? AppColors.primaryPurple
+                  : const Color(0xFF6B7280),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              gender == VoiceGender.female ? 'Female' : 'Male',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? AppColors.primaryPurple
+                    : const Color(0xFF1F2937),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -458,10 +473,11 @@ class _StyleConfigurationStepState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: const Color(0xFFE5E7EB),
+          width: 1.5,
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -491,21 +507,19 @@ class _StyleConfigurationStepState
         final isSelected = currentStyle == style;
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsetsDirectional.only(end: 8),
             child: GestureDetector(
               onTap: () => controller.updateImageStyle(style),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primaryPurple.withOpacity(0.1)
-                      : Colors.white.withOpacity(0.5),
+                  color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
                         ? AppColors.primaryPurple
-                        : Colors.white.withOpacity(0.3),
-                    width: isSelected ? 2 : 1,
+                        : const Color(0xFFE5E7EB),
+                    width: 1.5,
                   ),
                 ),
                 child: Text(
@@ -545,15 +559,13 @@ class _StyleConfigurationStepState
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primaryPurple.withOpacity(0.1)
-                    : Colors.white.withOpacity(0.5),
+                color: isSelected ? const Color(0xFFF3F4F6) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primaryPurple
-                      : Colors.white.withOpacity(0.3),
-                  width: isSelected ? 2 : 1,
+                      : const Color(0xFFE5E7EB),
+                  width: 1.5,
                 ),
               ),
               child: Row(

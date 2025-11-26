@@ -1,12 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'kie_ai_service.dart';
 
 /// Legacy KieService wrapper for backward compatibility
 /// Use KieAIService directly for new features
 class KieService {
-  final KieAIService _kieAI;
-
-  KieService(this._kieAI);
+  KieService();
 
   Future<String> generateVideo({
     required String script,
@@ -20,6 +17,5 @@ class KieService {
 }
 
 final kieServiceProvider = Provider<KieService>((ref) {
-  final kieAI = ref.watch(kieAIServiceProvider);
-  return KieService(kieAI);
+  return KieService();
 });

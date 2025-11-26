@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../../services/ai/ai_service.dart';
 import '../../../../services/ai/composite_ai_service.dart';
 import '../../../../services/ai/kie_ai_service.dart';
+import '../../../../features/auth/data/auth_repository.dart';
 import '../../domain/models/creation_config.dart';
 import '../../domain/models/creation_item.dart';
 import '../../data/repositories/creation_repository.dart';
@@ -74,8 +76,12 @@ class CreationController extends Notifier<CreationState> {
     _aiService = ref.watch(aiServiceProvider);
     _kieAI = ref.watch(kieAIServiceProvider);
 
-    // Load saved creations on startup
-    _loadCreations();
+    // Watch auth state to reload creations when user logs in/out
+    ref.watch(authStateProvider);
+
+    // Load saved creations
+    // Use microtask to avoid updating state during build
+    Future.microtask(() => _loadCreations());
 
     return CreationState();
   }
@@ -270,56 +276,79 @@ class CreationController extends Notifier<CreationState> {
   Future<void> _pollTask(CreationItem item) async {
     if (item.taskId == null) return;
 
-    // Poll for 5 minutes max
-    for (int i = 0; i < 60; i++) {
-      await Future.delayed(const Duration(seconds: 5));
-
-      try {
-        final status = await _kieAI.checkTaskStatus(item.taskId!);
-
-        if (status['state'] == 'success') {
-          final updatedItem = item.copyWith(
-            status: CreationStatus.success,
-            url: status['videoUrl'],
-          );
-          await _updateItem(updatedItem);
-
-          // If this is the currently watched task, update wizard status
-          if (state.currentTaskId == item.id) {
-            state = state.copyWith(
-              status: CreationWizardStatus.success,
-              videoUrl: status['videoUrl'],
-              currentStepMessage: "Magic Complete!",
-            );
-          }
-          return;
-        } else if (status['state'] == 'fail') {
-          final updatedItem = item.copyWith(
-            status: CreationStatus.failed,
-            errorMessage: status['error'],
-          );
-          await _updateItem(updatedItem);
-
-          if (state.currentTaskId == item.id) {
-            state = state.copyWith(
-              status: CreationWizardStatus.error,
-              errorMessage: status['error'],
-            );
-          }
-          return;
-        }
-      } catch (e) {
-        print('Polling error for ${item.id}: $e');
-        // Continue polling on network error
-      }
+    // Enable wake lock to keep polling alive even when screen is locked
+    try {
+      await WakelockPlus.enable();
+    } catch (e) {
+      print('Failed to enable wake lock: $e');
     }
 
-    // Timeout
-    final timeoutItem = item.copyWith(
-      status: CreationStatus.failed,
-      errorMessage: 'Generation timed out',
-    );
-    await _updateItem(timeoutItem);
+    try {
+      // Poll for 5 minutes max
+      for (int i = 0; i < 60; i++) {
+        await Future.delayed(const Duration(seconds: 5));
+
+        try {
+          final status = await _kieAI.checkTaskStatus(item.taskId!);
+
+          if (status['state'] == 'success') {
+            final updatedItem = item.copyWith(
+              status: CreationStatus.success,
+              url: status['videoUrl'],
+            );
+            await _updateItem(updatedItem);
+
+            // If this is the currently watched task, update wizard status
+            if (state.currentTaskId == item.id) {
+              state = state.copyWith(
+                status: CreationWizardStatus.success,
+                videoUrl: status['videoUrl'],
+                currentStepMessage: "Magic Complete!",
+              );
+            }
+            return;
+          } else if (status['state'] == 'fail') {
+            final updatedItem = item.copyWith(
+              status: CreationStatus.failed,
+              errorMessage: status['error'],
+            );
+            await _updateItem(updatedItem);
+
+            if (state.currentTaskId == item.id) {
+              state = state.copyWith(
+                status: CreationWizardStatus.error,
+                errorMessage: status['error'],
+              );
+            }
+            return;
+          }
+        } catch (e) {
+          print('Polling error for ${item.id}: $e');
+          // Continue polling on network error
+        }
+      }
+
+      // Timeout
+      final timeoutItem = item.copyWith(
+        status: CreationStatus.failed,
+        errorMessage: 'Generation timed out',
+      );
+      await _updateItem(timeoutItem);
+
+      if (state.currentTaskId == item.id) {
+        state = state.copyWith(
+          status: CreationWizardStatus.error,
+          errorMessage: 'Generation timed out',
+        );
+      }
+    } finally {
+      // Always disable wake lock when polling completes
+      try {
+        await WakelockPlus.disable();
+      } catch (e) {
+        print('Failed to disable wake lock: $e');
+      }
+    }
   }
 
   Future<void> _updateItem(CreationItem item) async {

@@ -195,12 +195,13 @@ class _GlassTextFieldState extends State<GlassTextField>
         children: [
           if (widget.labelText != null) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 8),
+              padding: const EdgeInsetsDirectional.only(start: 16, bottom: 8),
               child: Text(
                 widget.labelText!,
                 style: widget.labelStyle ??
                     Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: widget.labelColor ?? AppColors.white.withOpacity(0.9),
+                          color: widget.labelColor ??
+                              AppColors.white.withOpacity(0.9),
                           fontWeight: FontWeight.w500,
                         ),
               ),
@@ -267,7 +268,8 @@ class _GlassTextFieldState extends State<GlassTextField>
                       maxLines: widget.maxLines,
                       minLines: widget.minLines,
                       autofocus: widget.autofocus,
-                      cursorColor: widget.cursorColor ?? AppColors.primaryPurple,
+                      cursorColor:
+                          widget.cursorColor ?? AppColors.primaryPurple,
                       style: widget.textStyle ??
                           Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: widget.textColor ?? AppColors.darkGray,
@@ -276,7 +278,8 @@ class _GlassTextFieldState extends State<GlassTextField>
                         hintText: widget.hintText,
                         hintStyle: widget.hintStyle ??
                             Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: widget.hintColor ?? AppColors.darkGray.withOpacity(0.6),
+                                  color: widget.hintColor ??
+                                      AppColors.darkGray.withOpacity(0.6),
                                 ),
                         prefixIcon: widget.prefixIcon,
                         suffixIcon: widget.suffixIcon,

@@ -2,9 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ElevenLabsService {
-  final String _apiKey;
-
-  ElevenLabsService({required String apiKey}) : _apiKey = apiKey;
+  ElevenLabsService({required String apiKey});
 
   Future<String> generateAudio(String script) async {
     // TODO: Implement ElevenLabs API call using _apiKey

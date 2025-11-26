@@ -2,9 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OpenAIService {
-  final String _apiKey;
-
-  OpenAIService({required String apiKey}) : _apiKey = apiKey;
+  OpenAIService({required String apiKey});
 
   Future<String> generateScript(String prompt) async {
     // TODO: Implement OpenAI API call using _apiKey

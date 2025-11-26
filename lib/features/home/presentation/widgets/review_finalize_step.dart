@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/theme/app_colors.dart';
 import 'package:akvioo/features/creation/domain/models/creation_config.dart';
 import 'package:akvioo/features/creation/presentation/providers/creation_provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../../auth/data/auth_repository.dart';
+import '../../../../generated/app_localizations.dart';
 
 class ReviewFinalizeStep extends ConsumerWidget {
   const ReviewFinalizeStep({super.key});
@@ -110,8 +113,8 @@ class ReviewFinalizeStep extends ConsumerWidget {
                 label: const Text('Edit'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primaryPurple,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: 12, vertical: 6),
                 ),
               ),
             ],
@@ -242,8 +245,35 @@ class ReviewFinalizeStep extends ConsumerWidget {
   }
 
   Widget _buildGenerateButton(BuildContext context, WidgetRef ref) {
-    return ElevatedButton(
+    return GlowingOrbButton(
       onPressed: () {
+        // Check if user is guest
+        final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+
+        if (isAnonymous) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Login Required'),
+              content: const Text('Please login to generate your video.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.push('/login');
+                  },
+                  child: Text(AppLocalizations.of(context)!.login),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+
         // Navigation to magic loading will be handled by listener in home_screen
         final controller = ref.read(creationControllerProvider.notifier);
         final config = ref.read(creationControllerProvider).config;
@@ -253,29 +283,6 @@ class ReviewFinalizeStep extends ConsumerWidget {
           imagePath: config.imagePath,
         );
       },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryPurple,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 0,
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.auto_awesome, size: 24),
-          SizedBox(width: 8),
-          Text(
-            'Generate',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -309,5 +316,126 @@ class ReviewFinalizeStep extends ConsumerWidget {
       default:
         return size;
     }
+  }
+}
+
+class GlowingOrbButton extends StatefulWidget {
+  final VoidCallback onPressed;
+
+  const GlowingOrbButton({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  State<GlowingOrbButton> createState() => _GlowingOrbButtonState();
+}
+
+class _GlowingOrbButtonState extends State<GlowingOrbButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _glowAnimation = Tween<double>(begin: 2.0, end: 15.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final scale = _scaleAnimation.value * (_isHovered ? 1.05 : 1.0);
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF7C3BED), // Purple
+                      Color(0xFF3B82F6), // Blue
+                      Color(0xFFEC4899), // Pink
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    // Outer glow (pulsing)
+                    BoxShadow(
+                      color: const Color(0xFF7C3BED)
+                          .withOpacity(_isHovered ? 0.6 : 0.4),
+                      blurRadius: _glowAnimation.value + (_isHovered ? 10 : 0),
+                      spreadRadius: _isHovered ? 2 : 0,
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFFEC4899)
+                          .withOpacity(_isHovered ? 0.6 : 0.4),
+                      blurRadius: _glowAnimation.value + (_isHovered ? 10 : 0),
+                      spreadRadius: _isHovered ? 2 : 0,
+                      offset: const Offset(-2, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Generate',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 2,
+                            offset: const Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

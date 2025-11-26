@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -27,7 +28,7 @@ class KieAIService {
 
       return enhancedPrompt;
     } catch (e) {
-      print('Error enhancing prompt: $e');
+      debugPrint('Error enhancing prompt: $e');
       return originalPrompt; // Fallback to original
     }
   }
@@ -71,7 +72,7 @@ class KieAIService {
             'Sora 2 HTTP error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error generating video with Sora 2: $e');
+      debugPrint('Error generating video with Sora 2: $e');
       rethrow;
     }
   }
@@ -132,7 +133,7 @@ class KieAIService {
             'Veo3 HTTP error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error generating video with Veo3: $e');
+      debugPrint('Error generating video with Veo3: $e');
       rethrow;
     }
   }
@@ -178,7 +179,7 @@ class KieAIService {
         throw Exception('Status check HTTP error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error checking Sora 2 task status: $e');
+      debugPrint('Error checking Sora 2 task status: $e');
       rethrow;
     }
   }
@@ -222,7 +223,7 @@ class KieAIService {
         throw Exception('Status check HTTP error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error checking Veo3 task status: $e');
+      debugPrint('Error checking Veo3 task status: $e');
       rethrow;
     }
   }
@@ -261,7 +262,7 @@ class KieAIService {
         throw Exception('Nano Banana HTTP error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error generating image: $e');
+      debugPrint('Error generating image: $e');
       rethrow;
     }
   }
@@ -349,7 +350,7 @@ class KieAIService {
         return await _generateImageContent(config, enhancedPrompt);
       }
     } catch (e) {
-      print('Error in generateContent: $e');
+      debugPrint('Error in generateContent: $e');
       throw Exception(_getUserFriendlyError(e.toString()));
     }
   }
@@ -414,7 +415,7 @@ final kieAIServiceProvider = Provider<KieAIService>((ref) {
   // Get API key from .env file
   final apiKey = dotenv.env['KIE_API_KEY'] ?? '';
   if (apiKey.isEmpty) {
-    print('Warning: KIE_API_KEY not found in .env file');
+    debugPrint('Warning: KIE_API_KEY not found in .env file');
   }
   return KieAIService(apiKey: apiKey);
 });

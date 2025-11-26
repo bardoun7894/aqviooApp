@@ -33,16 +33,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE6E6FA), // Lavender
-              Color(0xFFF2F2FF), // Very light purple
-            ],
-          ),
-        ),
+        color: AppColors.backgroundLight,
         child: SafeArea(
           child: Column(
             children: [
@@ -70,16 +61,9 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primaryPurple,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryPurple.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.add, size: 24),
@@ -170,28 +154,13 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple
-              : Colors.white.withOpacity(0.5),
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected
-              ? null
-              : Border.all(color: Colors.white.withOpacity(0.8)),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          border: Border.all(
+            color:
+                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
+            width: 1.5,
+          ),
         ),
         child: Center(
           child: Text(
@@ -328,16 +297,9 @@ class _CreationCardState extends State<CreationCard>
         child: Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.4)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

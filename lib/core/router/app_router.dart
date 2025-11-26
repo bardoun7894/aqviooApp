@@ -8,6 +8,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/creation/presentation/screens/magic_loading_screen.dart';
 import '../../features/preview/presentation/screens/preview_screen.dart';
 import '../../features/creation/presentation/screens/my_creations_screen.dart';
+import '../../features/auth/presentation/screens/account_settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -35,7 +36,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       // }
 
       if (isLogin && isLoggedIn) {
-        return '/home';
+        final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+        if (!isAnonymous) {
+          return '/home';
+        }
       }
 
       if (!isLoggedIn && !isLogin && !isSplash) {
@@ -79,6 +83,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-creations',
         builder: (context, state) => const MyCreationsScreen(),
+      ),
+      GoRoute(
+        path: '/account-settings',
+        builder: (context, state) => const AccountSettingsScreen(),
       ),
     ],
   );

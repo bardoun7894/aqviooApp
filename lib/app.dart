@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/app_localizations.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/providers/locale_provider.dart';
 
 class AqviooApp extends ConsumerWidget {
   const AqviooApp({super.key});
@@ -11,6 +12,7 @@ class AqviooApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'Aqvioo',
@@ -27,10 +29,10 @@ class AqviooApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ar'), // Arabic (default)
+        Locale('ar'), // Arabic
         Locale('en'), // English
       ],
-      locale: const Locale('ar'), // Set Arabic as default
+      locale: locale, // Dynamic locale from provider
     );
   }
 }

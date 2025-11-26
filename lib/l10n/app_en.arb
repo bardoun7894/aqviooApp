@@ -1,48 +1,34 @@
 {
-  "@@locale": "en",
   "appTitle": "Aqvioo",
-  "@appTitle": {
-    "description": "The application title"
+  "welcome": "Welcome",
+  "verifyCode": "Verify Code",
+  "enterPhoneToContinue": "Enter your phone number to continue",
+  "enterCodeSentTo": "Enter the code sent to {phoneNumber}",
+  "@enterCodeSentTo": {
+    "placeholders": {
+      "phoneNumber": {
+        "type": "String"
+      }
+    }
   },
+  "sendOtp": "Send OTP",
+  "verify": "Verify",
+  "changeNumber": "Change Number",
+  "continueAsGuest": "Continue as Guest",
+  "back": "Back",
+  "google": "Google",
+  "apple": "Apple",
   "stepIdea": "Idea",
-  "@stepIdea": {
-    "description": "First step label in creation wizard"
-  },
   "stepStyle": "Style",
-  "@stepStyle": {
-    "description": "Second step label in creation wizard"
-  },
   "stepFinalize": "Finalize",
-  "@stepFinalize": {
-    "description": "Third step label in creation wizard"
-  },
   "ideaStepPlaceholder": "Describe your video idea... e.g., 'A futuristic city with flying cars'",
-  "@ideaStepPlaceholder": {
-    "description": "Placeholder text for idea input field"
-  },
   "addImage": "Add Image",
-  "@addImage": {
-    "description": "Button text to add an image"
-  },
   "imageAdded": "Image Added",
-  "@imageAdded": {
-    "description": "Button text when image is added"
-  },
   "buttonBack": "Back",
-  "@buttonBack": {
-    "description": "Back button text"
-  },
   "buttonNext": "Next",
-  "@buttonNext": {
-    "description": "Next button text"
-  },
   "promptRequired": "Please enter a prompt to continue",
-  "@promptRequired": {
-    "description": "Error message when prompt is empty"
-  },
   "errorMessage": "Error: {message}",
   "@errorMessage": {
-    "description": "Generic error message",
     "placeholders": {
       "message": {
         "type": "String"
@@ -50,59 +36,80 @@
     }
   },
   "myCreations": "My Creations",
-  "@myCreations": {
-    "description": "My Creations screen title"
-  },
+  "noCreationsYet": "No creations yet",
+  "startCreating": "Start creating your first video!",
+  "createNew": "Create New",
   "videoLength": "Video Length",
-  "@videoLength": {
-    "description": "Video length label"
-  },
   "aspectRatio": "Aspect Ratio",
-  "@aspectRatio": {
-    "description": "Aspect ratio label"
-  },
   "voiceGender": "Voice Gender",
-  "@voiceGender": {
-    "description": "Voice gender label"
-  },
   "male": "Male",
-  "@male": {
-    "description": "Male voice option"
-  },
   "female": "Female",
-  "@female": {
-    "description": "Female voice option"
-  },
   "duration": "Duration",
-  "@duration": {
-    "description": "Duration label"
-  },
   "seconds": "seconds",
-  "@seconds": {
-    "description": "Seconds unit"
-  },
   "generate": "Generate",
-  "@generate": {
-    "description": "Generate button text"
-  },
   "creating": "Creating",
-  "@creating": {
-    "description": "Creating status text"
-  },
   "generatingVideo": "Generating your video...",
-  "@generatingVideo": {
-    "description": "Generating video message"
-  },
   "preview": "Preview",
-  "@preview": {
-    "description": "Preview button text"
-  },
   "share": "Share",
-  "@share": {
-    "description": "Share button text"
-  },
   "download": "Download",
-  "@download": {
-    "description": "Download button text"
-  }
+  "delete": "Delete",
+  "edit": "Edit",
+  "save": "Save",
+  "cancel": "Cancel",
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "dontHaveAccount": "Don't have an account?",
+  "signUp": "Sign Up",
+  "or": "OR",
+  "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
+  "creatingMagic": "Creating Magic...",
+  "almostDone": "Almost Done!",
+  "processingVideo": "Processing your video",
+  "thisWillTakeAMoment": "This will take a moment",
+  "videoPreview": "Video Preview",
+  "playPause": "Play/Pause",
+  "restart": "Restart",
+  "downloadVideo": "Download Video",
+  "shareVideo": "Share Video",
+  "deleteVideo": "Delete Video",
+  "confirmDelete": "Are you sure you want to delete this video?",
+  "settings": "Settings",
+  "language": "Language",
+  "selectLanguage": "Select Language",
+  "english": "English",
+  "arabic": "Arabic",
+  "theme": "Theme",
+  "lightMode": "Light Mode",
+  "darkMode": "Dark Mode",
+  "systemDefault": "System Default",
+  "notifications": "Notifications",
+  "account": "Account",
+  "profile": "Profile",
+  "logout": "Logout",
+  "about": "About",
+  "version": "Version",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "payment": "Payment",
+  "proceedToPayment": "Proceed to Payment",
+  "paymentSuccessful": "Payment Successful",
+  "paymentFailed": "Payment Failed",
+  "total": "Total",
+  "price": "Price",
+  "gallery": "Gallery",
+  "selectMedia": "Select Media",
+  "photos": "Photos",
+  "videos": "Videos",
+  "recentMedia": "Recent Media",
+  "loading": "Loading...",
+  "retry": "Retry",
+  "success": "Success",
+  "failed": "Failed",
+  "warning": "Warning",
+  "info": "Information",
+  "confirm": "Confirm",
+  "close": "Close"
 }

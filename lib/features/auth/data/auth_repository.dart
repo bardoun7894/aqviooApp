@@ -3,10 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Toggle this to switch between Mock and Firebase
-const bool useMockAuth = true;
+const bool useMockAuth = false;
 
 abstract class AuthRepository {
   Stream<bool> get authStateChanges;
+  bool get isAnonymous;
   Future<void> signInAnonymously();
   Future<void> verifyPhoneNumber({
     required String phoneNumber,
@@ -22,6 +23,7 @@ abstract class AuthRepository {
 class MockAuthRepository implements AuthRepository {
   final _authStateController = StreamController<bool>.broadcast();
   bool _isLoggedIn = false;
+  bool _isAnonymous = false;
 
   MockAuthRepository() {
     // Emit initial state immediately to avoid stuck splash screen
@@ -35,9 +37,13 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  bool get isAnonymous => _isAnonymous;
+
+  @override
   Future<void> signInAnonymously() async {
     await Future.delayed(const Duration(seconds: 1));
     _isLoggedIn = true;
+    _isAnonymous = true;
     _authStateController.add(true);
   }
 
@@ -58,6 +64,7 @@ class MockAuthRepository implements AuthRepository {
   Future<void> signInWithCredential(PhoneAuthCredential credential) async {
     await Future.delayed(const Duration(seconds: 1));
     _isLoggedIn = true;
+    _isAnonymous = false;
     _authStateController.add(true);
   }
 
@@ -65,6 +72,7 @@ class MockAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     await Future.delayed(const Duration(milliseconds: 500));
     _isLoggedIn = false;
+    _isAnonymous = false;
     _authStateController.add(false);
   }
 }
@@ -77,6 +85,9 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Stream<bool> get authStateChanges =>
       _firebaseAuth.authStateChanges().map((user) => user != null);
+
+  @override
+  bool get isAnonymous => _firebaseAuth.currentUser?.isAnonymous ?? false;
 
   @override
   Future<void> signInAnonymously() async {

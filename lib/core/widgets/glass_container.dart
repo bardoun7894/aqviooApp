@@ -159,13 +159,15 @@ class _GlassContainerState extends State<GlassContainer>
                 : 1.0
         : 1.0;
 
-    final effectiveBorderWidth = widget.enableAnimation && widget.enableBorderAnimation
-        ? _isPressed || _isHovered
-            ? _borderAnimation.value
-            : widget.borderWidth
-        : widget.borderWidth;
+    final effectiveBorderWidth =
+        widget.enableAnimation && widget.enableBorderAnimation
+            ? _isPressed || _isHovered
+                ? _borderAnimation.value
+                : widget.borderWidth
+            : widget.borderWidth;
 
-    final effectiveBorderColor = widget.borderColor ?? AppColors.white.withOpacity(0.5);
+    final effectiveBorderColor =
+        widget.borderColor ?? AppColors.white.withOpacity(0.5);
 
     return Container(
       margin: widget.margin,
@@ -179,8 +181,12 @@ class _GlassContainerState extends State<GlassContainer>
           onTapUp: widget.onTap != null ? _onTapUp : null,
           onTapCancel: widget.onTap != null ? _onTapCancel : null,
           child: MouseRegion(
-            onEnter: widget.enableHoverEffect && widget.onTap != null ? (_) => _onHover(true) : null,
-            onExit: widget.enableHoverEffect && widget.onTap != null ? (_) => _onHover(false) : null,
+            onEnter: widget.enableHoverEffect && widget.onTap != null
+                ? (_) => _onHover(true)
+                : null,
+            onExit: widget.enableHoverEffect && widget.onTap != null
+                ? (_) => _onHover(false)
+                : null,
             child: AnimatedContainer(
               duration: widget.animationDuration,
               clipBehavior: widget.clipBehavior,
@@ -190,21 +196,22 @@ class _GlassContainerState extends State<GlassContainer>
                   color: effectiveBorderColor,
                   width: effectiveBorderWidth,
                 ),
-                boxShadow: widget.boxShadow ?? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    spreadRadius: 0,
-                    offset: const Offset(0, 5),
-                  ),
-                  if (_isHovered)
-                    BoxShadow(
-                      color: AppColors.primaryPurple.withOpacity(0.1),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 5),
-                    ),
-                ],
+                boxShadow: widget.boxShadow ??
+                    [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 5),
+                      ),
+                      if (_isHovered)
+                        BoxShadow(
+                          color: AppColors.primaryPurple.withOpacity(0.1),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 5),
+                        ),
+                    ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -222,7 +229,8 @@ class _GlassContainerState extends State<GlassContainer>
                             end: widget.gradientEnd ?? Alignment.bottomRight,
                             colors: [
                               AppColors.white.withOpacity(effectiveOpacity),
-                              AppColors.white.withOpacity(effectiveOpacity * 0.7),
+                              AppColors.white
+                                  .withOpacity(effectiveOpacity * 0.7),
                             ],
                           ),
                       borderRadius: BorderRadius.circular(widget.borderRadius),
