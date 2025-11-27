@@ -203,7 +203,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                   children: [
                     _buildCircleButton(
                       icon: Icons.close_rounded,
-                      onTap: () => context.pop(),
+                      onTap: () => context.go('/my-creations'),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
