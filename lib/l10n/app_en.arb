@@ -111,5 +111,167 @@
   "warning": "Warning",
   "info": "Information",
   "confirm": "Confirm",
-  "close": "Close"
+  "close": "Close",
+
+  "step1Script": "Script",
+  "step2Voice": "Voice",
+  "step3Video": "Video",
+  "all": "All",
+  "videos": "Videos",
+  "images": "Images",
+  "noCreationsYetMessage": "Start creating your first video!",
+  "selectVideo": "Select Video",
+  "enterPassword": "Enter Password",
+  "accountSettings": "Account Settings",
+  "otpVerification": "OTP Verification",
+  "enterOtp": "Enter OTP",
+  "verify": "Verify",
+  "resend": "Resend",
+  "twoFactor": "Two-Factor Authentication",
+  "musicTrack": "Music Track",
+  "voiceNarration": "Voice Narration",
+  "noMusicSelected": "No Music Selected",
+  "noVoiceSelected": "No Voice Selected",
+  "selectMusicTrack": "Select Music Track",
+  "addVoiceNarration": "Add Voice Narration",
+  "confirmation": "Confirmation",
+  "reviewCreation": "Review Your Creation",
+  "titleRequired": "Title is required",
+  "descriptionOptional": "Description (optional)",
+  "creationTitle": "Creation Title",
+  "creationDescription": "Description",
+  "tapToUnlock": "Tap to Unlock",
+  "appLocked": "App Locked",
+  "unknownError": "Unknown Error",
+  "tryAgain": "Try Again",
+  "processing": "Processing",
+  "waitForOtp": "Waiting for OTP code",
+  "empty": "Empty",
+  "name": "Name",
+  "created": "Created",
+  "dateFormat": "MMM dd, yyyy",
+  "deleteConfirmation": "Are you sure?",
+  "deleteCreationMsg": "This action cannot be undone",
+  "yes": "Yes",
+  "no": "No",
+  "copied": "Copied to clipboard",
+  "error": "Error",
+  "ok": "OK",
+
+  "whatToCreate": "What would you like to create?",
+  "describeYourIdea": "Describe your video idea and let AI do the magic.",
+  "enhance": "Enhance",
+  "promptEnhanced": "Prompt enhanced! ✨",
+  "charsCount": "{count} chars",
+  "@charsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "errorMessage": "Error: {error}",
+  "@errorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "guestLoginDisabled": "Guest login is disabled. Please enable Anonymous Auth in Firebase Console.",
+  "phoneInputHint": "000 000 0000",
+  "otpInputHint": "••••••",
+
+  "accountSettings": "Account Settings",
+  "fullName": "Full Name",
+  "enterYourName": "Enter your name",
+  "phoneNumber": "Phone Number",
+  "phoneInputPlaceholder": "+1 (555) 123-4567",
+  "language": "Language",
+  "privacy": "Privacy",
+  "deleteAccount": "Delete Account",
+  "logout": "Logout",
+
+  "appName": "Aqvioo",
+  "appSubtitle": "AI-Powered Content Creation",
+
+  "yourIdea": "📝 Your Idea",
+  "settingsSection": "⚙️ Settings",
+  "edit": "Edit",
+  "outputType": "Output Type",
+  "video": "Video",
+  "image": "Image",
+  "style": "Style",
+  "aspectRatio": "Aspect Ratio",
+  "aspectRatio16x9": "16:9 (Horizontal)",
+  "aspectRatio9x16": "9:16 (Vertical)",
+  "voice": "Voice",
+  "female": "Female",
+  "male": "Male",
+  "size": "Size",
+  "costSection": "💰 Cost",
+  "cost": "2.99",
+  "currency": "ر.س",
+  "loginRequired": "Login Required",
+  "pleaseLoginToGenerate": "Please login to generate your video.",
+  "generateMagic": "Generate Magic",
+
+  "dialectSaudi": "Saudi",
+  "dialectEgyptian": "Egyptian",
+  "dialectUAE": "UAE",
+  "dialectLebanese": "Lebanese",
+  "dialectJordanian": "Jordanian",
+  "dialectMoroccan": "Moroccan",
+
+  "sizeSquare": "Square (1024x1024)",
+  "sizeLandscape": "Landscape (1920x1080)",
+  "sizePortrait": "Portrait (1080x1920)",
+
+  "chooseVisualMood": "Choose the visual mood of your video",
+  "selectVideoLength": "Select video length",
+  "chooseVideoOrientation": "Choose video orientation",
+  "configureNarratorVoice": "Configure narrator voice",
+
+  "durationQuick": "Quick",
+  "durationStandard": "Standard",
+
+  "bestForYouTube": "Best for YouTube",
+  "bestForTikTok": "Best for TikTok",
+
+  "noCreationsYetTitle": "No creations yet",
+  "startCreatingVideos": "Start creating amazing videos!",
+
+  "scriptStep": "Script",
+  "audioStep": "Audio",
+  "videoStep": "Video",
+  "backgroundGenerationInfo": "You can safely exit the app. Your video will continue generating in the background.",
+
+  "mediaGallery": "Media Gallery",
+  "createNow": "Create Now",
+
+  "videoDownloadSuccess": "Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.",
+  "downloadError": "Error: {error}",
+  "@downloadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareError": "Share failed: {error}",
+  "@shareError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "completeYourPayment": "Complete Your Payment",
+  "totalAmount": "Total Amount",
+  "payWithTabby": "Pay with Tabby",
+  "payWithApplePay": "Pay with Apple Pay",
+  "payWithSTCPay": "Pay with STC Pay",
+  "payWithCard": "Pay with Card"
 }

@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.aqvioo.app"
-    compileSdk = 35
+    compileSdk = 36
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.aqvioo.app"
-        minSdk = 23  // Firebase cloud_firestore minimum requirement
+        minSdk = 23  // CRITICAL: All Firebase plugins need 23. DO NOT CHANGE THIS!
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"

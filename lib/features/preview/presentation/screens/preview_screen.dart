@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/file_utils.dart';
 
@@ -200,41 +201,38 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildGlassButton(
-                      icon: Icons.close,
+                    _buildCircleButton(
+                      icon: Icons.close_rounded,
                       onTap: () => context.pop(),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                        horizontal: 20,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Text(
-                            'Preview',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  color: const Color(0xFF1F2937),
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
+                        ],
+                      ),
+                      child: Text(
+                        'Preview',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
-                    _buildGlassButton(
-                      icon: Icons.ios_share,
+                    _buildCircleButton(
+                      icon: Icons.ios_share_rounded,
                       onTap: _handleShare,
                     ),
                   ],
@@ -249,162 +247,167 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
             left: 16,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.3)),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Timeline/Progress
+                  Row(
                     children: [
-                      // Timeline/Progress
-                      Row(
-                        children: [
-                          Text(
-                            _videoPlayerController != null
-                                ? _formatDuration(
-                                    _videoPlayerController!.value.position,
-                                  )
-                                : '0:00',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF374151),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: GestureDetector(
-                              onTapDown: (details) {
-                                if (_videoPlayerController == null) return;
-                                final box =
-                                    context.findRenderObject() as RenderBox?;
-                                if (box == null) return;
-                                final localX = details.localPosition.dx;
-                                final width = box.size.width - 100;
-                                final position =
-                                    (localX / width).clamp(0.0, 1.0);
-                                final duration =
-                                    _videoPlayerController!.value.duration;
-                                _videoPlayerController!.seekTo(
-                                  Duration(
-                                    milliseconds:
-                                        (duration.inMilliseconds * position)
-                                            .toInt(),
-                                  ),
-                                );
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: _videoPlayerController != null &&
-                                          _videoPlayerController!.value.duration
-                                                  .inMilliseconds >
-                                              0
-                                      ? _videoPlayerController!
-                                              .value.position.inMilliseconds /
-                                          _videoPlayerController!
-                                              .value.duration.inMilliseconds
-                                      : 0.0,
-                                  backgroundColor:
-                                      Colors.white.withOpacity(0.3),
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                    AppColors.primaryPurple,
-                                  ),
-                                  minHeight: 6,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _videoPlayerController != null
-                                ? _formatDuration(
-                                    _videoPlayerController!.value.duration,
-                                  )
-                                : '0:30',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF374151),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        _videoPlayerController != null
+                            ? _formatDuration(
+                                _videoPlayerController!.value.position,
+                              )
+                            : '0:00',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          fontFeatures: [const FontFeature.tabularFigures()],
+                        ),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Control Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildControlButton(
-                            icon: _isDownloading
-                                ? Icons.downloading
-                                : Icons.download,
-                            onTap: _isDownloading ? null : _handleDownload,
-                          ),
-                          _buildControlButton(
-                            icon: Icons.content_cut,
-                            onTap: () {
-                              // Handle cut/trim
-                            },
-                          ),
-                          // Play/Pause Button (larger)
-                          GestureDetector(
-                            onTap: _togglePlayPause,
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryPurple,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryPurple
-                                        .withOpacity(0.4),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTapDown: (details) {
+                            if (_videoPlayerController == null) return;
+                            final box =
+                                context.findRenderObject() as RenderBox?;
+                            if (box == null) return;
+                            final localX = details.localPosition.dx;
+                            final width = box.size.width - 100;
+                            final position = (localX / width).clamp(0.0, 1.0);
+                            final duration =
+                                _videoPlayerController!.value.duration;
+                            _videoPlayerController!.seekTo(
+                              Duration(
+                                milliseconds:
+                                    (duration.inMilliseconds * position)
+                                        .toInt(),
                               ),
-                              child: Icon(
-                                _isPlaying ? Icons.pause : Icons.play_arrow,
-                                color: Colors.white,
-                                size: 36,
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: _videoPlayerController != null &&
+                                      _videoPlayerController!
+                                              .value.duration.inMilliseconds >
+                                          0
+                                  ? _videoPlayerController!
+                                          .value.position.inMilliseconds /
+                                      _videoPlayerController!
+                                          .value.duration.inMilliseconds
+                                  : 0.0,
+                              backgroundColor: Colors.white.withOpacity(0.3),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.primaryPurple,
                               ),
+                              minHeight: 6,
                             ),
                           ),
-                          _buildControlButton(
-                            icon: Icons.auto_fix_high,
-                            onTap: () {
-                              // Handle effects
-                            },
-                          ),
-                          _buildControlButton(
-                            icon: Icons.style,
-                            onTap: () {
-                              // Handle styles
-                            },
-                          ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _videoPlayerController != null
+                            ? _formatDuration(
+                                _videoPlayerController!.value.duration,
+                              )
+                            : '0:30',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          fontFeatures: [const FontFeature.tabularFigures()],
+                        ),
                       ),
                     ],
                   ),
-                ),
+
+                  const SizedBox(height: 12),
+
+                  // Control Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildControlButton(
+                        icon: _isDownloading
+                            ? Icons.downloading_rounded
+                            : Icons.download_rounded,
+                        onTap: _isDownloading ? null : _handleDownload,
+                      ),
+                      _buildControlButton(
+                        icon: Icons.content_cut_rounded,
+                        onTap: () {
+                          // Handle cut/trim
+                        },
+                      ),
+                      // Play/Pause Button (larger)
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _togglePlayPause,
+                          borderRadius: BorderRadius.circular(35),
+                          child: Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primaryPurple,
+                                  Color(0xFF9F7AEA),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      AppColors.primaryPurple.withOpacity(0.4),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              _isPlaying
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildControlButton(
+                        icon: Icons.auto_fix_high_rounded,
+                        onTap: () {
+                          // Handle effects
+                        },
+                      ),
+                      _buildControlButton(
+                        icon: Icons.style_rounded,
+                        onTap: () {
+                          // Handle styles
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -413,25 +416,33 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
     );
   }
 
-  Widget _buildGlassButton({
+  Widget _buildCircleButton({
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Icon(icon, color: const Color(0xFF1F2937), size: 24),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: AppColors.textPrimary,
+            size: 24,
           ),
         ),
       ),
@@ -442,18 +453,26 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
     required IconData icon,
     required VoidCallback? onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: onTap == null ? 0.5 : 1.0,
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(24),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Opacity(
+          opacity: onTap == null ? 0.5 : 1.0,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.textSecondary,
+              size: 24,
+            ),
           ),
-          child: Icon(icon, color: const Color(0xFF374151), size: 24),
         ),
       ),
     );

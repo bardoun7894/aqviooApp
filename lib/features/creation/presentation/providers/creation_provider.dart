@@ -66,16 +66,13 @@ class CreationState {
 }
 
 class CreationController extends Notifier<CreationState> {
-  late final AIService _aiService;
-  late final KieAIService _kieAI;
+  AIService get _aiService => ref.read(aiServiceProvider);
+  KieAIService get _kieAI => ref.read(kieAIServiceProvider);
   final CreationRepository _repository = CreationRepository();
   final _uuid = const Uuid();
 
   @override
   CreationState build() {
-    _aiService = ref.watch(aiServiceProvider);
-    _kieAI = ref.watch(kieAIServiceProvider);
-
     // Watch auth state to reload creations when user logs in/out
     ref.watch(authStateProvider);
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:video_player/video_player.dart';
@@ -50,11 +51,11 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                     Expanded(
                       child: Text(
                         'My Creations',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: const Color(0xFF1F2937),
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -129,16 +130,19 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
           const SizedBox(height: 16),
           Text(
             'No creations yet',
-            style: TextStyle(
+            style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Start creating amazing videos!',
-            style: TextStyle(color: Colors.grey[500]),
+            style: GoogleFonts.outfit(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -150,25 +154,39 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
 
     return GestureDetector(
       onTap: () => setState(() => _selectedFilter = label),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryPurple : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color:
-                isSelected ? AppColors.primaryPurple : const Color(0xFFE5E7EB),
-            width: 1.5,
+            color: isSelected
+                ? AppColors.primaryPurple
+                : AppColors.glassBorder.withOpacity(0.5),
+            width: isSelected ? 1.5 : 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.primaryPurple.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: isSelected ? 8 : 4,
+              offset: Offset(0, isSelected ? 4 : 2),
+            ),
+          ],
         ),
         child: Center(
           child: Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isSelected ? Colors.white : const Color(0xFF52525B),
-                  fontWeight: FontWeight.w500,
-                ),
+            style: GoogleFonts.outfit(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       ),
@@ -295,11 +313,17 @@ class _CreationCardState extends State<CreationCard>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,9 +408,10 @@ class _CreationCardState extends State<CreationCard>
                           child: Text(
                             'Generating Magic...',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 14,
                               shadows: [
                                 Shadow(
                                   color: Colors.black.withOpacity(0.5),
@@ -411,34 +436,39 @@ class _CreationCardState extends State<CreationCard>
                       item.prompt,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: const Color(0xFF1F2937),
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        height: 1.3,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Icon(
-                          isVideo ? Icons.videocam : Icons.image,
+                          isVideo
+                              ? Icons.videocam_rounded
+                              : Icons.image_rounded,
                           size: 16,
-                          color: const Color(0xFF6B7280),
+                          color: AppColors.textSecondary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           '${isVideo ? "Video" : "Image"} • ${item.duration ?? "Standard"}',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF6B7280),
-                                  ),
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         const Spacer(),
                         Text(
                           DateFormat('MMM d, yyyy').format(item.createdAt),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF9CA3AF),
-                                  ),
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: AppColors.textHint,
+                          ),
                         ),
                       ],
                     ),
@@ -446,7 +476,11 @@ class _CreationCardState extends State<CreationCard>
                       const SizedBox(height: 8),
                       Text(
                         'Error: ${item.errorMessage}',
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                        style: GoogleFonts.outfit(
+                          color: Colors.red,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ],

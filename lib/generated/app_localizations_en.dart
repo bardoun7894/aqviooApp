@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -54,7 +56,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stepFinalize => 'Finalize';
 
   @override
-  String get ideaStepPlaceholder => 'Describe your video idea... e.g., \'A futuristic city with flying cars\'';
+  String get ideaStepPlaceholder =>
+      'Describe your video idea... e.g., \'A futuristic city with flying cars\'';
 
   @override
   String get addImage => 'Add Image';
@@ -72,8 +75,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promptRequired => 'Please enter a prompt to continue';
 
   @override
-  String errorMessage(String message) {
-    return 'Error: $message';
+  String errorMessage(String error) {
+    return 'Error: $error';
   }
 
   @override
@@ -306,4 +309,338 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get step1Script => 'Script';
+
+  @override
+  String get step2Voice => 'Voice';
+
+  @override
+  String get step3Video => 'Video';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get images => 'Images';
+
+  @override
+  String get noCreationsYetMessage => 'Start creating your first video!';
+
+  @override
+  String get selectVideo => 'Select Video';
+
+  @override
+  String get enterPassword => 'Enter Password';
+
+  @override
+  String get accountSettings => 'Account Settings';
+
+  @override
+  String get otpVerification => 'OTP Verification';
+
+  @override
+  String get enterOtp => 'Enter OTP';
+
+  @override
+  String get resend => 'Resend';
+
+  @override
+  String get twoFactor => 'Two-Factor Authentication';
+
+  @override
+  String get musicTrack => 'Music Track';
+
+  @override
+  String get voiceNarration => 'Voice Narration';
+
+  @override
+  String get noMusicSelected => 'No Music Selected';
+
+  @override
+  String get noVoiceSelected => 'No Voice Selected';
+
+  @override
+  String get selectMusicTrack => 'Select Music Track';
+
+  @override
+  String get addVoiceNarration => 'Add Voice Narration';
+
+  @override
+  String get confirmation => 'Confirmation';
+
+  @override
+  String get reviewCreation => 'Review Your Creation';
+
+  @override
+  String get titleRequired => 'Title is required';
+
+  @override
+  String get descriptionOptional => 'Description (optional)';
+
+  @override
+  String get creationTitle => 'Creation Title';
+
+  @override
+  String get creationDescription => 'Description';
+
+  @override
+  String get tapToUnlock => 'Tap to Unlock';
+
+  @override
+  String get appLocked => 'App Locked';
+
+  @override
+  String get unknownError => 'Unknown Error';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get processing => 'Processing';
+
+  @override
+  String get waitForOtp => 'Waiting for OTP code';
+
+  @override
+  String get empty => 'Empty';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get created => 'Created';
+
+  @override
+  String get dateFormat => 'MMM dd, yyyy';
+
+  @override
+  String get deleteConfirmation => 'Are you sure?';
+
+  @override
+  String get deleteCreationMsg => 'This action cannot be undone';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get copied => 'Copied to clipboard';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get whatToCreate => 'What would you like to create?';
+
+  @override
+  String get describeYourIdea =>
+      'Describe your video idea and let AI do the magic.';
+
+  @override
+  String get enhance => 'Enhance';
+
+  @override
+  String get promptEnhanced => 'Prompt enhanced! ✨';
+
+  @override
+  String charsCount(int count) {
+    return '$count chars';
+  }
+
+  @override
+  String get guestLoginDisabled =>
+      'Guest login is disabled. Please enable Anonymous Auth in Firebase Console.';
+
+  @override
+  String get phoneInputHint => '000 000 0000';
+
+  @override
+  String get otpInputHint => '••••••';
+
+  @override
+  String get fullName => 'Full Name';
+
+  @override
+  String get enterYourName => 'Enter your name';
+
+  @override
+  String get phoneNumber => 'Phone Number';
+
+  @override
+  String get phoneInputPlaceholder => '+1 (555) 123-4567';
+
+  @override
+  String get privacy => 'Privacy';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get appName => 'Aqvioo';
+
+  @override
+  String get appSubtitle => 'AI-Powered Content Creation';
+
+  @override
+  String get yourIdea => '📝 Your Idea';
+
+  @override
+  String get settingsSection => '⚙️ Settings';
+
+  @override
+  String get outputType => 'Output Type';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get style => 'Style';
+
+  @override
+  String get aspectRatio16x9 => '16:9 (Horizontal)';
+
+  @override
+  String get aspectRatio9x16 => '9:16 (Vertical)';
+
+  @override
+  String get voice => 'Voice';
+
+  @override
+  String get size => 'Size';
+
+  @override
+  String get costSection => '💰 Cost';
+
+  @override
+  String get cost => '2.99';
+
+  @override
+  String get currency => 'ر.س';
+
+  @override
+  String get loginRequired => 'Login Required';
+
+  @override
+  String get pleaseLoginToGenerate => 'Please login to generate your video.';
+
+  @override
+  String get generateMagic => 'Generate Magic';
+
+  @override
+  String get dialectSaudi => 'Saudi';
+
+  @override
+  String get dialectEgyptian => 'Egyptian';
+
+  @override
+  String get dialectUAE => 'UAE';
+
+  @override
+  String get dialectLebanese => 'Lebanese';
+
+  @override
+  String get dialectJordanian => 'Jordanian';
+
+  @override
+  String get dialectMoroccan => 'Moroccan';
+
+  @override
+  String get sizeSquare => 'Square (1024x1024)';
+
+  @override
+  String get sizeLandscape => 'Landscape (1920x1080)';
+
+  @override
+  String get sizePortrait => 'Portrait (1080x1920)';
+
+  @override
+  String get chooseVisualMood => 'Choose the visual mood of your video';
+
+  @override
+  String get selectVideoLength => 'Select video length';
+
+  @override
+  String get chooseVideoOrientation => 'Choose video orientation';
+
+  @override
+  String get configureNarratorVoice => 'Configure narrator voice';
+
+  @override
+  String get durationQuick => 'Quick';
+
+  @override
+  String get durationStandard => 'Standard';
+
+  @override
+  String get bestForYouTube => 'Best for YouTube';
+
+  @override
+  String get bestForTikTok => 'Best for TikTok';
+
+  @override
+  String get noCreationsYetTitle => 'No creations yet';
+
+  @override
+  String get startCreatingVideos => 'Start creating amazing videos!';
+
+  @override
+  String get scriptStep => 'Script';
+
+  @override
+  String get audioStep => 'Audio';
+
+  @override
+  String get videoStep => 'Video';
+
+  @override
+  String get backgroundGenerationInfo =>
+      'You can safely exit the app. Your video will continue generating in the background.';
+
+  @override
+  String get mediaGallery => 'Media Gallery';
+
+  @override
+  String get createNow => 'Create Now';
+
+  @override
+  String get videoDownloadSuccess =>
+      'Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.';
+
+  @override
+  String downloadError(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String shareError(String error) {
+    return 'Share failed: $error';
+  }
+
+  @override
+  String get completeYourPayment => 'Complete Your Payment';
+
+  @override
+  String get totalAmount => 'Total Amount';
+
+  @override
+  String get payWithTabby => 'Pay with Tabby';
+
+  @override
+  String get payWithApplePay => 'Pay with Apple Pay';
+
+  @override
+  String get payWithSTCPay => 'Pay with STC Pay';
+
+  @override
+  String get payWithCard => 'Pay with Card';
 }

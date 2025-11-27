@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../generated/app_localizations.dart';
 import '../providers/locale_provider.dart';
 import '../theme/app_colors.dart';
+import '../../features/auth/data/auth_repository.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -11,6 +14,7 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isAnonymous = ref.watch(authRepositoryProvider).isAnonymous;
 
     return Drawer(
       child: Container(
@@ -49,6 +53,31 @@ class AppDrawer extends ConsumerWidget {
                                 color: AppColors.primaryPurple,
                                 fontWeight: FontWeight.bold,
                               ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isAnonymous
+                            ? Colors.orange.withOpacity(0.1)
+                            : Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isAnonymous ? Colors.orange : Colors.green,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        isAnonymous ? 'Guest' : 'Authenticated',
+                        style: TextStyle(
+                          color: isAnonymous ? Colors.orange : Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -114,6 +143,58 @@ class AppDrawer extends ConsumerWidget {
               ),
 
               const Spacer(),
+
+              // Logout Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      await ref.read(authControllerProvider.notifier).signOut();
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.red.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.logout,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.logout,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
 
               // Version info
               Padding(

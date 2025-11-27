@@ -11,7 +11,7 @@ import '../../../../generated/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/animated_gradient_blob.dart';
 import '../../../../core/widgets/app_drawer.dart';
-import '../../../../core/widgets/glass_container.dart';
+
 import '../../../../core/widgets/neumorphic_container.dart';
 import '../../../creation/presentation/providers/creation_provider.dart';
 
@@ -88,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Prompt enhanced! ✨'),
+        content: Text(AppLocalizations.of(context)!.promptEnhanced),
         backgroundColor: AppColors.primaryPurple,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -397,84 +397,102 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "What would you like to create?",
+            AppLocalizations.of(context)!.whatToCreate,
             style: GoogleFonts.outfit(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+              height: 1.2,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
-            "Describe your video idea and let AI do the magic.",
+            AppLocalizations.of(context)!.describeYourIdea,
             style: GoogleFonts.outfit(
-              fontSize: 16,
+              fontSize: 15,
               color: AppColors.textSecondary,
+              letterSpacing: 0.2,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
 
-          // Glassmorphic Input Card
-          GlassContainer(
-            borderRadius: 24,
-            blurIntensity: 15,
-            opacity: 0.6,
-            borderColor:
-                AppColors.primaryPurple.withOpacity(0.3), // Visible border
-            borderWidth: 1.5,
+          // Clean Material Design Input Card
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header Row with Enhance Button only
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      'Describe your video',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
                     // Enhance Button
-                    TextButton.icon(
-                      onPressed: _enhancePrompt,
-                      icon: const Icon(
-                        Icons.auto_awesome,
-                        size: 16,
-                        color: AppColors.primaryPurple,
-                      ),
-                      label: Text(
-                        'Enhance',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryPurple,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        backgroundColor:
-                            AppColors.primaryPurple.withOpacity(0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _enhancePrompt,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryPurple.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: AppColors.primaryPurple.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: AppColors.primaryPurple,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                AppLocalizations.of(context)!.enhance,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryPurple,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Container(
-                  constraints: const BoxConstraints(minHeight: 150),
+                  constraints:
+                      const BoxConstraints(minHeight: 100), // Reduced from 150
                   child: TextField(
                     controller: _promptController,
                     maxLines: null,
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 16,
                       color: AppColors.textPrimary,
                       height: 1.5,
                     ),
@@ -483,7 +501,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           AppLocalizations.of(context)!.ideaStepPlaceholder,
                       hintStyle: GoogleFonts.outfit(
                         color: AppColors.textHint,
-                        fontSize: 18,
+                        fontSize: 16,
                       ),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -494,63 +512,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     onChanged: (value) => setState(() {}),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16), // Reduced from 24
 
-                // Image Attachment Area
-                if (_selectedImage != null)
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          _selectedImage!,
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: _removeImage,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
-                              shape: BoxShape.circle,
+                // Bottom Row: Image Upload & Character Counter
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Image Attachment Area
+                    if (_selectedImage != null)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(
+                              _selectedImage!,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
                             ),
-                            child: const Icon(Icons.close,
-                                color: Colors.white, size: 16),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: _removeImage,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    color: Colors.white, size: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryPurple.withOpacity(0.05),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primaryPurple.withOpacity(0.2),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.add_photo_alternate_rounded,
+                            color: AppColors.primaryPurple,
+                            size: 20,
                           ),
                         ),
                       ),
-                    ],
-                  )
-                else
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withOpacity(0.05),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primaryPurple.withOpacity(0.2),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.add_photo_alternate_rounded,
-                          color: AppColors.primaryPurple,
-                          size: 24,
-                        ),
+
+                    // Character Counter
+                    Text(
+                      AppLocalizations.of(context)!.charsCount(_promptController.text.length),
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: AppColors.textSecondary.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -587,6 +619,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     .goToPreviousStep(),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.transparent,
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.buttonBack,
@@ -601,42 +634,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (currentStep > 0) const SizedBox(width: 16),
           Expanded(
             flex: 2,
-            child: ElevatedButton(
+            child: _AnimatedGradientButton(
               onPressed: _canProceedToNextStep() ? _goToNextStep : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ).copyWith(
-                backgroundColor: MaterialStateProperty.resolveWith((states) {
-                  if (states.contains(MaterialState.disabled)) {
-                    return AppColors.mediumGray.withOpacity(0.3);
-                  }
-                  return AppColors.primaryPurple;
-                }),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.buttonNext,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, size: 20),
-                ],
-              ),
+              label: AppLocalizations.of(context)!.buttonNext,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AnimatedGradientButton extends StatefulWidget {
+  final VoidCallback? onPressed;
+  final String label;
+
+  const _AnimatedGradientButton({
+    required this.onPressed,
+    required this.label,
+  });
+
+  @override
+  State<_AnimatedGradientButton> createState() =>
+      _AnimatedGradientButtonState();
+}
+
+class _AnimatedGradientButtonState extends State<_AnimatedGradientButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = widget.onPressed != null;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isEnabled && _isHovered
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryPurple.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(16),
+            child: Ink(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: isEnabled
+                    ? AppColors.primaryPurple
+                    : AppColors.mediumGray.withOpacity(0.3),
+              ),
+              child: Container(
+                alignment: Alignment.center,
+                constraints: const BoxConstraints(minHeight: 56),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isEnabled ? Colors.white : AppColors.textHint,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    if (isEnabled) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

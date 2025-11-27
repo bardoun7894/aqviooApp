@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_animations/simple_animations.dart';
+import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -74,7 +75,7 @@ class MagicLoadingScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      state.currentStepMessage ?? "Creating Magic...",
+                      state.currentStepMessage ?? AppLocalizations.of(context)!.creatingMagic,
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 color: Colors.white,

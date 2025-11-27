@@ -16,8 +16,25 @@ class StyleConfigurationStep extends ConsumerStatefulWidget {
       _StyleConfigurationStepState();
 }
 
-class _StyleConfigurationStepState
-    extends ConsumerState<StyleConfigurationStep> {
+class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(creationControllerProvider).config;
@@ -35,9 +52,17 @@ class _StyleConfigurationStepState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Output Type Selector
-            _buildSectionHeader('Output Type'),
-            const SizedBox(height: 16),
-            _buildOutputTypeSelector(config.outputType, controller),
+            _buildAnimatedSection(
+              index: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildSectionHeader('Output Type'),
+                  const SizedBox(height: 16),
+                  _buildOutputTypeSelector(config.outputType, controller),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 32),
 
@@ -53,14 +78,61 @@ class _StyleConfigurationStepState
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.outfit(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
+  Widget _buildAnimatedSection({required int index, required Widget child}) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.2),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(
+            index * 0.1,
+            0.6 + (index * 0.1),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
       ),
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Interval(
+              index * 0.1,
+              0.6 + (index * 0.1),
+              curve: Curves.easeOut,
+            ),
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, {String? subtitle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -99,38 +171,46 @@ class _StyleConfigurationStepState
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: NeumorphicContainer(
-        borderRadius: 16,
-        depth: 3,
-        isConcave: isSelected,
-        intensity: 0.4,
-        border: Border.all(
-          color: isSelected ? AppColors.primaryPurple : AppColors.glassBorder,
-          width: 1.5,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.primaryPurple.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: isSelected ? 12 : 6,
+              offset: Offset(0, isSelected ? 4 : 2),
+            ),
+          ],
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primaryPurple
+                : AppColors.glassBorder.withOpacity(0.5),
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
-        color: isSelected
-            ? AppColors.primaryPurple.withOpacity(0.05)
-            : AppColors.white,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        child: Column(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 28,
-              color: isSelected
-                  ? AppColors.primaryPurple
-                  : AppColors.textSecondary,
+              size: 20,
+              color: isSelected ? Colors.white : AppColors.primaryPurple,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(width: 10),
             Text(
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? AppColors.primaryPurple
-                    : AppColors.textPrimary,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                letterSpacing: 0.2,
               ),
             ),
           ],
@@ -147,34 +227,70 @@ class _StyleConfigurationStepState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Style Selection
-        _buildSectionHeader('Style'),
-        const SizedBox(height: 16),
-        _buildStyleSelector(
-            config.videoStyle ?? VideoStyle.cinematic, controller),
-
-        const SizedBox(height: 32),
-
-        // Duration Selection
-        _buildSectionHeader('Duration'),
-        const SizedBox(height: 16),
-        _buildDurationSelector(config.videoDurationSeconds ?? 10, controller),
-
-        const SizedBox(height: 32),
-
-        // Aspect Ratio
-        _buildSectionHeader('Aspect Ratio'),
-        const SizedBox(height: 16),
-        _buildAspectRatioSelector(
-          config.videoAspectRatio ?? 'landscape',
-          controller,
+        _buildAnimatedSection(
+          index: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSectionHeader('Style',
+                  subtitle: 'Choose the visual mood of your video'),
+              const SizedBox(height: 16),
+              _buildStyleSelector(
+                  config.videoStyle ?? VideoStyle.cinematic, controller),
+            ],
+          ),
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
+
+        // Duration Selection
+        _buildAnimatedSection(
+          index: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSectionHeader('Duration', subtitle: 'Select video length'),
+              const SizedBox(height: 16),
+              _buildDurationSelector(
+                  config.videoDurationSeconds ?? 10, controller),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 40),
+
+        // Aspect Ratio
+        _buildAnimatedSection(
+          index: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSectionHeader('Aspect Ratio',
+                  subtitle: 'Choose video orientation'),
+              const SizedBox(height: 16),
+              _buildAspectRatioSelector(
+                config.videoAspectRatio ?? 'landscape',
+                controller,
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 40),
 
         // Voice Settings
-        _buildSectionHeader('Voice Settings'),
-        const SizedBox(height: 16),
-        _buildVoiceSettings(config, controller),
+        _buildAnimatedSection(
+          index: 4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSectionHeader('Voice Settings',
+                  subtitle: 'Configure narrator voice'),
+              const SizedBox(height: 16),
+              _buildVoiceSettings(config, controller),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -200,38 +316,50 @@ class _StyleConfigurationStepState
 
   Widget _buildStyleSelector(
       VideoStyle currentStyle, CreationController controller) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: VideoStyle.values.map((style) {
+    final styles = VideoStyle.values;
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 2.8,
+      children: styles.map((style) {
         final isSelected = currentStyle == style;
         return GestureDetector(
           onTap: () => controller.updateVideoStyle(style),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            child: NeumorphicContainer(
-              borderRadius: 16,
-              depth: 3,
-              isConcave: isSelected,
-              intensity: 0.4,
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isSelected ? AppColors.primaryPurple : Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: isSelected
+                      ? AppColors.primaryPurple.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.04),
+                  blurRadius: isSelected ? 12 : 6,
+                  offset: Offset(0, isSelected ? 4 : 2),
+                ),
+              ],
               border: Border.all(
                 color: isSelected
                     ? AppColors.primaryPurple
-                    : AppColors.glassBorder,
-                width: 1.5,
+                    : AppColors.glassBorder.withOpacity(0.5),
+                width: isSelected ? 1.5 : 1,
               ),
-              color: isSelected
-                  ? AppColors.primaryPurple.withOpacity(0.05)
-                  : AppColors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Center(
               child: Text(
                 style.displayName,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isSelected
-                      ? AppColors.primaryPurple
-                      : AppColors.textSecondary,
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -271,33 +399,49 @@ class _StyleConfigurationStepState
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: NeumorphicContainer(
-        borderRadius: 16,
-        depth: isSelected ? -3 : 3,
-        intensity: 0.6,
-        color: isSelected
-            ? AppColors.primaryPurple.withOpacity(0.05)
-            : AppColors.white,
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.primaryPurple.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: isSelected ? 12 : 6,
+              offset: Offset(0, isSelected ? 4 : 2),
+            ),
+          ],
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primaryPurple
+                : AppColors.glassBorder.withOpacity(0.5),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               '${duration}s',
               style: GoogleFonts.outfit(
-                fontSize: 24,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isSelected
-                    ? AppColors.primaryPurple
-                    : AppColors.textPrimary,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(width: 8),
             Text(
-              duration == 10 ? 'Fast' : 'Longer',
+              duration == 10 ? 'Quick' : 'Standard',
               style: GoogleFonts.outfit(
-                fontSize: 12,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
                 color: isSelected
-                    ? AppColors.primaryPurple.withOpacity(0.7)
+                    ? Colors.white.withOpacity(0.9)
                     : AppColors.textSecondary,
               ),
             ),
@@ -348,46 +492,87 @@ class _StyleConfigurationStepState
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: NeumorphicContainer(
-        borderRadius: 16,
-        depth: 3,
-        isConcave: isSelected,
-        intensity: 0.4,
-        border: Border.all(
-          color: isSelected ? AppColors.primaryPurple : AppColors.glassBorder,
-          width: 1.5,
-        ),
-        color: isSelected
-            ? AppColors.primaryPurple.withOpacity(0.05)
-            : AppColors.white,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        child: Column(
-          children: [
-            Icon(
-              icon,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
+          boxShadow: [
+            BoxShadow(
               color: isSelected
-                  ? AppColors.primaryPurple
-                  : AppColors.textSecondary,
-              size: 28,
+                  ? AppColors.primaryPurple.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.08),
+              blurRadius: isSelected ? 20 : 10,
+              offset: Offset(0, isSelected ? 8 : 4),
             ),
-            const SizedBox(height: 12),
+          ],
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primaryPurple
+                : AppColors.glassBorder.withOpacity(0.5),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withOpacity(0.2)
+                    : AppColors.primaryPurple.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                icon,
+                size: 48,
+                color: isSelected ? Colors.white : AppColors.primaryPurple,
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               label,
               style: GoogleFonts.outfit(
-                fontSize: 16,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: isSelected
-                    ? AppColors.primaryPurple
-                    : AppColors.textPrimary,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                letterSpacing: 0.2,
               ),
             ),
+            const SizedBox(height: 8),
             Text(
               subtitle,
               style: GoogleFonts.outfit(
-                fontSize: 12,
+                fontSize: 14,
                 color: isSelected
-                    ? AppColors.primaryPurple.withOpacity(0.7)
+                    ? Colors.white.withOpacity(0.85)
                     : AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withOpacity(0.15)
+                    : AppColors.primaryPurple.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                ratio == 'landscape' ? 'Best for YouTube' : 'Best for TikTok',
+                style: GoogleFonts.outfit(
+                  fontSize: 11,
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.9)
+                      : AppColors.primaryPurple.withOpacity(0.7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ],

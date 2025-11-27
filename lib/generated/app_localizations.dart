@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,7 +84,8 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
     delegate,
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -224,8 +227,8 @@ abstract class AppLocalizations {
   /// No description provided for @errorMessage.
   ///
   /// In en, this message translates to:
-  /// **'Error: {message}'**
-  String errorMessage(String message);
+  /// **'Error: {error}'**
+  String errorMessage(String error);
 
   /// No description provided for @myCreations.
   ///
@@ -688,9 +691,658 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @step1Script.
+  ///
+  /// In en, this message translates to:
+  /// **'Script'**
+  String get step1Script;
+
+  /// No description provided for @step2Voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get step2Voice;
+
+  /// No description provided for @step3Video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get step3Video;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @images.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get images;
+
+  /// No description provided for @noCreationsYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Start creating your first video!'**
+  String get noCreationsYetMessage;
+
+  /// No description provided for @selectVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Video'**
+  String get selectVideo;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Password'**
+  String get enterPassword;
+
+  /// No description provided for @accountSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Settings'**
+  String get accountSettings;
+
+  /// No description provided for @otpVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP Verification'**
+  String get otpVerification;
+
+  /// No description provided for @enterOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter OTP'**
+  String get enterOtp;
+
+  /// No description provided for @resend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend'**
+  String get resend;
+
+  /// No description provided for @twoFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-Factor Authentication'**
+  String get twoFactor;
+
+  /// No description provided for @musicTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Track'**
+  String get musicTrack;
+
+  /// No description provided for @voiceNarration.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Narration'**
+  String get voiceNarration;
+
+  /// No description provided for @noMusicSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No Music Selected'**
+  String get noMusicSelected;
+
+  /// No description provided for @noVoiceSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No Voice Selected'**
+  String get noVoiceSelected;
+
+  /// No description provided for @selectMusicTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Music Track'**
+  String get selectMusicTrack;
+
+  /// No description provided for @addVoiceNarration.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Voice Narration'**
+  String get addVoiceNarration;
+
+  /// No description provided for @confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation'**
+  String get confirmation;
+
+  /// No description provided for @reviewCreation.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Your Creation'**
+  String get reviewCreation;
+
+  /// No description provided for @titleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Title is required'**
+  String get titleRequired;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (optional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @creationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creation Title'**
+  String get creationTitle;
+
+  /// No description provided for @creationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get creationDescription;
+
+  /// No description provided for @tapToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to Unlock'**
+  String get tapToUnlock;
+
+  /// No description provided for @appLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'App Locked'**
+  String get appLocked;
+
+  /// No description provided for @unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Error'**
+  String get unknownError;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get processing;
+
+  /// No description provided for @waitForOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for OTP code'**
+  String get waitForOtp;
+
+  /// No description provided for @empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get empty;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get created;
+
+  /// No description provided for @dateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'MMM dd, yyyy'**
+  String get dateFormat;
+
+  /// No description provided for @deleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get deleteConfirmation;
+
+  /// No description provided for @deleteCreationMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone'**
+  String get deleteCreationMsg;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// No description provided for @copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copied;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @whatToCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to create?'**
+  String get whatToCreate;
+
+  /// No description provided for @describeYourIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your video idea and let AI do the magic.'**
+  String get describeYourIdea;
+
+  /// No description provided for @enhance.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhance'**
+  String get enhance;
+
+  /// No description provided for @promptEnhanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt enhanced! ✨'**
+  String get promptEnhanced;
+
+  /// No description provided for @charsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chars'**
+  String charsCount(int count);
+
+  /// No description provided for @guestLoginDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest login is disabled. Please enable Anonymous Auth in Firebase Console.'**
+  String get guestLoginDisabled;
+
+  /// No description provided for @phoneInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'000 000 0000'**
+  String get phoneInputHint;
+
+  /// No description provided for @otpInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'••••••'**
+  String get otpInputHint;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Name'**
+  String get fullName;
+
+  /// No description provided for @enterYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name'**
+  String get enterYourName;
+
+  /// No description provided for @phoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Number'**
+  String get phoneNumber;
+
+  /// No description provided for @phoneInputPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 (555) 123-4567'**
+  String get phoneInputPlaceholder;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'Aqvioo'**
+  String get appName;
+
+  /// No description provided for @appSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-Powered Content Creation'**
+  String get appSubtitle;
+
+  /// No description provided for @yourIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'📝 Your Idea'**
+  String get yourIdea;
+
+  /// No description provided for @settingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'⚙️ Settings'**
+  String get settingsSection;
+
+  /// No description provided for @outputType.
+  ///
+  /// In en, this message translates to:
+  /// **'Output Type'**
+  String get outputType;
+
+  /// No description provided for @video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get video;
+
+  /// No description provided for @image.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get image;
+
+  /// No description provided for @style.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get style;
+
+  /// No description provided for @aspectRatio16x9.
+  ///
+  /// In en, this message translates to:
+  /// **'16:9 (Horizontal)'**
+  String get aspectRatio16x9;
+
+  /// No description provided for @aspectRatio9x16.
+  ///
+  /// In en, this message translates to:
+  /// **'9:16 (Vertical)'**
+  String get aspectRatio9x16;
+
+  /// No description provided for @voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get voice;
+
+  /// No description provided for @size.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get size;
+
+  /// No description provided for @costSection.
+  ///
+  /// In en, this message translates to:
+  /// **'💰 Cost'**
+  String get costSection;
+
+  /// No description provided for @cost.
+  ///
+  /// In en, this message translates to:
+  /// **'2.99'**
+  String get cost;
+
+  /// No description provided for @currency.
+  ///
+  /// In en, this message translates to:
+  /// **'ر.س'**
+  String get currency;
+
+  /// No description provided for @loginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login Required'**
+  String get loginRequired;
+
+  /// No description provided for @pleaseLoginToGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Please login to generate your video.'**
+  String get pleaseLoginToGenerate;
+
+  /// No description provided for @generateMagic.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Magic'**
+  String get generateMagic;
+
+  /// No description provided for @dialectSaudi.
+  ///
+  /// In en, this message translates to:
+  /// **'Saudi'**
+  String get dialectSaudi;
+
+  /// No description provided for @dialectEgyptian.
+  ///
+  /// In en, this message translates to:
+  /// **'Egyptian'**
+  String get dialectEgyptian;
+
+  /// No description provided for @dialectUAE.
+  ///
+  /// In en, this message translates to:
+  /// **'UAE'**
+  String get dialectUAE;
+
+  /// No description provided for @dialectLebanese.
+  ///
+  /// In en, this message translates to:
+  /// **'Lebanese'**
+  String get dialectLebanese;
+
+  /// No description provided for @dialectJordanian.
+  ///
+  /// In en, this message translates to:
+  /// **'Jordanian'**
+  String get dialectJordanian;
+
+  /// No description provided for @dialectMoroccan.
+  ///
+  /// In en, this message translates to:
+  /// **'Moroccan'**
+  String get dialectMoroccan;
+
+  /// No description provided for @sizeSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Square (1024x1024)'**
+  String get sizeSquare;
+
+  /// No description provided for @sizeLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Landscape (1920x1080)'**
+  String get sizeLandscape;
+
+  /// No description provided for @sizePortrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Portrait (1080x1920)'**
+  String get sizePortrait;
+
+  /// No description provided for @chooseVisualMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the visual mood of your video'**
+  String get chooseVisualMood;
+
+  /// No description provided for @selectVideoLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Select video length'**
+  String get selectVideoLength;
+
+  /// No description provided for @chooseVideoOrientation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose video orientation'**
+  String get chooseVideoOrientation;
+
+  /// No description provided for @configureNarratorVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure narrator voice'**
+  String get configureNarratorVoice;
+
+  /// No description provided for @durationQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick'**
+  String get durationQuick;
+
+  /// No description provided for @durationStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get durationStandard;
+
+  /// No description provided for @bestForYouTube.
+  ///
+  /// In en, this message translates to:
+  /// **'Best for YouTube'**
+  String get bestForYouTube;
+
+  /// No description provided for @bestForTikTok.
+  ///
+  /// In en, this message translates to:
+  /// **'Best for TikTok'**
+  String get bestForTikTok;
+
+  /// No description provided for @noCreationsYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No creations yet'**
+  String get noCreationsYetTitle;
+
+  /// No description provided for @startCreatingVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Start creating amazing videos!'**
+  String get startCreatingVideos;
+
+  /// No description provided for @scriptStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Script'**
+  String get scriptStep;
+
+  /// No description provided for @audioStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audioStep;
+
+  /// No description provided for @videoStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get videoStep;
+
+  /// No description provided for @backgroundGenerationInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'You can safely exit the app. Your video will continue generating in the background.'**
+  String get backgroundGenerationInfo;
+
+  /// No description provided for @mediaGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Media Gallery'**
+  String get mediaGallery;
+
+  /// No description provided for @createNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Now'**
+  String get createNow;
+
+  /// No description provided for @videoDownloadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.'**
+  String get videoDownloadSuccess;
+
+  /// No description provided for @downloadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String downloadError(String error);
+
+  /// No description provided for @shareError.
+  ///
+  /// In en, this message translates to:
+  /// **'Share failed: {error}'**
+  String shareError(String error);
+
+  /// No description provided for @completeYourPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Payment'**
+  String get completeYourPayment;
+
+  /// No description provided for @totalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount'**
+  String get totalAmount;
+
+  /// No description provided for @payWithTabby.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with Tabby'**
+  String get payWithTabby;
+
+  /// No description provided for @payWithApplePay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with Apple Pay'**
+  String get payWithApplePay;
+
+  /// No description provided for @payWithSTCPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with STC Pay'**
+  String get payWithSTCPay;
+
+  /// No description provided for @payWithCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with Card'**
+  String get payWithCard;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -699,25 +1351,25 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
-    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-    'an issue with the localizations generation tool. Please file an issue '
-    'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
-  );
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
 }
