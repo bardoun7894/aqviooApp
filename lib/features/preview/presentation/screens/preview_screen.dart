@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_extensions.dart';
 import '../../../../core/utils/file_utils.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
@@ -224,7 +225,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                       child: Text(
                         'Preview',
                         style: GoogleFonts.outfit(
-                          fontSize: 16,
+                          fontSize: 16.sp(context),
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                           letterSpacing: 0.5,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/responsive_extensions.dart';
 
 /// A responsive scaffold that automatically handles keyboard resize,
 /// safe areas, and scrollable content to prevent overflow errors.

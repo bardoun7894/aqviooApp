@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/responsive_extensions.dart';
 import '../../data/auth_repository.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -286,14 +287,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                               fit: BoxFit.contain,
                                               errorBuilder:
                                                   (context, error, stackTrace) {
-                                                    // Fallback icon if logo.png not found
-                                                    return Icon(
-                                                      Icons.auto_awesome,
-                                                      size: 60,
-                                                      color: AppColors
-                                                          .primaryPurple,
-                                                    );
-                                                  },
+                                                // Fallback icon if logo.png not found
+                                                return Icon(
+                                                  Icons.auto_awesome,
+                                                  size: 60,
+                                                  color:
+                                                      AppColors.primaryPurple,
+                                                );
+                                              },
                                             ),
                                           ),
 
@@ -344,7 +345,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 40),
+                      SizedBox(height: 40.scaleH(context)),
 
                       // Aqvioo text with fade-in and slide up
                       Transform.translate(
@@ -363,7 +364,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             },
                             child: Text(
                               'Aqvioo',
-                              style: Theme.of(context).textTheme.displaySmall
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displaySmall
                                   ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -375,18 +378,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.scaleH(context)),
 
                       // Subtitle with fade
                       Opacity(
                         opacity: _logoOpacity.value * 0.8,
                         child: Text(
                           'AI-Powered Content Creation',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: const Color(0xFF6B7280),
-                                letterSpacing: 0.5,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF6B7280),
+                                    letterSpacing: 0.5,
+                                  ),
                         ),
                       ),
                     ],

@@ -6,8 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/animated_gradient_blob.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/neumorphic_container.dart';
 import '../providers/auth_provider.dart';
 import '../../../../generated/app_localizations.dart';
 
@@ -25,12 +23,62 @@ class OtpScreen extends ConsumerStatefulWidget {
   ConsumerState<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends ConsumerState<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen>
+    with TickerProviderStateMixin {
   final _otpController = TextEditingController();
+  late AnimationController _entranceController;
+  late AnimationController _floatController;
+  late Animation<double> _logoAnimation;
+  late Animation<double> _titleAnimation;
+  late Animation<double> _cardAnimation;
+  late Animation<double> _floatAnimation;
+  final _inputFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Entrance animations
+    _entranceController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    // Floating animation for logo
+    _floatController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _logoAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.4, curve: Curves.easeOutCubic),
+    );
+
+    _titleAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.2, 0.6, curve: Curves.easeOutCubic),
+    );
+
+    _cardAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic),
+    );
+
+    _floatAnimation = Tween<double>(begin: -10, end: 10).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+
+    // Start entrance animation
+    _entranceController.forward();
+  }
 
   @override
   void dispose() {
     _otpController.dispose();
+    _entranceController.dispose();
+    _floatController.dispose();
+    _inputFocusNode.dispose();
     super.dispose();
   }
 
@@ -51,12 +99,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
     ref.listen(authControllerProvider, (previous, next) {
       if (next.hasError) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${next.error}')));
-      } else if (!next.isLoading && !next.hasError) {
-        // Auth action succeeded
-        context.go('/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     });
 
@@ -64,7 +112,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Stack(
         children: [
-          // Animated Background
+          // Animated Background Blobs
           Positioned(
             top: -100,
             right: -100,
@@ -93,142 +141,303 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        NeumorphicContainer(
-                          width: 60,
-                          height: 60,
-                          borderRadius: 16,
-                          depth: 3,
-                          intensity: 0.6,
-                          child: Icon(
-                            Icons.lock_outline_rounded,
-                            size: 32,
-                            color: AppColors.primaryPurple,
+                    // Animated Logo with Floating Effect
+                    FadeTransition(
+                      opacity: _logoAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, -0.3),
+                          end: Offset.zero,
+                        ).animate(_logoAnimation),
+                        child: AnimatedBuilder(
+                          animation: _floatAnimation,
+                          builder: (context, child) {
+                            return Transform.translate(
+                              offset: Offset(0, _floatAnimation.value),
+                              child: child,
+                            );
+                          },
+                          child: Hero(
+                            tag: 'app_logo',
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryPurple
+                                        .withOpacity(0.2),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Text(
-                          l10n.verifyCode,
-                          style: GoogleFonts.outfit(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
-                          ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Animated Title
+                    FadeTransition(
+                      opacity: _titleAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(_titleAnimation),
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.verifyCode,
+                              style: GoogleFonts.outfit(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'We sent a code to',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.phoneNumber,
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryPurple,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
 
                     const SizedBox(height: 48),
 
-                    // Glassmorphic Card
-                    GlassContainer(
-                      borderRadius: 32,
-                      blurIntensity: 15,
-                      opacity: 0.6,
-                      borderColor: AppColors.white.withOpacity(0.8),
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            l10n.enterCodeSentTo(widget.phoneNumber),
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 32),
-
-                          // OTP Input
-                          NeumorphicContainer(
-                            borderRadius: 20,
-                            depth: -3, // Concave
-                            intensity: 0.6,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: TextField(
-                              controller: _otpController,
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.outfit(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                                letterSpacing: 12,
+                    // Animated Card
+                    FadeTransition(
+                      opacity: _cardAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.2),
+                          end: Offset.zero,
+                        ).animate(_cardAnimation),
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
                               ),
-                              decoration: InputDecoration(
-                                hintText: '••••••',
-                                hintStyle: GoogleFonts.outfit(
-                                  color: AppColors.textHint,
-                                  fontSize: 28,
-                                  letterSpacing: 12,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(height: 32),
-
-                          // Verify Button (Circle Check)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // OTP Input
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF9FAFB),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: _otpController.text.isEmpty
+                                        ? const Color(0xFFE5E7EB)
+                                        : AppColors.primaryPurple,
+                                    width: 2,
+                                  ),
+                                  boxShadow: _otpController.text.isNotEmpty
+                                      ? [
+                                          BoxShadow(
+                                            color: AppColors.primaryPurple
+                                                .withOpacity(0.1),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: TextField(
+                                  controller: _otpController,
+                                  focusNode: _inputFocusNode,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 6,
+                                  autofocus: true,
+                                  onChanged: (value) {
+                                    setState(() {});
+                                    if (value.length == 6) {
+                                      _verifyOTP();
+                                    }
+                                  },
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 12,
+                                    fontFeatures: [
+                                      const FontFeature.tabularFigures()
+                                    ],
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: '• • • • • •',
+                                    hintStyle: GoogleFonts.outfit(
+                                      color:
+                                          AppColors.textHint.withOpacity(0.5),
+                                      fontSize: 32,
+                                      letterSpacing: 12,
+                                    ),
+                                    border: InputBorder.none,
+                                    counterText: '',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Verify Button
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: isLoading ? null : _verifyOTP,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          AppColors.primaryPurple,
+                                          Color(0xFF9F7AEA),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primaryPurple
+                                              .withOpacity(0.4),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: isLoading
+                                          ? const SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 3,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(
+                                                  Colors.white,
+                                                ),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Verify',
+                                              style: GoogleFonts.outfit(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Back Button
                               TextButton(
                                 onPressed: () => context.pop(),
                                 child: Text(
-                                  l10n.back,
+                                  'Back to login',
                                   style: GoogleFonts.outfit(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 14,
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              SizedBox(
-                                width: 64,
-                                height: 64,
-                                child: ElevatedButton(
-                                  onPressed: isLoading ? null : _verifyOTP,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primaryPurple,
-                                    foregroundColor: Colors.white,
-                                    elevation: 8,
-                                    shadowColor: AppColors.primaryPurple
-                                        .withOpacity(0.4),
-                                    shape: const CircleBorder(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                  Colors.white,
-                                                ),
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.check_rounded,
-                                          size: 32,
-                                        ),
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Resend Code
+                    FadeTransition(
+                      opacity: _cardAnimation,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Didn't receive the code? ",
+                            style: GoogleFonts.outfit(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // TODO: Implement resend logic
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Code resent!'),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Resend',
+                              style: GoogleFonts.outfit(
+                                color: AppColors.primaryPurple,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
                         ],
                       ),
