@@ -8,6 +8,7 @@ const bool useMockAuth = false;
 abstract class AuthRepository {
   Stream<bool> get authStateChanges;
   bool get isAnonymous;
+  User? get currentUser;
   Future<void> signInAnonymously();
   Future<UserCredential> signUpWithEmailPassword({
     required String email,
@@ -47,6 +48,9 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   bool get isAnonymous => _isAnonymous;
+
+  @override
+  User? get currentUser => null;
 
   @override
   Future<void> signInAnonymously() async {
@@ -124,6 +128,9 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   bool get isAnonymous => _firebaseAuth.currentUser?.isAnonymous ?? false;
+
+  @override
+  User? get currentUser => _firebaseAuth.currentUser;
 
   @override
   Future<void> signInAnonymously() async {

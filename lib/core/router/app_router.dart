@@ -10,6 +10,7 @@ import '../../features/creation/presentation/screens/magic_loading_screen.dart';
 import '../../features/preview/presentation/screens/preview_screen.dart';
 import '../../features/creation/presentation/screens/my_creations_screen.dart';
 import '../../features/auth/presentation/screens/account_settings_screen.dart';
+import '../../features/payment/presentation/screens/payment_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -83,6 +84,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/account-settings',
         builder: (context, state) => const AccountSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/payment',
+        builder: (context, state) {
+          double amount = 199.0;
+          if (state.extra is double) {
+            amount = state.extra as double;
+          }
+          return PaymentScreen(amount: amount);
+        },
       ),
     ],
   );

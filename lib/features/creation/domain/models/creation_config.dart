@@ -112,6 +112,15 @@ enum VideoStyle {
   modern,
   corporate,
   socialMedia,
+  vintage,
+  fantasy,
+  documentary,
+  horror,
+  comedy,
+  sciFi,
+  noir,
+  dreamlike,
+  retro,
 }
 
 extension VideoStyleExtension on VideoStyle {
@@ -129,6 +138,24 @@ extension VideoStyleExtension on VideoStyle {
         return 'Corporate';
       case VideoStyle.socialMedia:
         return 'Social Media';
+      case VideoStyle.vintage:
+        return 'Vintage';
+      case VideoStyle.fantasy:
+        return 'Fantasy';
+      case VideoStyle.documentary:
+        return 'Documentary';
+      case VideoStyle.horror:
+        return 'Horror';
+      case VideoStyle.comedy:
+        return 'Comedy';
+      case VideoStyle.sciFi:
+        return 'Sci-Fi';
+      case VideoStyle.noir:
+        return 'Noir';
+      case VideoStyle.dreamlike:
+        return 'Dreamlike';
+      case VideoStyle.retro:
+        return 'Retro';
     }
   }
 
@@ -146,6 +173,24 @@ extension VideoStyleExtension on VideoStyle {
         return 'professional corporate style';
       case VideoStyle.socialMedia:
         return 'engaging social media style with dynamic energy';
+      case VideoStyle.vintage:
+        return 'vintage style with retro aesthetics and aged film look';
+      case VideoStyle.fantasy:
+        return 'fantasy style with magical and otherworldly elements';
+      case VideoStyle.documentary:
+        return 'documentary style with realistic and observational approach';
+      case VideoStyle.horror:
+        return 'horror style with dark atmosphere and suspenseful mood';
+      case VideoStyle.comedy:
+        return 'comedy style with lighthearted and playful energy';
+      case VideoStyle.sciFi:
+        return 'sci-fi style with futuristic technology and advanced aesthetics';
+      case VideoStyle.noir:
+        return 'film noir style with high contrast and moody shadows';
+      case VideoStyle.dreamlike:
+        return 'dreamlike style with surreal and ethereal atmosphere';
+      case VideoStyle.retro:
+        return 'retro style with 80s and 90s aesthetic';
     }
   }
 }

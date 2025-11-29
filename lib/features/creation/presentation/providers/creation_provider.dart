@@ -178,21 +178,25 @@ class CreationController extends Notifier<CreationState> {
 
   // Main generation method using NEW Kie AI Service
   Future<void> generateVideo({
-    required String prompt,
+    String? prompt,
     String? imagePath,
   }) async {
     try {
-      // Get config from state
-      final config = state.config;
+      // Get config from state (use provided prompt or state config prompt)
+      final config = state.config.copyWith(
+        prompt: prompt ?? state.config.prompt,
+        imagePath: imagePath ?? state.config.imagePath,
+      );
 
       // Convert imagePath to File if exists
       File? imageFile;
-      if (imagePath != null && imagePath.isNotEmpty) {
-        imageFile = File(imagePath);
+      if (config.imagePath != null && config.imagePath!.isNotEmpty) {
+        imageFile = File(config.imagePath!);
       }
 
-      // Update status: Enhancing prompt
+      // Update state with config and status
       state = state.copyWith(
+        config: config,
         status: CreationWizardStatus.generatingScript,
         currentStepMessage: config.outputType == OutputType.video
             ? "Enhancing your idea..."

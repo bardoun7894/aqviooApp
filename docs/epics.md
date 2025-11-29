@@ -144,7 +144,7 @@ _Generated using BMad Method - Create Epics & Stories Workflow v1.0_
 - [ ] Tabby SDK integration (`tabby_flutter_inapp_sdk`)
 - [ ] Handle Success/Cancel callbacks
 - [ ] Update credits via Cloud Function (secure) or client (MVP)
-**Technical Notes:** See Architecture Doc ADR-001.
+**Technical Notes:** **Tabby ONLY** (No Stripe/Apple Pay for MVP). See Architecture Doc ADR-001.
 
 ---
 

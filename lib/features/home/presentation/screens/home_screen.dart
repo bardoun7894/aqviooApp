@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:akvioo/features/auth/data/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -15,6 +18,7 @@ import '../../../creation/presentation/providers/creation_provider.dart';
 import '../../../creation/domain/models/creation_item.dart';
 import '../../../creation/domain/models/creation_config.dart';
 import '../../../../core/services/openai_service.dart';
+import '../../../../core/providers/credits_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -27,12 +31,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _promptController = TextEditingController();
   final _picker = ImagePicker();
   final _openAIService = OpenAIService();
+  final stt.SpeechToText _speech = stt.SpeechToText();
   File? _selectedImage;
   bool _isEnhancing = false;
+  bool _isListening = false;
+  bool _speechAvailable = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize speech recognition
+    _initSpeech();
 
     // Initialize prompt from config if exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -41,6 +51,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _promptController.text = config.prompt;
       }
     });
+  }
+
+  Future<void> _initSpeech() async {
+    try {
+      _speechAvailable = await _speech.initialize(
+        onError: (error) => print('Speech recognition error: $error'),
+        onStatus: (status) => print('Speech recognition status: $status'),
+      );
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error initializing speech: $e');
+    }
   }
 
   @override
@@ -107,9 +131,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  void _applyQuickSuggestion(String suggestion) {
-    _promptController.text = suggestion;
+  Future<void> _applyQuickSuggestion(String suggestion) async {
+    // Don't show the prompt to user - directly generate
     ref.read(creationControllerProvider.notifier).updatePrompt(suggestion);
+
+    // Get output type from config
+    final config = ref.read(creationControllerProvider).config;
+    final outputType = config.outputType;
+
+    // Check if user can generate
+    final creditsController = ref.read(creditsControllerProvider.notifier);
+    final canGenerate = await creditsController.canGenerate(outputType);
+    final creditsState = ref.read(creditsControllerProvider);
+
+    if (!canGenerate) {
+      // Show payment dialog
+      final creditCost = creditsController.getCreditCost(outputType);
+      final contentType = outputType == OutputType.video ? 'video' : 'image';
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Insufficient Credits',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You need $creditCost credits to generate a $contentType.',
+                style: GoogleFonts.outfit(),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your balance: ${creditsState.credits} credits',
+                style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.push('/payment', extra: 199.0);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Buy Credits',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Deduct credits
+    await creditsController.deductCreditsForGeneration(outputType);
+
+    // Start video generation
+    ref.read(creationControllerProvider.notifier).generateVideo();
+
+    // Navigate to magic loading screen
+    context.push('/magic-loading');
   }
 
   void _showAdvancedSettings() {
@@ -121,7 +231,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _handleGenerate() {
+  Future<void> _toggleListening() async {
+    if (_isListening) {
+      await _stopListening();
+    } else {
+      await _startListening();
+    }
+  }
+
+  Future<void> _startListening() async {
+    if (!_speechAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Speech recognition not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Request microphone permission
+    final permission = await Permission.microphone.request();
+    if (!permission.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Microphone permission is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isListening = true);
+
+    await _speech.listen(
+      onResult: (result) {
+        setState(() {
+          _promptController.text = result.recognizedWords;
+          ref
+              .read(creationControllerProvider.notifier)
+              .updatePrompt(result.recognizedWords);
+        });
+      },
+      listenFor: const Duration(seconds: 30),
+      pauseFor: const Duration(seconds: 3),
+      cancelOnError: true,
+      listenMode: stt.ListenMode.confirmation,
+    );
+  }
+
+  Future<void> _stopListening() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+  }
+
+  Future<void> _handleGenerate() async {
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -133,10 +297,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
+    // Get output type from config
+    final config = ref.read(creationControllerProvider).config;
+    final outputType = config.outputType;
+
+    // Check if user can generate
+    final creditsController = ref.read(creditsControllerProvider.notifier);
+    final canGenerate = await creditsController.canGenerate(outputType);
+    final creditsState = ref.read(creditsControllerProvider);
+
+    if (!canGenerate) {
+      // Show payment dialog
+      final creditCost = creditsController.getCreditCost(outputType);
+      final contentType = outputType == OutputType.video ? 'video' : 'image';
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Insufficient Credits',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You need $creditCost credits to generate a $contentType.',
+                style: GoogleFonts.outfit(),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your balance: ${creditsState.credits} credits',
+                style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.push('/payment', extra: 199.0);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Buy Credits',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Deduct credits
+    await creditsController.deductCreditsForGeneration(outputType);
+
     // Update prompt in config
     ref.read(creationControllerProvider.notifier).updatePrompt(prompt);
 
-    // Navigate to magic loading (generation starts there)
+    // Start video generation
+    ref.read(creationControllerProvider.notifier).generateVideo();
+
+    // Navigate to magic loading screen
     context.push('/magic-loading');
   }
 
@@ -236,6 +483,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final creditsState = ref.watch(creditsControllerProvider);
+    final currentUser = ref.read(authRepositoryProvider).currentUser;
+    final userName = currentUser?.displayName ??
+        currentUser?.email?.split('@').first ??
+        'User';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -249,15 +502,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors: [
-                      Colors.grey.shade700,
-                      Colors.grey.shade800,
+                      AppColors.primaryPurple,
+                      const Color(0xFF9D6BFF),
                     ],
                   ),
                   border: Border.all(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.white,
                     width: 2,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryPurple.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: ClipOval(
                   child: Icon(
@@ -282,7 +544,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'User',
+                    userName,
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -298,7 +560,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // Credits Badge
           Container(
-            padding: const EdgeInsets.only(left: 8, right: 12, top: 6, bottom: 6),
+            padding:
+                const EdgeInsets.only(left: 8, right: 12, top: 6, bottom: 6),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.6),
               borderRadius: BorderRadius.circular(20),
@@ -331,7 +594,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '850',
+                  '${creditsState.credits}',
                   style: GoogleFonts.outfit(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -362,7 +625,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 size: 18,
                 color: AppColors.textSecondary,
               ),
-              onPressed: () => context.push('/settings'),
+              onPressed: () => context.push('/account-settings'),
               padding: EdgeInsets.zero,
             ),
           ),
@@ -479,12 +742,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 decoration: BoxDecoration(
                                   color: _isEnhancing
                                       ? AppColors.mediumGray.withOpacity(0.1)
-                                      : AppColors.primaryPurple.withOpacity(0.08),
+                                      : AppColors.primaryPurple
+                                          .withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: _isEnhancing
                                         ? AppColors.mediumGray.withOpacity(0.2)
-                                        : AppColors.primaryPurple.withOpacity(0.2),
+                                        : AppColors.primaryPurple
+                                            .withOpacity(0.2),
                                     width: 1,
                                   ),
                                 ),
@@ -497,7 +762,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         height: 14,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
                                             AppColors.primaryPurple,
                                           ),
                                         ),
@@ -512,7 +778,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     Text(
                                       _isEnhancing
                                           ? 'Enhancing...'
-                                          : AppLocalizations.of(context)!.enhance,
+                                          : AppLocalizations.of(context)!
+                                              .enhance,
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
@@ -541,7 +808,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           height: 1.5,
                         ),
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.ideaStepPlaceholder,
+                          hintText:
+                              AppLocalizations.of(context)!.ideaStepPlaceholder,
                           hintStyle: GoogleFonts.outfit(
                             color: AppColors.textHint,
                             fontSize: 15,
@@ -566,10 +834,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryPurple.withOpacity(0.05),
+                                color:
+                                    AppColors.primaryPurple.withOpacity(0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.primaryPurple.withOpacity(0.15),
+                                  color:
+                                      AppColors.primaryPurple.withOpacity(0.15),
                                 ),
                               ),
                               child: Icon(
@@ -582,20 +852,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                           const SizedBox(width: 8),
 
-                          // Advanced Settings Button
+                          // Speech-to-Text Button
                           GestureDetector(
-                            onTap: _showAdvancedSettings,
+                            onTap: _toggleListening,
                             child: Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryPurple.withOpacity(0.05),
+                                color: _isListening
+                                    ? AppColors.primaryPurple.withOpacity(0.2)
+                                    : AppColors.primaryPurple.withOpacity(0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.primaryPurple.withOpacity(0.15),
+                                  color: _isListening
+                                      ? AppColors.primaryPurple.withOpacity(0.5)
+                                      : AppColors.primaryPurple
+                                          .withOpacity(0.15),
                                 ),
                               ),
                               child: Icon(
-                                Icons.mic_outlined,
+                                _isListening ? Icons.mic : Icons.mic_outlined,
                                 size: 18,
                                 color: AppColors.primaryPurple,
                               ),
@@ -618,12 +893,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ),
                             child: Text(
-                              ref.watch(creationControllerProvider).config.videoAspectRatio == 'landscape'
+                              ref
+                                          .watch(creationControllerProvider)
+                                          .config
+                                          .videoAspectRatio ==
+                                      'landscape'
                                   ? '16:9'
                                   : '9:16',
                               style: GoogleFonts.outfit(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
+                                color: AppColors.primaryPurple,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          // Settings Icon Button
+                          GestureDetector(
+                            onTap: _showAdvancedSettings,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primaryPurple.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color:
+                                      AppColors.primaryPurple.withOpacity(0.15),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.tune_rounded,
+                                size: 16,
                                 color: AppColors.primaryPurple,
                               ),
                             ),
@@ -647,7 +950,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.primaryPurple.withOpacity(0.3),
+                                      color: AppColors.primaryPurple
+                                          .withOpacity(0.3),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
@@ -738,7 +1042,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _applyQuickSuggestion(suggestion['prompt'] as String),
+                  onTap: () =>
+                      _applyQuickSuggestion(suggestion['prompt'] as String),
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -818,7 +1123,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               TextButton(
                 onPressed: () => context.push('/my-creations'),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.viewLibrary,
@@ -925,12 +1231,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ? [const Color(0xFF6B9DFF), const Color(0xFF9D6BFF)]
                         : [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
                   ),
-                  image: item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(item.thumbnailUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+                  image:
+                      item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(item.thumbnailUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                 ),
                 child: Stack(
                   children: [
@@ -1086,9 +1393,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     context.push('/my-creations');
                   }),
                   const SizedBox(width: 70), // Space for FAB
-                  _buildNavItem(Icons.credit_card_rounded, false, () {}),
+                  _buildNavItem(Icons.credit_card_rounded, false, () {
+                    context.push('/payment', extra: 199.0);
+                  }),
                   _buildNavItem(Icons.person_rounded, false, () {
-                    context.push('/settings');
+                    context.push('/account-settings');
                   }),
                 ],
               ),
@@ -1165,9 +1474,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               height: 4,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isActive
-                    ? AppColors.primaryPurple
-                    : Colors.transparent,
+                color: isActive ? AppColors.primaryPurple : Colors.transparent,
               ),
             ),
           ],
@@ -1178,11 +1485,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 // Advanced Settings Bottom Sheet
-class _AdvancedSettingsSheet extends ConsumerWidget {
+class _AdvancedSettingsSheet extends ConsumerStatefulWidget {
   const _AdvancedSettingsSheet();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AdvancedSettingsSheet> createState() =>
+      _AdvancedSettingsSheetState();
+}
+
+class _AdvancedSettingsSheetState
+    extends ConsumerState<_AdvancedSettingsSheet> {
+  bool _showAllStyles = false;
+
+  @override
+  Widget build(BuildContext context) {
     final config = ref.watch(creationControllerProvider).config;
 
     return Container(
@@ -1236,7 +1552,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                         ref,
                         AppLocalizations.of(context)!.video,
                         config.outputType == OutputType.video,
-                        () => ref.read(creationControllerProvider.notifier).updateOutputType(OutputType.video),
+                        () => ref
+                            .read(creationControllerProvider.notifier)
+                            .updateOutputType(OutputType.video),
                       ),
                       const SizedBox(width: 8),
                       _buildChoiceChip(
@@ -1244,7 +1562,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                         ref,
                         AppLocalizations.of(context)!.image,
                         config.outputType == OutputType.image,
-                        () => ref.read(creationControllerProvider.notifier).updateOutputType(OutputType.image),
+                        () => ref
+                            .read(creationControllerProvider.notifier)
+                            .updateOutputType(OutputType.image),
                       ),
                     ],
                   ),
@@ -1258,19 +1578,105 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                     context,
                     ref,
                     AppLocalizations.of(context)!.style,
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: VideoStyle.values.map((style) {
-                        final isSelected = config.videoStyle == style;
-                        return _buildChoiceChip(
-                          context,
-                          ref,
-                          style.toString().split('.').last.capitalize(),
-                          isSelected,
-                          () => ref.read(creationControllerProvider.notifier).updateVideoStyle(style),
-                        );
-                      }).toList(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: (_showAllStyles
+                                  ? VideoStyle.values
+                                  : VideoStyle.values.take(6).toList())
+                              .map((style) {
+                            final isSelected = config.videoStyle == style;
+                            return _buildChoiceChip(
+                              context,
+                              ref,
+                              style.displayName,
+                              isSelected,
+                              () => ref
+                                  .read(creationControllerProvider.notifier)
+                                  .updateVideoStyle(style),
+                            );
+                          }).toList(),
+                        ),
+                        if (!_showAllStyles &&
+                            VideoStyle.values.length > 6) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => setState(() => _showAllStyles = true),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade900,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      AppColors.primaryPurple.withOpacity(0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_circle_outline,
+                                    size: 16,
+                                    color: AppColors.primaryPurple,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'More Styles',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryPurple,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (_showAllStyles) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () => setState(() => _showAllStyles = false),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade900,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.grey.shade800,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.remove_circle_outline,
+                                    size: 16,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Show Less',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
 
@@ -1288,7 +1694,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           '10s',
                           config.videoDurationSeconds == 10,
-                          () => ref.read(creationControllerProvider.notifier).updateVideoDuration(10),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVideoDuration(10),
                         ),
                         const SizedBox(width: 8),
                         _buildChoiceChip(
@@ -1296,7 +1704,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           '15s',
                           config.videoDurationSeconds == 15,
-                          () => ref.read(creationControllerProvider.notifier).updateVideoDuration(15),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVideoDuration(15),
                         ),
                       ],
                     ),
@@ -1316,7 +1726,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           '16:9',
                           config.videoAspectRatio == 'landscape',
-                          () => ref.read(creationControllerProvider.notifier).updateVideoAspectRatio('landscape'),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVideoAspectRatio('landscape'),
                         ),
                         const SizedBox(width: 8),
                         _buildChoiceChip(
@@ -1324,7 +1736,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           '9:16',
                           config.videoAspectRatio == 'portrait',
-                          () => ref.read(creationControllerProvider.notifier).updateVideoAspectRatio('portrait'),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVideoAspectRatio('portrait'),
                         ),
                       ],
                     ),
@@ -1344,7 +1758,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           AppLocalizations.of(context)!.female,
                           config.voiceGender == VoiceGender.female,
-                          () => ref.read(creationControllerProvider.notifier).updateVoiceSettings(gender: VoiceGender.female),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVoiceSettings(gender: VoiceGender.female),
                         ),
                         const SizedBox(width: 8),
                         _buildChoiceChip(
@@ -1352,7 +1768,9 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
                           ref,
                           AppLocalizations.of(context)!.male,
                           config.voiceGender == VoiceGender.male,
-                          () => ref.read(creationControllerProvider.notifier).updateVoiceSettings(gender: VoiceGender.male),
+                          () => ref
+                              .read(creationControllerProvider.notifier)
+                              .updateVoiceSettings(gender: VoiceGender.male),
                         ),
                       ],
                     ),
@@ -1426,14 +1844,10 @@ class _AdvancedSettingsSheet extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryPurple
-              : Colors.grey.shade900,
+          color: isSelected ? AppColors.primaryPurple : Colors.grey.shade900,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryPurple
-                : Colors.grey.shade800,
+            color: isSelected ? AppColors.primaryPurple : Colors.grey.shade800,
             width: 1,
           ),
         ),
