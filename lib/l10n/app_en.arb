@@ -312,5 +312,107 @@
   "modelVersion": "Model v4.0",
   "generating": "Generating...",
   "processing": "Processing...",
-  "quickSuggestions": "Quick Suggestions"
+  "quickSuggestions": "Quick Suggestions",
+
+  "buyCredits": "Buy Credits",
+  "currentBalance": "Current Balance",
+  "creditBalance": "{count} Credits",
+  "@creditBalance": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "purchaseCredits": "Purchase {count} Credits - {price} SAR",
+  "@purchaseCredits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "videosOrImages": "{videos} videos or {images} images",
+  "@videosOrImages": {
+    "placeholders": {
+      "videos": {
+        "type": "String"
+      },
+      "images": {
+        "type": "String"
+      }
+    }
+  },
+  "popularBadge": "Popular",
+  "bestValueBadge": "Best Value",
+  "tabbyInstallments": "Split your purchase into 4 interest-free payments",
+  "paymentsOf": "4 payments of",
+  "tabbyBenefits": "• Pay the first installment now\n• Remaining 3 payments every 2 weeks\n• No interest, no fees",
+  "continueToTabby": "Continue to Tabby",
+  "firstPayment": "First payment: {amount} SAR",
+  "@firstPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentSuccessTitle": "Payment Successful!",
+  "creditsAdded": "{count} credits have been added to your account",
+  "@creditsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startCreatingButton": "Start Creating",
+  "paymentFailedTitle": "Payment Failed",
+  "paymentFailedMessage": "Unable to process payment with Tabby. Please try again.",
+  "securePaymentTabby": "Secure buy now, pay later with Tabby",
+  "insufficientCredits": "Insufficient Credits",
+  "needCreditsMessage": "You need {count} credits to generate a {type}.",
+  "@needCreditsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "yourBalance": "Your balance: {count} credits",
+  "@yourBalance": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "enhancingIdea": "Enhancing your idea...",
+  "preparingPrompt": "Preparing your prompt...",
+  "bringingImageToLife": "Bringing your image to life...",
+  "creatingVideo": "Creating your video...",
+  "generatingImage": "Generating your image...",
+  "creatingMasterpiece": "Creating your masterpiece...",
+  "magicComplete": "Magic Complete!",
+
+  "library": "Library",
+  "allCreations": "All Creations",
+  "playVideo": "Play Video",
+  "viewImage": "View Image",
+  "createdOn": "Created on {date}",
+  "@createdOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "checkLaterInMyCreations": "Check later in My Creations"
 }

@@ -1537,6 +1537,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quick Suggestions'**
   String get quickSuggestions;
+
+  /// No description provided for @buyCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Credits'**
+  String get buyCredits;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Balance'**
+  String get currentBalance;
+
+  /// No description provided for @creditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Credits'**
+  String creditBalance(int count);
+
+  /// No description provided for @purchaseCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase {count} Credits - {price} SAR'**
+  String purchaseCredits(int count, String price);
+
+  /// No description provided for @videosOrImages.
+  ///
+  /// In en, this message translates to:
+  /// **'{videos} videos or {images} images'**
+  String videosOrImages(String videos, String images);
+
+  /// No description provided for @popularBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get popularBadge;
+
+  /// No description provided for @bestValueBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Value'**
+  String get bestValueBadge;
+
+  /// No description provided for @tabbyInstallments.
+  ///
+  /// In en, this message translates to:
+  /// **'Split your purchase into 4 interest-free payments'**
+  String get tabbyInstallments;
+
+  /// No description provided for @paymentsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'4 payments of'**
+  String get paymentsOf;
+
+  /// No description provided for @tabbyBenefits.
+  ///
+  /// In en, this message translates to:
+  /// **'• Pay the first installment now\n• Remaining 3 payments every 2 weeks\n• No interest, no fees'**
+  String get tabbyBenefits;
+
+  /// No description provided for @continueToTabby.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Tabby'**
+  String get continueToTabby;
+
+  /// No description provided for @firstPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'First payment: {amount} SAR'**
+  String firstPayment(String amount);
+
+  /// No description provided for @paymentSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Successful!'**
+  String get paymentSuccessTitle;
+
+  /// No description provided for @creditsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} credits have been added to your account'**
+  String creditsAdded(int count);
+
+  /// No description provided for @startCreatingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Creating'**
+  String get startCreatingButton;
+
+  /// No description provided for @paymentFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Failed'**
+  String get paymentFailedTitle;
+
+  /// No description provided for @paymentFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to process payment with Tabby. Please try again.'**
+  String get paymentFailedMessage;
+
+  /// No description provided for @securePaymentTabby.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure buy now, pay later with Tabby'**
+  String get securePaymentTabby;
+
+  /// No description provided for @insufficientCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient Credits'**
+  String get insufficientCredits;
+
+  /// No description provided for @needCreditsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {count} credits to generate a {type}.'**
+  String needCreditsMessage(int count, String type);
+
+  /// No description provided for @yourBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance: {count} credits'**
+  String yourBalance(int count);
+
+  /// No description provided for @enhancingIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhancing your idea...'**
+  String get enhancingIdea;
+
+  /// No description provided for @preparingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your prompt...'**
+  String get preparingPrompt;
+
+  /// No description provided for @bringingImageToLife.
+  ///
+  /// In en, this message translates to:
+  /// **'Bringing your image to life...'**
+  String get bringingImageToLife;
+
+  /// No description provided for @creatingVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your video...'**
+  String get creatingVideo;
+
+  /// No description provided for @generatingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating your image...'**
+  String get generatingImage;
+
+  /// No description provided for @creatingMasterpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your masterpiece...'**
+  String get creatingMasterpiece;
+
+  /// No description provided for @magicComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Magic Complete!'**
+  String get magicComplete;
+
+  /// No description provided for @library.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get library;
+
+  /// No description provided for @allCreations.
+  ///
+  /// In en, this message translates to:
+  /// **'All Creations'**
+  String get allCreations;
+
+  /// No description provided for @playVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Video'**
+  String get playVideo;
+
+  /// No description provided for @viewImage.
+  ///
+  /// In en, this message translates to:
+  /// **'View Image'**
+  String get viewImage;
+
+  /// No description provided for @createdOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created on {date}'**
+  String createdOn(String date);
+
+  /// No description provided for @checkLaterInMyCreations.
+  ///
+  /// In en, this message translates to:
+  /// **'Check later in My Creations'**
+  String get checkLaterInMyCreations;
 }
 
 class _AppLocalizationsDelegate

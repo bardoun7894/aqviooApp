@@ -742,4 +742,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickSuggestions => 'Quick Suggestions';
+
+  @override
+  String get buyCredits => 'Buy Credits';
+
+  @override
+  String get currentBalance => 'Current Balance';
+
+  @override
+  String creditBalance(int count) {
+    return '$count Credits';
+  }
+
+  @override
+  String purchaseCredits(int count, String price) {
+    return 'Purchase $count Credits - $price SAR';
+  }
+
+  @override
+  String videosOrImages(String videos, String images) {
+    return '$videos videos or $images images';
+  }
+
+  @override
+  String get popularBadge => 'Popular';
+
+  @override
+  String get bestValueBadge => 'Best Value';
+
+  @override
+  String get tabbyInstallments =>
+      'Split your purchase into 4 interest-free payments';
+
+  @override
+  String get paymentsOf => '4 payments of';
+
+  @override
+  String get tabbyBenefits =>
+      '• Pay the first installment now\n• Remaining 3 payments every 2 weeks\n• No interest, no fees';
+
+  @override
+  String get continueToTabby => 'Continue to Tabby';
+
+  @override
+  String firstPayment(String amount) {
+    return 'First payment: $amount SAR';
+  }
+
+  @override
+  String get paymentSuccessTitle => 'Payment Successful!';
+
+  @override
+  String creditsAdded(int count) {
+    return '$count credits have been added to your account';
+  }
+
+  @override
+  String get startCreatingButton => 'Start Creating';
+
+  @override
+  String get paymentFailedTitle => 'Payment Failed';
+
+  @override
+  String get paymentFailedMessage =>
+      'Unable to process payment with Tabby. Please try again.';
+
+  @override
+  String get securePaymentTabby => 'Secure buy now, pay later with Tabby';
+
+  @override
+  String get insufficientCredits => 'Insufficient Credits';
+
+  @override
+  String needCreditsMessage(int count, String type) {
+    return 'You need $count credits to generate a $type.';
+  }
+
+  @override
+  String yourBalance(int count) {
+    return 'Your balance: $count credits';
+  }
+
+  @override
+  String get enhancingIdea => 'Enhancing your idea...';
+
+  @override
+  String get preparingPrompt => 'Preparing your prompt...';
+
+  @override
+  String get bringingImageToLife => 'Bringing your image to life...';
+
+  @override
+  String get creatingVideo => 'Creating your video...';
+
+  @override
+  String get generatingImage => 'Generating your image...';
+
+  @override
+  String get creatingMasterpiece => 'Creating your masterpiece...';
+
+  @override
+  String get magicComplete => 'Magic Complete!';
+
+  @override
+  String get library => 'Library';
+
+  @override
+  String get allCreations => 'All Creations';
+
+  @override
+  String get playVideo => 'Play Video';
+
+  @override
+  String get viewImage => 'View Image';
+
+  @override
+  String createdOn(String date) {
+    return 'Created on $date';
+  }
+
+  @override
+  String get checkLaterInMyCreations => 'Check later in My Creations';
 }

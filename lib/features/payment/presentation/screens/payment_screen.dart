@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../../generated/app_localizations.dart';
 
 // Credit packages
 class CreditPackage {
@@ -46,6 +47,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final creditsState = ref.watch(creditsControllerProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -57,7 +59,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         ),
         title: Text(
-          'Buy Credits',
+          l10n.buyCredits,
           style: GoogleFonts.outfit(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
@@ -95,7 +97,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Current Balance',
+                      l10n.currentBalance,
                       style: GoogleFonts.outfit(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 14,
@@ -103,7 +105,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${creditsState.credits} Credits',
+                      l10n.creditBalance(creditsState.credits),
                       style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: 28,
@@ -224,7 +226,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        package.badge!,
+                                        package.badge == 'Popular' ? l10n.popularBadge : l10n.bestValueBadge,
                                         style: GoogleFonts.outfit(
                                           fontSize: 10,
                                           color: Colors.white,
@@ -237,7 +239,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${(package.credits / 10).toStringAsFixed(0)} videos or ${(package.credits / 5).toStringAsFixed(0)} images',
+                                l10n.videosOrImages(
+                                  (package.credits / 10).toStringAsFixed(0),
+                                  (package.credits / 5).toStringAsFixed(0),
+                                ),
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
@@ -313,7 +318,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                 const Icon(Icons.shopping_bag, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Pay with Tabby - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR',
+                                  '${l10n.payWithTabby} - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR',
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -334,7 +339,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Secure buy now, pay later with Tabby',
+                        l10n.securePaymentTabby,
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -382,7 +387,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Pay with Tabby',
+                l10n.payWithTabby,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -395,7 +400,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Split your purchase into 4 interest-free payments',
+                l10n.tabbyInstallments,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -415,7 +420,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Total',
+                          l10n.total,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.w600,
                           ),
@@ -434,7 +439,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '4 payments of',
+                          l10n.paymentsOf,
                           style: GoogleFonts.outfit(
                             color: AppColors.textSecondary,
                             fontSize: 13,
@@ -454,7 +459,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '• Pay the first installment now\n• Remaining 3 payments every 2 weeks\n• No interest, no fees',
+                l10n.tabbyBenefits,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -467,7 +472,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(
-                'Cancel',
+                l10n.cancel,
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -483,7 +488,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
               ),
               child: Text(
-                'Continue to Tabby',
+                l10n.continueToTabby,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w600,
                 ),
@@ -536,7 +541,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Payment Successful!',
+                l10n.paymentSuccessTitle,
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -546,7 +551,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                '${package.credits} credits have been added to your account',
+                l10n.creditsAdded(package.credits),
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -570,7 +575,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'First payment: ${(package.price / 4).toStringAsFixed(2)} SAR',
+                      l10n.firstPayment((package.price / 4).toStringAsFixed(2)),
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -596,7 +601,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ),
                   child: Text(
-                    'Start Creating',
+                    l10n.startCreatingButton,
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -619,11 +624,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Payment Failed',
+            l10n.paymentFailedTitle,
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           ),
           content: Text(
-            'Unable to process payment with Tabby. Please try again.',
+            l10n.paymentFailedMessage,
             style: GoogleFonts.outfit(),
           ),
           actions: [

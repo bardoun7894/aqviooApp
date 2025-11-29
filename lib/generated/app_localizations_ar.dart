@@ -743,4 +743,124 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickSuggestions => 'اقتراحات سريعة';
+
+  @override
+  String get buyCredits => 'شراء الرصيد';
+
+  @override
+  String get currentBalance => 'الرصيد الحالي';
+
+  @override
+  String creditBalance(int count) {
+    return '$count رصيد';
+  }
+
+  @override
+  String purchaseCredits(int count, String price) {
+    return 'شراء $count رصيد - $price ريال';
+  }
+
+  @override
+  String videosOrImages(String videos, String images) {
+    return '$videos فيديو أو $images صورة';
+  }
+
+  @override
+  String get popularBadge => 'الأكثر شعبية';
+
+  @override
+  String get bestValueBadge => 'أفضل قيمة';
+
+  @override
+  String get tabbyInstallments => 'قسّم مشترياتك إلى 4 دفعات بدون فوائد';
+
+  @override
+  String get paymentsOf => '4 دفعات بقيمة';
+
+  @override
+  String get tabbyBenefits =>
+      '• ادفع الدفعة الأولى الآن\n• الدفعات الـ 3 المتبقية كل أسبوعين\n• لا فوائد، لا رسوم';
+
+  @override
+  String get continueToTabby => 'المتابعة إلى تابي';
+
+  @override
+  String firstPayment(String amount) {
+    return 'الدفعة الأولى: $amount ريال';
+  }
+
+  @override
+  String get paymentSuccessTitle => 'تم الدفع بنجاح!';
+
+  @override
+  String creditsAdded(int count) {
+    return 'تمت إضافة $count رصيد إلى حسابك';
+  }
+
+  @override
+  String get startCreatingButton => 'ابدأ الإنشاء';
+
+  @override
+  String get paymentFailedTitle => 'فشل الدفع';
+
+  @override
+  String get paymentFailedMessage =>
+      'تعذرت معالجة الدفع عبر تابي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get securePaymentTabby => 'اشترِ الآن وادفع لاحقاً بأمان عبر تابي';
+
+  @override
+  String get insufficientCredits => 'رصيد غير كافٍ';
+
+  @override
+  String needCreditsMessage(int count, String type) {
+    return 'تحتاج إلى $count رصيد لإنشاء $type.';
+  }
+
+  @override
+  String yourBalance(int count) {
+    return 'رصيدك: $count رصيد';
+  }
+
+  @override
+  String get enhancingIdea => 'جاري تحسين فكرتك...';
+
+  @override
+  String get preparingPrompt => 'جاري تحضير الوصف...';
+
+  @override
+  String get bringingImageToLife => 'جاري تحويل صورتك إلى حياة...';
+
+  @override
+  String get creatingVideo => 'جاري إنشاء الفيديو...';
+
+  @override
+  String get generatingImage => 'جاري إنشاء الصورة...';
+
+  @override
+  String get creatingMasterpiece => 'جاري إنشاء تحفتك...';
+
+  @override
+  String get magicComplete => 'اكتمل السحر!';
+
+  @override
+  String get library => 'المكتبة';
+
+  @override
+  String get allCreations => 'جميع الإبداعات';
+
+  @override
+  String get playVideo => 'تشغيل الفيديو';
+
+  @override
+  String get viewImage => 'عرض الصورة';
+
+  @override
+  String createdOn(String date) {
+    return 'تم الإنشاء في $date';
+  }
+
+  @override
+  String get checkLaterInMyCreations => 'تحقق لاحقاً في إبداعاتي';
 }

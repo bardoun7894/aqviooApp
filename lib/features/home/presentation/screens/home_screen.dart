@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -36,6 +37,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isEnhancing = false;
   bool _isListening = false;
   bool _speechAvailable = false;
+
+  // Video playback state
+  VideoPlayerController? _videoController;
+  int? _playingVideoIndex;
+  bool _isVideoInitializing = false;
 
   @override
   void initState() {
@@ -70,7 +76,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _promptController.dispose();
+    _videoController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _playVideo(String videoUrl, int index) async {
+    if (_playingVideoIndex == index && _videoController?.value.isPlaying == true) {
+      // Already playing this video, pause it
+      await _videoController?.pause();
+      return;
+    }
+
+    // Stop and dispose previous video
+    await _videoController?.pause();
+    await _videoController?.dispose();
+
+    setState(() {
+      _isVideoInitializing = true;
+      _playingVideoIndex = index;
+    });
+
+    try {
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      await _videoController!.initialize();
+      await _videoController!.setLooping(true);
+      await _videoController!.setVolume(0.0); // Muted by default
+      await _videoController!.play();
+
+      if (mounted) {
+        setState(() {
+          _isVideoInitializing = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVideoInitializing = false;
+          _playingVideoIndex = null;
+        });
+      }
+    }
+  }
+
+  void _stopVideo() {
+    _videoController?.pause();
+    _videoController?.dispose();
+    setState(() {
+      _videoController = null;
+      _playingVideoIndex = null;
+    });
   }
 
   Future<void> _pickImage() async {
@@ -147,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!canGenerate) {
       // Show payment dialog
       final creditCost = creditsController.getCreditCost(outputType);
-      final contentType = outputType == OutputType.video ? 'video' : 'image';
+      final contentType = outputType == OutputType.video ? AppLocalizations.of(context)!.video : AppLocalizations.of(context)!.image;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -155,7 +209,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Insufficient Credits',
+            AppLocalizations.of(context)!.insufficientCredits,
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
             ),
@@ -165,12 +219,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'You need $creditCost credits to generate a $contentType.',
+                AppLocalizations.of(context)!.needCreditsMessage(creditCost, contentType),
                 style: GoogleFonts.outfit(),
               ),
               const SizedBox(height: 8),
               Text(
-                'Your balance: ${creditsState.credits} credits',
+                AppLocalizations.of(context)!.yourBalance(creditsState.credits),
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -181,7 +235,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Cancel',
+                AppLocalizations.of(context)!.cancel,
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -199,7 +253,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               child: Text(
-                'Buy Credits',
+                AppLocalizations.of(context)!.buyCredits,
                 style: GoogleFonts.outfit(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -309,7 +363,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!canGenerate) {
       // Show payment dialog
       final creditCost = creditsController.getCreditCost(outputType);
-      final contentType = outputType == OutputType.video ? 'video' : 'image';
+      final contentType = outputType == OutputType.video ? AppLocalizations.of(context)!.video : AppLocalizations.of(context)!.image;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -317,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Insufficient Credits',
+            AppLocalizations.of(context)!.insufficientCredits,
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
             ),
@@ -327,12 +381,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'You need $creditCost credits to generate a $contentType.',
+                AppLocalizations.of(context)!.needCreditsMessage(creditCost, contentType),
                 style: GoogleFonts.outfit(),
               ),
               const SizedBox(height: 8),
               Text(
-                'Your balance: ${creditsState.credits} credits',
+                AppLocalizations.of(context)!.yourBalance(creditsState.credits),
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -343,7 +397,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Cancel',
+                AppLocalizations.of(context)!.cancel,
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -361,7 +415,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               child: Text(
-                'Buy Credits',
+                AppLocalizations.of(context)!.buyCredits,
                 style: GoogleFonts.outfit(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -1152,7 +1206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             itemCount: recentCreations.length,
             itemBuilder: (context, index) {
-              return _buildProjectCard(recentCreations[index]);
+              return _buildProjectCard(recentCreations[index], index);
             },
           ),
         ],
@@ -1160,20 +1214,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildProjectCard(CreationItem item) {
+  Widget _buildProjectCard(CreationItem item, int index) {
     final isVideo = item.type == CreationType.video;
+    final isPlaying = _playingVideoIndex == index;
+    final isInitializing = isPlaying && _isVideoInitializing;
 
     return GestureDetector(
       onTap: () {
         if (item.url != null) {
           if (isVideo) {
-            context.push(
-              '/preview',
-              extra: {
-                'videoUrl': item.url,
-                'thumbnailUrl': item.thumbnailUrl,
-              },
-            );
+            // Play video inline
+            _playVideo(item.url!, index);
           } else {
             showDialog(
               context: context,
@@ -1241,24 +1292,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 child: Stack(
                   children: [
-                    // Gradient Overlay
-                    Container(
-                      decoration: BoxDecoration(
+                    // Show video player if playing, otherwise show thumbnail
+                    if (isPlaying && _videoController != null && _videoController!.value.isInitialized)
+                      ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.0),
-                            Colors.black.withOpacity(0.3),
-                          ],
+                        child: SizedBox.expand(
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _videoController!.value.size.width,
+                              height: _videoController!.value.size.height,
+                              child: VideoPlayer(_videoController!),
+                            ),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      // Gradient Overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.0),
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    // Play Icon
-                    if (isVideo)
+                    ],
+
+                    // Loading indicator when initializing
+                    if (isInitializing)
+                      const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+
+                    // Play/Pause Icon
+                    if (isVideo && !isInitializing)
                       Positioned(
                         top: 8,
                         right: 8,
@@ -1274,7 +1354,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                           child: Icon(
-                            Icons.play_arrow_rounded,
+                            isPlaying && _videoController?.value.isPlaying == true
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
                             size: 18,
                             color: Colors.white,
                           ),

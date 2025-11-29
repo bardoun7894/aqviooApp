@@ -112,7 +112,7 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.auto_awesome,
-                                    label: 'Script',
+                                    label: AppLocalizations.of(context)!.scriptStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingScript,
                                     isCompleted: state.status.index >
@@ -127,7 +127,7 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.graphic_eq,
-                                    label: 'Audio',
+                                    label: AppLocalizations.of(context)!.audioStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingAudio,
                                     isCompleted: state.status.index >
@@ -142,7 +142,7 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.video_library,
-                                    label: 'Video',
+                                    label: AppLocalizations.of(context)!.videoStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingVideo,
                                     isCompleted: state.status ==
@@ -218,7 +218,7 @@ class MagicLoadingScreen extends ConsumerWidget {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        "You can safely exit the app. Your video will continue generating in the background.",
+                                        AppLocalizations.of(context)!.backgroundGenerationInfo,
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.9),
                                           fontSize: 13,
@@ -243,9 +243,9 @@ class MagicLoadingScreen extends ConsumerWidget {
                               },
                               icon: const Icon(Icons.arrow_back,
                                   color: Colors.white70),
-                              label: const Text(
-                                'Check later in My Creations',
-                                style: TextStyle(
+                              label: Text(
+                                AppLocalizations.of(context)!.checkLaterInMyCreations,
+                                style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
