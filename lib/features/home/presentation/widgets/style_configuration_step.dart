@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../../generated/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/glass_container.dart';
 import '../../../../../core/widgets/neumorphic_container.dart';
@@ -39,6 +40,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget build(BuildContext context) {
     final config = ref.watch(creationControllerProvider).config;
     final controller = ref.read(creationControllerProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -57,9 +59,9 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSectionHeader('Output Type'),
+                  _buildSectionHeader(l10n.outputType),
                   const SizedBox(height: 16),
-                  _buildOutputTypeSelector(config.outputType, controller),
+                  _buildOutputTypeSelector(config.outputType, controller, l10n),
                 ],
               ),
             ),
@@ -68,9 +70,9 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
 
             // Conditional rendering based on output type
             if (config.outputType == OutputType.video) ...[
-              _buildVideoConfiguration(config, controller),
+              _buildVideoConfiguration(config, controller, l10n),
             ] else ...[
-              _buildImageConfiguration(config, controller),
+              _buildImageConfiguration(config, controller, l10n),
             ],
           ],
         ),
@@ -139,12 +141,13 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget _buildOutputTypeSelector(
     OutputType currentType,
     CreationController controller,
+    AppLocalizations l10n,
   ) {
     return Row(
       children: [
         Expanded(
           child: _buildOutputTypeCard(
-            label: 'Video',
+            label: l10n.video,
             icon: Icons.videocam_rounded,
             isSelected: currentType == OutputType.video,
             onTap: () => controller.updateOutputType(OutputType.video),
@@ -153,7 +156,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
         const SizedBox(width: 16),
         Expanded(
           child: _buildOutputTypeCard(
-            label: 'Image',
+            label: l10n.image,
             icon: Icons.image_rounded,
             isSelected: currentType == OutputType.image,
             onTap: () => controller.updateOutputType(OutputType.image),
@@ -222,6 +225,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget _buildVideoConfiguration(
     CreationConfig config,
     CreationController controller,
+    AppLocalizations l10n,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -232,8 +236,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionHeader('Style',
-                  subtitle: 'Choose the visual mood of your video'),
+              _buildSectionHeader(l10n.styleHeader,
+                  subtitle: l10n.chooseVisualMood),
               const SizedBox(height: 16),
               _buildStyleSelector(
                   config.videoStyle ?? VideoStyle.cinematic, controller),
@@ -249,10 +253,10 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionHeader('Duration', subtitle: 'Select video length'),
+              _buildSectionHeader(l10n.durationHeader, subtitle: l10n.selectVideoLength),
               const SizedBox(height: 16),
               _buildDurationSelector(
-                  config.videoDurationSeconds ?? 10, controller),
+                  config.videoDurationSeconds ?? 10, controller, l10n),
             ],
           ),
         ),
@@ -265,12 +269,13 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionHeader('Aspect Ratio',
-                  subtitle: 'Choose video orientation'),
+              _buildSectionHeader(l10n.aspectRatioHeader,
+                  subtitle: l10n.chooseVideoOrientation),
               const SizedBox(height: 16),
               _buildAspectRatioSelector(
                 config.videoAspectRatio ?? 'landscape',
                 controller,
+                l10n,
               ),
             ],
           ),
@@ -284,10 +289,10 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionHeader('Voice Settings',
-                  subtitle: 'Configure narrator voice'),
+              _buildSectionHeader(l10n.voiceSettingsHeader,
+                  subtitle: l10n.configureNarratorVoice),
               const SizedBox(height: 16),
-              _buildVoiceSettings(config, controller),
+              _buildVoiceSettings(config, controller, l10n),
             ],
           ),
         ),
@@ -298,18 +303,19 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget _buildImageConfiguration(
     CreationConfig config,
     CreationController controller,
+    AppLocalizations l10n,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildSectionHeader('Style'),
+        _buildSectionHeader(l10n.styleHeader),
         const SizedBox(height: 16),
         _buildImageStyleSelector(
             config.imageStyle ?? ImageStyle.realistic, controller),
         const SizedBox(height: 32),
-        _buildSectionHeader('Size'),
+        _buildSectionHeader(l10n.sizeHeader),
         const SizedBox(height: 16),
-        _buildImageSizeSelector(config.imageSize ?? '1024x1024', controller),
+        _buildImageSizeSelector(config.imageSize ?? '1024x1024', controller, l10n),
       ],
     );
   }
@@ -370,12 +376,13 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   }
 
   Widget _buildDurationSelector(
-      int currentDuration, CreationController controller) {
+      int currentDuration, CreationController controller, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
           child: _buildDurationCard(
             duration: 10,
+            label: l10n.quick,
             isSelected: currentDuration == 10,
             onTap: () => controller.updateVideoDuration(10),
           ),
@@ -384,6 +391,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
         Expanded(
           child: _buildDurationCard(
             duration: 15,
+            label: l10n.standard,
             isSelected: currentDuration == 15,
             onTap: () => controller.updateVideoDuration(15),
           ),
@@ -394,6 +402,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
 
   Widget _buildDurationCard({
     required int duration,
+    required String label,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -436,7 +445,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
             ),
             const SizedBox(width: 8),
             Text(
-              duration == 10 ? 'Quick' : 'Standard',
+              label,
               style: GoogleFonts.outfit(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -454,6 +463,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget _buildAspectRatioSelector(
     String currentRatio,
     CreationController controller,
+    AppLocalizations l10n,
   ) {
     return Row(
       children: [
@@ -461,10 +471,11 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: _buildAspectRatioCard(
             ratio: 'landscape',
             label: '16:9',
-            subtitle: 'Horizontal',
+            subtitle: l10n.horizontal,
             icon: Icons.crop_landscape_rounded,
             isSelected: currentRatio == 'landscape',
             onTap: () => controller.updateVideoAspectRatio('landscape'),
+            bestFor: l10n.bestForYouTube,
           ),
         ),
         const SizedBox(width: 16),
@@ -472,10 +483,11 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: _buildAspectRatioCard(
             ratio: 'portrait',
             label: '9:16',
-            subtitle: 'Vertical',
+            subtitle: l10n.vertical,
             icon: Icons.crop_portrait_rounded,
             isSelected: currentRatio == 'portrait',
             onTap: () => controller.updateVideoAspectRatio('portrait'),
+            bestFor: l10n.bestForTikTok,
           ),
         ),
       ],
@@ -489,6 +501,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
     required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
+    required String bestFor,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -564,7 +577,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                ratio == 'landscape' ? 'Best for YouTube' : 'Best for TikTok',
+                bestFor,
                 style: GoogleFonts.outfit(
                   fontSize: 11,
                   color: isSelected
@@ -584,6 +597,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   Widget _buildVoiceSettings(
     CreationConfig config,
     CreationController controller,
+    AppLocalizations l10n,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -594,6 +608,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
             Expanded(
               child: _buildVoiceGenderCard(
                 gender: VoiceGender.female,
+                label: l10n.female,
                 isSelected: config.voiceGender == VoiceGender.female,
                 onTap: () => controller.updateVoiceSettings(
                   gender: VoiceGender.female,
@@ -604,6 +619,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
             Expanded(
               child: _buildVoiceGenderCard(
                 gender: VoiceGender.male,
+                label: l10n.male,
                 isSelected: config.voiceGender == VoiceGender.male,
                 onTap: () => controller.updateVoiceSettings(
                   gender: VoiceGender.male,
@@ -614,13 +630,14 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
         ),
         const SizedBox(height: 16),
         // Dialect selection
-        _buildDialectDropdown(config.voiceDialect ?? 'ar-SA', controller),
+        _buildDialectDropdown(config.voiceDialect ?? 'ar-SA', controller, l10n),
       ],
     );
   }
 
   Widget _buildVoiceGenderCard({
     required VoiceGender gender,
+    required String label,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -653,7 +670,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
             ),
             const SizedBox(width: 8),
             Text(
-              gender == VoiceGender.female ? 'Female' : 'Male',
+              label,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 fontSize: 14,
@@ -670,14 +687,14 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   }
 
   Widget _buildDialectDropdown(
-      String currentDialect, CreationController controller) {
+      String currentDialect, CreationController controller, AppLocalizations l10n) {
     final dialects = {
-      'ar-SA': '🇸🇦 Saudi',
-      'ar-EG': '🇪🇬 Egyptian',
-      'ar-AE': '🇦🇪 UAE',
-      'ar-LB': '🇱🇧 Lebanese',
-      'ar-JO': '🇯🇴 Jordanian',
-      'ar-MA': '🇲🇦 Moroccan',
+      'ar-SA': '🇸🇦 ${l10n.dialectSaudi}',
+      'ar-EG': '🇪🇬 ${l10n.dialectEgyptian}',
+      'ar-AE': '🇦🇪 ${l10n.dialectUAE}',
+      'ar-LB': '🇱🇧 ${l10n.dialectLebanese}',
+      'ar-JO': '🇯🇴 ${l10n.dialectJordanian}',
+      'ar-MA': '🇲🇦 ${l10n.dialectMoroccan}',
     };
 
     return Container(
@@ -760,11 +777,11 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
   }
 
   Widget _buildImageSizeSelector(
-      String currentSize, CreationController controller) {
+      String currentSize, CreationController controller, AppLocalizations l10n) {
     final sizes = {
-      '1024x1024': 'Square',
-      '1920x1080': 'Landscape',
-      '1080x1920': 'Portrait',
+      '1024x1024': l10n.square,
+      '1920x1080': l10n.landscape,
+      '1080x1920': l10n.portrait,
     };
 
     return Column(

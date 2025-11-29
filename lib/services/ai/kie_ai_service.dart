@@ -228,35 +228,87 @@ class KieAIService {
     }
   }
 
+  /// Check the status of a Nano Banana Pro image generation task
+  Future<Map<String, dynamic>> checkImageTaskStatus(String taskId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/v1/jobs/recordInfo?taskId=$taskId'),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 200) {
+          final taskData = data['data'];
+          final state = taskData['state'];
+
+          if (state == 'success') {
+            final resultJson = jsonDecode(taskData['resultJson']);
+            return {
+              'state': 'success',
+              'imageUrl': resultJson['resultUrls'][0],
+            };
+          } else if (state == 'fail') {
+            return {
+              'state': 'fail',
+              'error': taskData['failMsg'],
+            };
+          } else {
+            return {
+              'state': 'waiting',
+            };
+          }
+        } else {
+          throw Exception('Status check error: ${data['msg']}');
+        }
+      } else {
+        throw Exception('Status check HTTP error: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error checking image task status: $e');
+      rethrow;
+    }
+  }
+
   // ==================== IMAGE GENERATION (Nano Banana Pro) ====================
 
   /// Generate image using Nano Banana Pro
+  /// Returns a taskId that needs to be polled for results
   Future<String> generateImage({
     required String prompt,
-    String style = 'realistic', // realistic, cartoon, artistic
-    String size = '1024x1024', // 1024x1024, 1920x1080, 1080x1920
+    List<String>? imageInput, // Optional: up to 8 input images (URLs)
+    String aspectRatio =
+        '1:1', // 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
+    String resolution = '1K', // 1K, 2K, 4K
+    String outputFormat = 'png', // png, jpg
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/nano-banana/generate'),
+        Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
         headers: {
           'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'prompt': prompt,
-          'style': style,
-          'size': size,
-          'format': 'jpg',
+          'model': 'nano-banana-pro',
+          'input': {
+            'prompt': prompt,
+            'image_input': imageInput ?? [],
+            'aspect_ratio': aspectRatio,
+            'resolution': resolution,
+            'output_format': outputFormat,
+          },
         }),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['data']['imageUrl'];
+        if (data['code'] == 200) {
+          return data['data']['taskId'];
         } else {
-          throw Exception('Nano Banana error: ${data['message']}');
+          throw Exception('Nano Banana API error: ${data['msg']}');
         }
       } else {
         throw Exception('Nano Banana HTTP error: ${response.statusCode}');
@@ -391,22 +443,58 @@ class KieAIService {
     CreationConfig config,
     String enhancedPrompt,
   ) async {
-    final imageUrl = await generateImage(
+    // Convert size string (e.g., "1024x1024") to aspect ratio and resolution
+    String aspectRatio = '1:1';
+    String resolution = '1K';
+
+    if (config.imageSize != null) {
+      // Map common sizes to aspect ratios
+      if (config.imageSize == '1920x1080' || config.imageSize == '16:9') {
+        aspectRatio = '16:9';
+        resolution = '2K';
+      } else if (config.imageSize == '1080x1920' ||
+          config.imageSize == '9:16') {
+        aspectRatio = '9:16';
+        resolution = '2K';
+      } else {
+        aspectRatio = '1:1';
+        resolution = '1K';
+      }
+    }
+
+    final taskId = await generateImage(
       prompt: enhancedPrompt,
-      style: config.imageStyle?.name ?? 'realistic',
-      size: config.imageSize ?? '1024x1024',
+      aspectRatio: aspectRatio,
+      resolution: resolution,
+      outputFormat: 'png',
     );
 
+    // Return taskId immediately for persistence (similar to video)
     return {
-      'type': 'image',
-      'url': imageUrl,
+      'type': 'image_task',
+      'taskId': taskId,
+      'status': 'processing',
     };
   }
 
-  /// Public method to check status of a task
+  /// Public method to check status of a task (works for both video and image)
+  /// Attempts to check status using both video and image endpoints
   Future<Map<String, dynamic>> checkTaskStatus(String taskId) async {
-    // Currently only supporting Sora 2 for MVP
-    return await checkSora2TaskStatus(taskId);
+    try {
+      // Try checking as a video task first (Sora 2)
+      final result = await checkSora2TaskStatus(taskId);
+      return result;
+    } catch (e) {
+      // If it fails, try checking as an image task (Nano Banana)
+      try {
+        final result = await checkImageTaskStatus(taskId);
+        return result;
+      } catch (imageError) {
+        // If both fail, rethrow the original error
+        debugPrint('Error checking task status: $e');
+        rethrow;
+      }
+    }
   }
 }
 

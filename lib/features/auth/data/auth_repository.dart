@@ -9,6 +9,15 @@ abstract class AuthRepository {
   Stream<bool> get authStateChanges;
   bool get isAnonymous;
   Future<void> signInAnonymously();
+  Future<UserCredential> signUpWithEmailPassword({
+    required String email,
+    required String password,
+    required String name,
+  });
+  Future<UserCredential> signInWithEmailPassword({
+    required String email,
+    required String password,
+  });
   Future<void> verifyPhoneNumber({
     required String phoneNumber,
     required void Function(PhoneAuthCredential) verificationCompleted,
@@ -45,6 +54,33 @@ class MockAuthRepository implements AuthRepository {
     _isLoggedIn = true;
     _isAnonymous = true;
     _authStateController.add(true);
+  }
+
+  @override
+  Future<UserCredential> signUpWithEmailPassword({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    _isLoggedIn = true;
+    _isAnonymous = false;
+    _authStateController.add(true);
+    // Return a mock UserCredential - this won't be used in mock mode
+    throw UnimplementedError('Mock auth does not return UserCredential');
+  }
+
+  @override
+  Future<UserCredential> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    _isLoggedIn = true;
+    _isAnonymous = false;
+    _authStateController.add(true);
+    // Return a mock UserCredential - this won't be used in mock mode
+    throw UnimplementedError('Mock auth does not return UserCredential');
   }
 
   @override
@@ -92,6 +128,32 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signInAnonymously() async {
     await _firebaseAuth.signInAnonymously();
+  }
+
+  @override
+  Future<UserCredential> signUpWithEmailPassword({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    // Update display name
+    await userCredential.user?.updateDisplayName(name);
+    return userCredential;
+  }
+
+  @override
+  Future<UserCredential> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    return await _firebaseAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
   }
 
   @override

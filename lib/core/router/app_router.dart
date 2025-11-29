@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/creation/presentation/screens/magic_loading_screen.dart';
 import '../../features/preview/presentation/screens/preview_screen.dart';
@@ -22,6 +23,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.value == true;
       final isSplash = state.uri.toString() == '/splash';
       final isLogin = state.uri.toString() == '/login';
+      final isSignup = state.uri.toString() == '/signup';
 
       if (authState.isLoading) {
         return '/splash';
@@ -31,18 +33,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/home';
       }
 
-      // if (isSplash && !isLoggedIn) {
-      //   return '/login';
-      // }
-
-      if (isLogin && isLoggedIn) {
-        final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
-        if (!isAnonymous) {
-          return '/home';
-        }
+      if ((isLogin || isSignup) && isLoggedIn) {
+        return '/home';
       }
 
-      if (!isLoggedIn && !isLogin && !isSplash) {
+      if (!isLoggedIn && !isLogin && !isSignup && !isSplash) {
         return '/login';
       }
 
@@ -54,6 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/magic-loading',

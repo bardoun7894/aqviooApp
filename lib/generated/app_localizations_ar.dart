@@ -398,7 +398,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryAgain => 'حاول مرة أخرى';
 
   @override
-  String get processing => 'جاري المعالجة';
+  String get processing => 'جاري المعالجة...';
 
   @override
   String get waitForOtp => 'في انتظار رمز التحقق';
@@ -644,4 +644,103 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payWithCard => 'الدفع عبر البطاقة';
+
+  @override
+  String get emailOrPhone => 'البريد الإلكتروني أو الهاتف';
+
+  @override
+  String get signIn => 'تسجيل الدخول';
+
+  @override
+  String get continueButton => 'متابعة';
+
+  @override
+  String get confirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get alreadyHaveAccount => 'هل لديك حساب بالفعل؟';
+
+  @override
+  String get phone => 'الهاتف';
+
+  @override
+  String get createAccount => 'إنشاء حساب';
+
+  @override
+  String get joinAndStartCreating => 'انضم وابدأ في إنشاء مقاطع فيديو رائعة';
+
+  @override
+  String get styleHeader => 'الأسلوب';
+
+  @override
+  String get durationHeader => 'المدة';
+
+  @override
+  String get aspectRatioHeader => 'نسبة العرض';
+
+  @override
+  String get voiceSettingsHeader => 'إعدادات الصوت';
+
+  @override
+  String get sizeHeader => 'الحجم';
+
+  @override
+  String get quick => 'سريع';
+
+  @override
+  String get standard => 'قياسي';
+
+  @override
+  String get horizontal => 'أفقي';
+
+  @override
+  String get vertical => 'رأسي';
+
+  @override
+  String get square => 'مربع';
+
+  @override
+  String get landscape => 'أفقي';
+
+  @override
+  String get portrait => 'رأسي';
+
+  @override
+  String get recentProjects => 'المشاريع الأخيرة';
+
+  @override
+  String get viewAll => 'عرض الكل';
+
+  @override
+  String get createMagic => 'إنشاء السحر';
+
+  @override
+  String get productAd => 'إعلان منتج';
+
+  @override
+  String get socialReel => 'ريل تواصل';
+
+  @override
+  String get render3D => 'تصيير ثلاثي الأبعاد';
+
+  @override
+  String get avatar => 'أفاتار';
+
+  @override
+  String get advancedSettings => 'إعدادات متقدمة';
+
+  @override
+  String get credits => 'الرصيد';
+
+  @override
+  String get viewLibrary => 'عرض المكتبة';
+
+  @override
+  String get modelVersion => 'الإصدار 4.0';
+
+  @override
+  String get generating => 'جاري الإنشاء...';
+
+  @override
+  String get quickSuggestions => 'اقتراحات سريعة';
 }

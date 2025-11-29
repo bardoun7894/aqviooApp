@@ -398,7 +398,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryAgain => 'Try Again';
 
   @override
-  String get processing => 'Processing';
+  String get processing => 'Processing...';
 
   @override
   String get waitForOtp => 'Waiting for OTP code';
@@ -643,4 +643,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payWithCard => 'Pay with Card';
+
+  @override
+  String get emailOrPhone => 'Email or Phone';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get confirmPassword => 'Confirm Password';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get joinAndStartCreating => 'Join and start creating amazing videos';
+
+  @override
+  String get styleHeader => 'Style';
+
+  @override
+  String get durationHeader => 'Duration';
+
+  @override
+  String get aspectRatioHeader => 'Aspect Ratio';
+
+  @override
+  String get voiceSettingsHeader => 'Voice Settings';
+
+  @override
+  String get sizeHeader => 'Size';
+
+  @override
+  String get quick => 'Quick';
+
+  @override
+  String get standard => 'Standard';
+
+  @override
+  String get horizontal => 'Horizontal';
+
+  @override
+  String get vertical => 'Vertical';
+
+  @override
+  String get square => 'Square';
+
+  @override
+  String get landscape => 'Landscape';
+
+  @override
+  String get portrait => 'Portrait';
+
+  @override
+  String get recentProjects => 'Recent Projects';
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get createMagic => 'Create Magic';
+
+  @override
+  String get productAd => 'Product Ad';
+
+  @override
+  String get socialReel => 'Social Reel';
+
+  @override
+  String get render3D => '3D Render';
+
+  @override
+  String get avatar => 'Avatar';
+
+  @override
+  String get advancedSettings => 'Advanced Settings';
+
+  @override
+  String get credits => 'Credits';
+
+  @override
+  String get viewLibrary => 'View Library';
+
+  @override
+  String get modelVersion => 'Model v4.0';
+
+  @override
+  String get generating => 'Generating...';
+
+  @override
+  String get quickSuggestions => 'Quick Suggestions';
 }

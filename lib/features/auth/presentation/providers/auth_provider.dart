@@ -16,6 +16,34 @@ class AuthController extends AsyncNotifier<void> {
     );
   }
 
+  Future<void> signUpWithEmailPassword({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signUpWithEmailPassword(
+        email: email,
+        password: password,
+        name: name,
+      ),
+    );
+  }
+
+  Future<void> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithEmailPassword(
+        email: email,
+        password: password,
+      ),
+    );
+  }
+
   Future<void> verifyPhoneNumber({
     required String phoneNumber,
     required void Function(String, int?) codeSent,

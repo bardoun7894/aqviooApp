@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @processing.
   ///
   /// In en, this message translates to:
-  /// **'Processing'**
+  /// **'Processing...'**
   String get processing;
 
   /// No description provided for @waitForOtp.
@@ -1339,6 +1339,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pay with Card'**
   String get payWithCard;
+
+  /// No description provided for @emailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or Phone'**
+  String get emailOrPhone;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get signIn;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get confirmPassword;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Account'**
+  String get createAccount;
+
+  /// No description provided for @joinAndStartCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Join and start creating amazing videos'**
+  String get joinAndStartCreating;
+
+  /// No description provided for @styleHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get styleHeader;
+
+  /// No description provided for @durationHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get durationHeader;
+
+  /// No description provided for @aspectRatioHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Aspect Ratio'**
+  String get aspectRatioHeader;
+
+  /// No description provided for @voiceSettingsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Settings'**
+  String get voiceSettingsHeader;
+
+  /// No description provided for @sizeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get sizeHeader;
+
+  /// No description provided for @quick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick'**
+  String get quick;
+
+  /// No description provided for @standard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get standard;
+
+  /// No description provided for @horizontal.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal'**
+  String get horizontal;
+
+  /// No description provided for @vertical.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical'**
+  String get vertical;
+
+  /// No description provided for @square.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get square;
+
+  /// No description provided for @landscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Landscape'**
+  String get landscape;
+
+  /// No description provided for @portrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Portrait'**
+  String get portrait;
+
+  /// No description provided for @recentProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Projects'**
+  String get recentProjects;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View All'**
+  String get viewAll;
+
+  /// No description provided for @createMagic.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Magic'**
+  String get createMagic;
+
+  /// No description provided for @productAd.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Ad'**
+  String get productAd;
+
+  /// No description provided for @socialReel.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Reel'**
+  String get socialReel;
+
+  /// No description provided for @render3D.
+  ///
+  /// In en, this message translates to:
+  /// **'3D Render'**
+  String get render3D;
+
+  /// No description provided for @avatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar'**
+  String get avatar;
+
+  /// No description provided for @advancedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Settings'**
+  String get advancedSettings;
+
+  /// No description provided for @credits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get credits;
+
+  /// No description provided for @viewLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'View Library'**
+  String get viewLibrary;
+
+  /// No description provided for @modelVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Model v4.0'**
+  String get modelVersion;
+
+  /// No description provided for @generating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get generating;
+
+  /// No description provided for @quickSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Suggestions'**
+  String get quickSuggestions;
 }
 
 class _AppLocalizationsDelegate

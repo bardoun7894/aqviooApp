@@ -85,7 +85,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } else if (_isPhone(identifier)) {
       _signInWithPhone(identifier);
     } else {
-      _showSnackBar('Please enter a valid email or phone number', isError: true);
+      _showSnackBar('Please enter a valid email or phone number',
+          isError: true);
     }
   }
 
@@ -97,8 +98,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       return;
     }
 
-    // TODO: Implement email/password sign-in with Firebase
-    _showSnackBar('Email sign-in coming soon!');
+    // Call Firebase signin
+    ref.read(authControllerProvider.notifier).signInWithEmailPassword(
+      email: email,
+      password: password,
+    );
   }
 
   void _signInWithPhone(String phone) {
@@ -167,7 +171,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ],
         ),
-        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
+        backgroundColor:
+            isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(12),
@@ -196,36 +201,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Logo
+                  _buildCompactHeader(context, l10n, isDark),
 
-                // Logo
-                _buildCompactHeader(context, l10n, isDark),
+                  const SizedBox(height: 32),
 
-                const SizedBox(height: 32),
+                  // Main Card
+                  _buildCompactCard(context, isLoading, l10n, isDark),
 
-                // Main Card
-                _buildCompactCard(context, isLoading, l10n, isDark),
+                  const SizedBox(height: 16),
 
-                const SizedBox(height: 16),
+                  // Guest Login
+                  if (!_codeSent)
+                    _buildCompactGuestLogin(context, isLoading, l10n, isDark),
 
-                // Guest Login
-                if (!_codeSent) _buildCompactGuestLogin(context, isLoading, l10n, isDark),
+                  const SizedBox(height: 12),
 
-                const Spacer(),
+                  // Don't have account - Signup link
+                  if (!_codeSent) _buildSignupLink(context, isDark),
 
-                // Footer
-                _buildCompactFooter(context, isDark),
-                const SizedBox(height: 16),
-              ],
+                  const SizedBox(height: 24),
+
+                  // Footer
+                  _buildCompactFooter(context, isDark),
+                ],
+              ),
             ),
           ),
         ),
@@ -250,8 +261,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
   }
 
-  Widget _buildCompactHeader(BuildContext context, AppLocalizations l10n, bool isDark) {
+  Widget _buildCompactHeader(
+      BuildContext context, AppLocalizations l10n, bool isDark) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // Compact Logo
         Container(
@@ -310,26 +323,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildCompactCard(BuildContext context, bool isLoading, AppLocalizations l10n, bool isDark) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 420),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkGray : AppColors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : AppColors.neuShadowDark.withOpacity(0.15),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+  Widget _buildCompactCard(BuildContext context, bool isLoading,
+      AppLocalizations l10n, bool isDark) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 420),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkGray : AppColors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withOpacity(0.3)
+                  : AppColors.neuShadowDark.withOpacity(0.15),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: _codeSent
+            ? _buildOTPForm(context, isLoading, isDark)
+            : _buildUnifiedForm(context, isLoading, isDark),
       ),
-      padding: const EdgeInsets.all(24),
-      child: _codeSent
-          ? _buildOTPForm(context, isLoading, isDark)
-          : _buildUnifiedForm(context, isLoading, isDark),
     );
   }
 
@@ -339,13 +356,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final showPassword = identifier.isNotEmpty && _isEmail(identifier);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Email or Phone Input
         _buildCompactTextField(
           controller: _identifierController,
           focusNode: _identifierFocusNode,
-          hintText: 'Email or Phone',
+          hintText: l10n.emailOrPhone,
           icon: Icons.person_outline,
           keyboardType: TextInputType.emailAddress,
           isDark: isDark,
@@ -365,17 +383,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _buildCompactTextField(
             controller: _passwordController,
             focusNode: _passwordFocusNode,
-            hintText: 'Password',
+            hintText: l10n.password,
             icon: Icons.lock_outline,
             obscureText: _obscurePassword,
             isDark: isDark,
             suffixIcon: IconButton(
               icon: Icon(
-                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                _obscurePassword
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
                 size: 18,
               ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
             onSubmitted: (_) => _handleSignIn(),
           ),
@@ -385,7 +406,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
         // Sign In Button
         _buildCompactButton(
-          label: showPassword ? 'Sign In' : 'Continue',
+          label: showPassword ? l10n.signIn : l10n.continueButton,
           icon: Icons.arrow_forward,
           onPressed: isLoading ? null : _handleSignIn,
           isLoading: isLoading,
@@ -401,7 +422,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 _showSnackBar('Forgot password coming soon!');
               },
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 minimumSize: Size.zero,
               ),
               child: Text(
@@ -422,7 +444,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _buildOTPForm(BuildContext context, bool isLoading, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           l10n.otpVerification,
@@ -451,7 +474,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: _otpController.text.isEmpty
-                  ? (isDark ? Colors.white.withOpacity(0.1) : AppColors.neuShadowDark.withOpacity(0.2))
+                  ? (isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neuShadowDark.withOpacity(0.2))
                   : AppColors.primaryPurple,
               width: 2,
             ),
@@ -646,43 +671,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildCompactGuestLogin(BuildContext context, bool isLoading, AppLocalizations l10n, bool isDark) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 420),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: isDark
-              ? AppColors.mediumGray.withOpacity(0.3)
-              : AppColors.neuShadowDark.withOpacity(0.3),
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isLoading ? null : _guestLogin,
+  Widget _buildCompactGuestLogin(BuildContext context, bool isLoading,
+      AppLocalizations l10n, bool isDark) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 420),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isDark
+                ? AppColors.mediumGray.withOpacity(0.3)
+                : AppColors.neuShadowDark.withOpacity(0.3),
+            width: 1.5,
+          ),
           borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 18,
-                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.continueAsGuest,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isLoading ? null : _guestLogin,
+            borderRadius: BorderRadius.circular(14),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.person_outline,
+                    size: 18,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.continueAsGuest,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -690,60 +722,98 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
+  Widget _buildSignupLink(BuildContext context, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            l10n.dontHaveAccount,
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.go('/signup'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+            ),
+            child: Text(
+              l10n.signUp,
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryPurple,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCompactFooter(BuildContext context, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 4,
-      children: [
-        Text(
-          'By continuing, you agree to our',
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            color: isDark ? AppColors.mediumGray : AppColors.textHint,
-          ),
-        ),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            l10n.termsOfService,
+    return Center(
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runAlignment: WrapAlignment.center,
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          Text(
+            'By continuing, you agree to our',
             style: GoogleFonts.outfit(
               fontSize: 11,
-              color: AppColors.primaryPurple,
-              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.mediumGray : AppColors.textHint,
             ),
           ),
-        ),
-        Text(
-          'and',
-          style: GoogleFonts.outfit(
-            fontSize: 11,
-            color: isDark ? AppColors.mediumGray : AppColors.textHint,
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              l10n.termsOfService,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: AppColors.primaryPurple,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-        ),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            l10n.privacyPolicy,
+          Text(
+            'and',
             style: GoogleFonts.outfit(
               fontSize: 11,
-              color: AppColors.primaryPurple,
-              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.mediumGray : AppColors.textHint,
             ),
           ),
-        ),
-      ],
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              l10n.privacyPolicy,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: AppColors.primaryPurple,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
