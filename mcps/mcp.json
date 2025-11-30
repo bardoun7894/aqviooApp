@@ -7,6 +7,13 @@
         "@upstash/context7-mcp"
       ]
     },
+    "dart": {
+      "command": "dart",
+      "args": [
+        "mcp-server",
+        "--force-roots-fallback"
+      ]
+    },
     "perplexity": {
       "command": "npx",
       "args": [
@@ -36,14 +43,6 @@
       "env": {
         "PYTHONPATH": "/Users/mac/.gemini/flutter-mcp/src"
       }
-    },
-    "dart-mcp-server": {
-      "command": "dart",
-      "args": [
-        "mcp-server",
-        "--force-roots-fallback"
-      ],
-      "env": {}
     }
   }
 }

@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
 import '../../../../generated/app_localizations.dart';
+import '../../../../services/payment/tabby_service.dart';
 
 // Credit packages
 class CreditPackage {
@@ -226,7 +230,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        package.badge == 'Popular' ? l10n.popularBadge : l10n.bestValueBadge,
+                                        package.badge == 'Popular'
+                                            ? l10n.popularBadge
+                                            : l10n.bestValueBadge,
                                         style: GoogleFonts.outfit(
                                           fontSize: 10,
                                           color: Colors.white,
@@ -360,6 +366,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     setState(() {
       _isProcessing = true;
     });
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final package = creditPackages[_selectedPackageIndex];
@@ -505,113 +512,85 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         return;
       }
 
-      // Simulate Tabby payment processing
-      // In production, redirect to Tabby checkout page
-      await Future.delayed(const Duration(seconds: 2));
+      // Get user information
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
 
-      // Add credits to user account
-      await ref
-          .read(creditsControllerProvider.notifier)
-          .addCredits(package.credits);
+      // Get Tabby configuration from environment
+      final merchantCode = dotenv.env['TABBY_MERCHANT_CODE'] ?? 'sa';
+      final orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Create Tabby checkout session
+      final session = await TabbyService().createCheckoutSession(
+        merchantCode: merchantCode,
+        amount: package.price,
+        currency: 'SAR',
+        userEmail: user.email ?? 'user@aqvioo.com',
+        userPhone: user.phoneNumber ?? '+966500000001',
+        userName: user.displayName ?? 'User',
+        credits: package.credits,
+        orderId: orderId,
+      );
 
       if (!mounted) return;
 
-      // Show success dialog
-      showDialog(
+      if (session == null) {
+        throw Exception('Failed to create Tabby session');
+      }
+
+      // Session status check removed - SDK version doesn't support it
+      // Payment will fail gracefully in the WebView if rejected
+
+      // Open Tabby WebView for payment
+      if (!mounted) return;
+      TabbyWebView.showWebView(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
+        webUrl: session.availableProducts.installments?.webUrl ?? '',
+        onResult: (WebViewResult resultCode) async {
+          switch (resultCode) {
+            case WebViewResult.authorized:
+              // Payment authorized - add credits
+              await ref
+                  .read(creditsControllerProvider.notifier)
+                  .addCredits(package.credits);
+
+              if (!mounted) return;
+              _showSuccessDialog(package);
+              break;
+
+            case WebViewResult.rejected:
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.paymentFailedMessage),
+                  backgroundColor: Colors.red,
                 ),
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.green.shade600,
-                  size: 64,
+              );
+              break;
+
+            case WebViewResult.expired:
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.paymentFailedMessage),
+                  backgroundColor: Colors.orange,
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.paymentSuccessTitle,
-                style: GoogleFonts.outfit(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.creditsAdded(package.credits),
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.shopping_bag,
-                      color: Color(0xFF3ECDCC),
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.firstPayment((package.price / 4).toStringAsFixed(2)),
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close dialog
-                    context.pop(); // Close payment screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.startCreatingButton,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+              );
+              break;
+
+            case WebViewResult.close:
+              // User closed the checkout
+              break;
+          }
+
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
+        },
       );
     } catch (e) {
       if (!mounted) return;
@@ -649,5 +628,106 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         });
       }
     }
+  }
+
+  void _showSuccessDialog(CreditPackage package) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_circle,
+                color: Colors.green.shade600,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.paymentSuccessTitle,
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.creditsAdded(package.credits),
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.shopping_bag,
+                    color: Color(0xFF3ECDCC),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.firstPayment((package.price / 4).toStringAsFixed(2)),
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  context.pop(); // Close payment screen
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  l10n.startCreatingButton,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -11,9 +11,17 @@ import '../../features/preview/presentation/screens/preview_screen.dart';
 import '../../features/creation/presentation/screens/my_creations_screen.dart';
 import '../../features/auth/presentation/screens/account_settings_screen.dart';
 import '../../features/payment/presentation/screens/payment_screen.dart';
+import '../../features/admin/auth/screens/admin_login_screen.dart';
+import '../../features/admin/auth/providers/admin_auth_provider.dart';
+import '../../features/admin/dashboard/screens/dashboard_home_screen.dart';
+import '../../features/admin/users/screens/users_list_screen.dart';
+import '../../features/admin/users/screens/user_detail_screen.dart';
+import '../../features/admin/content/screens/content_viewer_screen.dart';
+import '../../features/admin/payments/screens/payments_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final adminAuthState = ref.watch(adminAuthControllerProvider);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -22,10 +30,26 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
     redirect: (context, state) {
       final isLoggedIn = authState.value == true;
-      final isSplash = state.uri.toString() == '/splash';
-      final isLogin = state.uri.toString() == '/login';
-      final isSignup = state.uri.toString() == '/signup';
+      final isAdminLoggedIn = adminAuthState.isAuthenticated;
+      final currentPath = state.uri.toString();
+      final isAdminRoute = currentPath.startsWith('/admin');
+      final isAdminLogin = currentPath == '/admin/login';
+      final isSplash = currentPath == '/splash';
+      final isLogin = currentPath == '/login';
+      final isSignup = currentPath == '/signup';
 
+      // Admin routes handling
+      if (isAdminRoute) {
+        if (!isAdminLoggedIn && !isAdminLogin) {
+          return '/admin/login';
+        }
+        if (isAdminLogin && isAdminLoggedIn) {
+          return '/admin/dashboard';
+        }
+        return null; // Allow access to admin route
+      }
+
+      // Mobile app routes handling
       if (authState.isLoading) {
         return '/splash';
       }
@@ -94,6 +118,34 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           return PaymentScreen(amount: amount);
         },
+      ),
+      // Admin Routes
+      GoRoute(
+        path: '/admin/login',
+        builder: (context, state) => const AdminLoginScreen(),
+      ),
+      GoRoute(
+        path: '/admin/dashboard',
+        builder: (context, state) => const DashboardHomeScreen(),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const UsersListScreen(),
+      ),
+      GoRoute(
+        path: '/admin/users/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return UserDetailScreen(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/admin/content',
+        builder: (context, state) => const ContentViewerScreen(),
+      ),
+      GoRoute(
+        path: '/admin/payments',
+        builder: (context, state) => const PaymentsScreen(),
       ),
     ],
   );
