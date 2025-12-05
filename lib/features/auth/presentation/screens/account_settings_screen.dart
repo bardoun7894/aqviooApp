@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../admin/auth/providers/admin_auth_provider.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -480,6 +481,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Widget _buildSettingsSection(BuildContext context, WidgetRef ref) {
+    final adminAuthState = ref.watch(adminAuthControllerProvider);
+    final isAdmin = adminAuthState.isAuthenticated;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -494,6 +498,19 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ),
       child: Column(
         children: [
+          // Admin Dashboard Switch - Only show for admin users
+          if (isAdmin) ...[
+            _buildSettingsTile(
+              icon: Icons.admin_panel_settings_rounded,
+              title: 'Admin Dashboard',
+              subtitle: 'Switch to admin view',
+              iconColor: const Color(0xFF8B5CF6),
+              onTap: () {
+                context.go('/admin/dashboard');
+              },
+            ),
+            _buildDivider(),
+          ],
           _buildSettingsTile(
             icon: Icons.language_rounded,
             title: 'Language',

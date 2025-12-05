@@ -42,32 +42,25 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      appBar: isMobile ? _buildMobileAppBar(isDark, adminUser?.displayName ?? 'Admin') : null,
       body: Row(
         children: [
-          // Sidebar
+          // Sidebar - Only on desktop/tablet
           if (!isMobile)
             _buildSidebar(isDark, adminUser?.displayName ?? 'Admin'),
-
-          // Mobile Drawer
-          if (isMobile)
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            ),
 
           // Main Content
           Expanded(
             child: Column(
               children: [
-                // Top App Bar
-                _buildTopBar(isDark, adminUser?.displayName ?? 'Admin'),
+                // Top App Bar - Only on desktop/tablet
+                if (!isMobile)
+                  _buildTopBar(isDark, adminUser?.displayName ?? 'Admin'),
 
                 // Main Content Area
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.all(isMobile ? 16 : 24),
                     child: widget.child,
                   ),
                 ),
@@ -78,7 +71,10 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
       ),
       drawer: isMobile
           ? Drawer(
-              child: _buildSidebarContent(isDark, adminUser?.displayName ?? 'Admin'),
+              backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+              child: SafeArea(
+                child: _buildSidebarContent(isDark, adminUser?.displayName ?? 'Admin'),
+              ),
             )
           : null,
     );
@@ -151,6 +147,15 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                   route: '/admin/settings',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/settings',
+                ),
+                const SizedBox(height: 16),
+                // Switch to Home App
+                _buildNavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Switch to App',
+                  route: '/home',
+                  isDark: isDark,
+                  isActive: false,
                 ),
               ],
             ),
@@ -395,6 +400,72 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
           ),
         ],
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildMobileAppBar(bool isDark, String adminName) {
+    return AppBar(
+      backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+      elevation: 0,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(
+            Icons.menu_rounded,
+            color: isDark ? AppColors.white : AppColors.textPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Aqvioo Admin',
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.white : AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.notifications_outlined,
+            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+          ),
+          onPressed: () {},
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
+            child: Text(
+              adminName[0].toUpperCase(),
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryPurple,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
