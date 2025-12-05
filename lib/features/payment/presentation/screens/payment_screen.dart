@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../services/payment/tabby_service.dart';
+import '../../../../services/payment/transaction_service.dart';
 
 // Credit packages
 class CreditPackage {
@@ -522,6 +523,22 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       final merchantCode = dotenv.env['TABBY_MERCHANT_CODE'] ?? 'sa';
       final orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
 
+      // Create transaction record in Firestore (pending status)
+      final transactionId = await TransactionService().createTransaction(
+        userId: user.uid,
+        userName: user.displayName ?? 'User',
+        userEmail: user.email ?? 'N/A',
+        amount: package.price,
+        currency: 'SAR',
+        credits: package.credits,
+        orderId: orderId,
+        paymentMethod: 'Tabby',
+        metadata: {
+          'packageCredits': package.credits,
+          'packagePrice': package.price,
+        },
+      );
+
       // Create Tabby checkout session
       final session = await TabbyService().createCheckoutSession(
         merchantCode: merchantCode,
@@ -551,6 +568,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         onResult: (WebViewResult resultCode) async {
           switch (resultCode) {
             case WebViewResult.authorized:
+              // Update transaction status to authorized/completed
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: TransactionStatus.authorized,
+              );
+
               // Payment authorized - add credits
               await ref
                   .read(creditsControllerProvider.notifier)
@@ -561,6 +584,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               break;
 
             case WebViewResult.rejected:
+              // Update transaction status to failed
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: TransactionStatus.failed,
+              );
+
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -571,6 +600,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               break;
 
             case WebViewResult.expired:
+              // Update transaction status to failed
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: TransactionStatus.failed,
+              );
+
               if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -581,7 +616,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               break;
 
             case WebViewResult.close:
-              // User closed the checkout
+              // User closed the checkout - leave as pending
               break;
           }
 

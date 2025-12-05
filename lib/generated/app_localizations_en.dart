@@ -41,6 +41,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
+  String get backToLogin => 'Back to login';
+
+  @override
   String get google => 'Google';
 
   @override
@@ -398,7 +401,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryAgain => 'Try Again';
 
   @override
-  String get processing => 'Processing...';
+  String get processing => 'Processing';
 
   @override
   String get waitForOtp => 'Waiting for OTP code';
@@ -751,7 +754,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String creditBalance(int count) {
-    return '$count Credits';
+    return 'Credit Balance';
   }
 
   @override
@@ -863,4 +866,299 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkLaterInMyCreations => 'Check later in My Creations';
+
+  @override
+  String get creator => 'Creator';
+
+  @override
+  String get speechRecognitionNotAvailable =>
+      'Speech recognition not available';
+
+  @override
+  String get microphonePermissionRequired =>
+      'Microphone permission is required';
+
+  @override
+  String failedToEnhancePrompt(Object error) {
+    return 'Failed to enhance prompt: $error';
+  }
+
+  @override
+  String get moreStyles => 'More Styles';
+
+  @override
+  String get showLess => 'Show Less';
+
+  @override
+  String get enhancing => 'Enhancing...';
+
+  @override
+  String get didNotReceiveCode => 'Didn\'t receive the code? ';
+
+  @override
+  String get weSentCodeTo => 'We sent a code to';
+
+  @override
+  String youWillGenerate(Object label) {
+    return 'You will generate $label';
+  }
+
+  @override
+  String get yourGallery => 'YOUR GALLERY';
+
+  @override
+  String get emptyGalleryDescription =>
+      'Start creating amazing AI-generated videos and images with just a few taps';
+
+  @override
+  String get createYourFirst => 'Create Your First';
+
+  @override
+  String get generatingMagic => 'Generating Magic...';
+
+  @override
+  String get generationTimedOut => 'Generation timed out';
+
+  @override
+  String get cinematic => 'Cinematic';
+
+  @override
+  String get realEstate => 'Real Estate';
+
+  @override
+  String get educational => 'Educational';
+
+  @override
+  String get corporate => 'Corporate';
+
+  @override
+  String get gaming => 'Gaming';
+
+  @override
+  String get musicVideo => 'Music Video';
+
+  @override
+  String get documentary => 'Documentary';
+
+  @override
+  String get adminDashboard => 'Dashboard';
+
+  @override
+  String get adminUsers => 'Users';
+
+  @override
+  String get adminContent => 'Content';
+
+  @override
+  String get adminPayments => 'Payments';
+
+  @override
+  String get adminSettings => 'Settings';
+
+  @override
+  String get dashboardMetrics => 'Dashboard Metrics';
+
+  @override
+  String get totalUsers => 'Total Users';
+
+  @override
+  String get totalVideos => 'Total Videos';
+
+  @override
+  String get totalRevenue => 'Total Revenue';
+
+  @override
+  String get videosGenerated => 'Videos Generated';
+
+  @override
+  String get activeGenerations => 'Active Generations';
+
+  @override
+  String get successRate => 'Success Rate';
+
+  @override
+  String get recentUsers => 'Recent Users';
+
+  @override
+  String get recentVideos => 'Recent Videos';
+
+  @override
+  String get recentTransactions => 'Recent Transactions';
+
+  @override
+  String get userList => 'User List';
+
+  @override
+  String get searchByEmail => 'Search by email or username';
+
+  @override
+  String get phoneNumberLabel => 'Phone';
+
+  @override
+  String get creditsLabel => 'Credits';
+
+  @override
+  String get statusLabel => 'Status';
+
+  @override
+  String get actionLabel => 'Action';
+
+  @override
+  String get banUser => 'Ban User';
+
+  @override
+  String get unbanUser => 'Unban User';
+
+  @override
+  String get viewDetails => 'View Details';
+
+  @override
+  String get contentManagement => 'Content Management';
+
+  @override
+  String get searchByPrompt => 'Search by prompt or user';
+
+  @override
+  String get typeFilter => 'Type';
+
+  @override
+  String get statusFilter => 'Status';
+
+  @override
+  String get allTypes => 'All Types';
+
+  @override
+  String get allStatus => 'All Status';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get contentPreview => 'Preview';
+
+  @override
+  String get copyUrl => 'Copy URL';
+
+  @override
+  String get userInformation => 'User Information';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get adjustCredits => 'Adjust Credits';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get bonus => 'Bonus';
+
+  @override
+  String get refund => 'Refund';
+
+  @override
+  String get correction => 'Correction';
+
+  @override
+  String get other => 'Other';
+
+  @override
+  String get notes => 'Notes (optional)';
+
+  @override
+  String get accountStatus => 'Account Status';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get banned => 'Banned';
+
+  @override
+  String get bannedOn => 'Banned on';
+
+  @override
+  String get banReason => 'Reason';
+
+  @override
+  String get recentCreations => 'Recent Creations';
+
+  @override
+  String get noCreations => 'No creations yet';
+
+  @override
+  String get paymentsList => 'Payments List';
+
+  @override
+  String get paymentId => 'Payment ID';
+
+  @override
+  String get paymentStatus => 'Status';
+
+  @override
+  String get paymentDate => 'Date';
+
+  @override
+  String get transactionId => 'Transaction ID';
+
+  @override
+  String get adminLogout => 'Logout';
+
+  @override
+  String get adminProfile => 'Admin Profile';
+
+  @override
+  String get adminEmail => 'Email';
+
+  @override
+  String get adminRole => 'Role';
+
+  @override
+  String get adminPermissions => 'Permissions';
+
+  @override
+  String get areYouSure => 'Are you sure?';
+
+  @override
+  String get deleteContentMsg => 'This content will be permanently deleted';
+
+  @override
+  String get confirmBan => 'Are you sure you want to ban this user?';
+
+  @override
+  String get unbanConfirm => 'Are you sure you want to unban this user?';
+
+  @override
+  String get userNotFound => 'User not found';
+
+  @override
+  String get contentNotFound => 'Content not found';
+
+  @override
+  String get creditsAdjusted => 'Credits adjusted successfully';
+
+  @override
+  String get userBanned => 'User has been banned';
+
+  @override
+  String get userUnbanned => 'User has been unbanned';
+
+  @override
+  String get contentDeleted => 'Content deleted successfully';
+
+  @override
+  String get errorAdjustingCredits => 'Error adjusting credits';
+
+  @override
+  String get errorBanningUser => 'Error banning user';
+
+  @override
+  String get errorLoadingUsers => 'Error loading users';
+
+  @override
+  String get errorLoadingContent => 'Error loading content';
 }

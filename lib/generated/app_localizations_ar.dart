@@ -41,6 +41,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get back => 'رجوع';
 
   @override
+  String get backToLogin => 'العودة لتسجيل الدخول';
+
+  @override
   String get google => 'جوجل';
 
   @override
@@ -398,7 +401,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryAgain => 'حاول مرة أخرى';
 
   @override
-  String get processing => 'جاري المعالجة...';
+  String get processing => 'قيد المعالجة';
 
   @override
   String get waitForOtp => 'في انتظار رمز التحقق';
@@ -752,7 +755,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String creditBalance(int count) {
-    return '$count رصيد';
+    return 'رصيد الأرصدة';
   }
 
   @override
@@ -863,4 +866,297 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checkLaterInMyCreations => 'تحقق لاحقاً في إبداعاتي';
+
+  @override
+  String get creator => 'منشئ';
+
+  @override
+  String get speechRecognitionNotAvailable => 'التعرف على الصوت غير متاح';
+
+  @override
+  String get microphonePermissionRequired => 'يجب منح إذن الميكروفون';
+
+  @override
+  String failedToEnhancePrompt(Object error) {
+    return 'فشل في تحسين الوصف: $error';
+  }
+
+  @override
+  String get moreStyles => 'المزيد من الأنماط';
+
+  @override
+  String get showLess => 'عرض أقل';
+
+  @override
+  String get enhancing => 'جاري التحسين...';
+
+  @override
+  String get didNotReceiveCode => 'لم تستلم الرمز؟';
+
+  @override
+  String get weSentCodeTo => 'لقد أرسلنا رمزًا إلى';
+
+  @override
+  String youWillGenerate(Object label) {
+    return 'سوف تقوم بإنشاء $label';
+  }
+
+  @override
+  String get yourGallery => 'معرضك';
+
+  @override
+  String get emptyGalleryDescription =>
+      'ابدأ في إنشاء مقاطع فيديو وصور مذهلة بواسطة الذكاء الاصطناعي ببضع نقرات فقط';
+
+  @override
+  String get createYourFirst => 'أنشئ أول فيديو لك';
+
+  @override
+  String get generatingMagic => 'جاري إنشاء السحر...';
+
+  @override
+  String get generationTimedOut => 'انتهت مهلة الإنشاء';
+
+  @override
+  String get cinematic => 'سينمائي';
+
+  @override
+  String get realEstate => 'عقارات';
+
+  @override
+  String get educational => ' تعليمي';
+
+  @override
+  String get corporate => 'شركات';
+
+  @override
+  String get gaming => 'ألعاب';
+
+  @override
+  String get musicVideo => 'فيديو موسيقي';
+
+  @override
+  String get documentary => 'وثائقي';
+
+  @override
+  String get adminDashboard => 'لوحة المعلومات';
+
+  @override
+  String get adminUsers => 'المستخدمون';
+
+  @override
+  String get adminContent => 'المحتوى';
+
+  @override
+  String get adminPayments => 'المدفوعات';
+
+  @override
+  String get adminSettings => 'الإعدادات';
+
+  @override
+  String get dashboardMetrics => 'مقاييس لوحة المعلومات';
+
+  @override
+  String get totalUsers => 'إجمالي المستخدمين';
+
+  @override
+  String get totalVideos => 'إجمالي الفيديوهات';
+
+  @override
+  String get totalRevenue => 'إجمالي الإيرادات';
+
+  @override
+  String get videosGenerated => 'فيديوهات تم إنشاؤها';
+
+  @override
+  String get activeGenerations => 'عمليات الإنشاء النشطة';
+
+  @override
+  String get successRate => 'معدل النجاح';
+
+  @override
+  String get recentUsers => 'المستخدمون الأخيرون';
+
+  @override
+  String get recentVideos => 'الفيديوهات الأخيرة';
+
+  @override
+  String get recentTransactions => 'المعاملات الأخيرة';
+
+  @override
+  String get userList => 'قائمة المستخدمين';
+
+  @override
+  String get searchByEmail => 'ابحث برسالة بريد إلكترونية أو اسم مستخدم';
+
+  @override
+  String get phoneNumberLabel => 'الهاتف';
+
+  @override
+  String get creditsLabel => 'الأرصدة';
+
+  @override
+  String get statusLabel => 'الحالة';
+
+  @override
+  String get actionLabel => 'إجراء';
+
+  @override
+  String get banUser => 'حظر المستخدم';
+
+  @override
+  String get unbanUser => 'إلغاء حظر المستخدم';
+
+  @override
+  String get viewDetails => 'عرض التفاصيل';
+
+  @override
+  String get contentManagement => 'إدارة المحتوى';
+
+  @override
+  String get searchByPrompt => 'ابحث بالطلب أو اسم المستخدم';
+
+  @override
+  String get typeFilter => 'النوع';
+
+  @override
+  String get statusFilter => 'الحالة';
+
+  @override
+  String get allTypes => 'جميع الأنواع';
+
+  @override
+  String get allStatus => 'جميع الحالات';
+
+  @override
+  String get completed => 'مكتمل';
+
+  @override
+  String get contentPreview => 'معاينة';
+
+  @override
+  String get copyUrl => 'نسخ الرابط';
+
+  @override
+  String get userInformation => 'معلومات المستخدم';
+
+  @override
+  String get joined => 'انضم في';
+
+  @override
+  String get adjustCredits => 'ضبط الأرصدة';
+
+  @override
+  String get amount => 'المبلغ';
+
+  @override
+  String get reason => 'السبب';
+
+  @override
+  String get bonus => 'مكافأة';
+
+  @override
+  String get refund => 'استرجاع';
+
+  @override
+  String get correction => 'تصحيح';
+
+  @override
+  String get other => 'آخر';
+
+  @override
+  String get notes => 'ملاحظات (اختياري)';
+
+  @override
+  String get accountStatus => 'حالة الحساب';
+
+  @override
+  String get active => 'نشط';
+
+  @override
+  String get banned => 'محظور';
+
+  @override
+  String get bannedOn => 'تم الحظر في';
+
+  @override
+  String get banReason => 'السبب';
+
+  @override
+  String get recentCreations => 'الإبداعات الأخيرة';
+
+  @override
+  String get noCreations => 'لا توجد إبداعات حتى الآن';
+
+  @override
+  String get paymentsList => 'قائمة المدفوعات';
+
+  @override
+  String get paymentId => 'معرّف الدفع';
+
+  @override
+  String get paymentStatus => 'الحالة';
+
+  @override
+  String get paymentDate => 'التاريخ';
+
+  @override
+  String get transactionId => 'معرّف المعاملة';
+
+  @override
+  String get adminLogout => 'تسجيل الخروج';
+
+  @override
+  String get adminProfile => 'ملف المسؤول';
+
+  @override
+  String get adminEmail => 'البريد الإلكتروني';
+
+  @override
+  String get adminRole => 'الدور';
+
+  @override
+  String get adminPermissions => 'الصلاحيات';
+
+  @override
+  String get areYouSure => 'هل أنت متأكد؟';
+
+  @override
+  String get deleteContentMsg => 'سيتم حذف هذا المحتوى بشكل دائم';
+
+  @override
+  String get confirmBan => 'هل أنت متأكد من حظر هذا المستخدم؟';
+
+  @override
+  String get unbanConfirm => 'هل أنت متأكد من إلغاء حظر هذا المستخدم؟';
+
+  @override
+  String get userNotFound => 'لم يتم العثور على المستخدم';
+
+  @override
+  String get contentNotFound => 'لم يتم العثور على المحتوى';
+
+  @override
+  String get creditsAdjusted => 'تم ضبط الأرصدة بنجاح';
+
+  @override
+  String get userBanned => 'تم حظر المستخدم';
+
+  @override
+  String get userUnbanned => 'تم إلغاء حظر المستخدم';
+
+  @override
+  String get contentDeleted => 'تم حذف المحتوى بنجاح';
+
+  @override
+  String get errorAdjustingCredits => 'خطأ في ضبط الأرصدة';
+
+  @override
+  String get errorBanningUser => 'خطأ في حظر المستخدم';
+
+  @override
+  String get errorLoadingUsers => 'خطأ في تحميل المستخدمين';
+
+  @override
+  String get errorLoadingContent => 'خطأ في تحميل المحتوى';
 }

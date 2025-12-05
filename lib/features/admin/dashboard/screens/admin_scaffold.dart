@@ -229,7 +229,10 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
           borderRadius: BorderRadius.circular(12),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: _sidebarExpanded ? 16 : 0,
+              vertical: 12,
+            ),
             decoration: BoxDecoration(
               gradient: isActive ? AppColors.primaryGradient : null,
               color: isActive
@@ -237,32 +240,40 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                   : (isDark ? Colors.transparent : Colors.transparent),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isActive
-                      ? Colors.white
-                      : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
-                ),
-                if (_sidebarExpanded) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: GoogleFonts.outfit(
-                        fontSize: 14,
-                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+            child: _sidebarExpanded
+                ? Row(
+                    children: [
+                      Icon(
+                        icon,
+                        size: 22,
                         color: isActive
                             ? Colors.white
                             : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                            color: isActive
+                                ? Colors.white
+                                : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: isActive
+                          ? Colors.white
+                          : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
                     ),
                   ),
-                ],
-              ],
-            ),
           ),
         ),
       ),
@@ -271,7 +282,7 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
 
   Widget _buildSidebarFooter(bool isDark, String adminName) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(_sidebarExpanded ? 16 : 8),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -340,7 +351,10 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
               },
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: EdgeInsets.symmetric(
+                  horizontal: _sidebarExpanded ? 12 : 8,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: isDark
@@ -349,27 +363,33 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.logout_rounded,
-                      size: 18,
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                    ),
-                    if (_sidebarExpanded) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        'Logout',
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                child: _sidebarExpanded
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_rounded,
+                            size: 18,
+                            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Logout',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.logout_rounded,
+                          size: 18,
                           color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
                         ),
                       ),
-                    ],
-                  ],
-                ),
               ),
             ),
           ),

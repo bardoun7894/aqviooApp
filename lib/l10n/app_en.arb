@@ -16,6 +16,7 @@
   "changeNumber": "Change Number",
   "continueAsGuest": "Continue as Guest",
   "back": "Back",
+  "backToLogin": "Back to login",
   "google": "Google",
   "apple": "Apple",
   "stepIdea": "Idea",
@@ -27,10 +28,10 @@
   "buttonBack": "Back",
   "buttonNext": "Next",
   "promptRequired": "Please enter a prompt to continue",
-  "errorMessage": "Error: {message}",
+  "errorMessage": "Error: {error}",
   "@errorMessage": {
     "placeholders": {
-      "message": {
+      "error": {
         "type": "String"
       }
     }
@@ -112,12 +113,10 @@
   "info": "Information",
   "confirm": "Confirm",
   "close": "Close",
-
   "step1Script": "Script",
   "step2Voice": "Voice",
   "step3Video": "Video",
   "all": "All",
-  "videos": "Videos",
   "images": "Images",
   "noCreationsYetMessage": "Start creating your first video!",
   "selectVideo": "Select Video",
@@ -125,7 +124,6 @@
   "accountSettings": "Account Settings",
   "otpVerification": "OTP Verification",
   "enterOtp": "Enter OTP",
-  "verify": "Verify",
   "resend": "Resend",
   "twoFactor": "Two-Factor Authentication",
   "musicTrack": "Music Track",
@@ -144,7 +142,7 @@
   "appLocked": "App Locked",
   "unknownError": "Unknown Error",
   "tryAgain": "Try Again",
-  "processing": "Processing",
+  "processing": "Processing...",
   "waitForOtp": "Waiting for OTP code",
   "empty": "Empty",
   "name": "Name",
@@ -157,7 +155,6 @@
   "copied": "Copied to clipboard",
   "error": "Error",
   "ok": "OK",
-
   "whatToCreate": "What would you like to create?",
   "describeYourIdea": "Describe your video idea and let AI do the magic.",
   "enhance": "Enhance",
@@ -170,45 +167,26 @@
       }
     }
   },
-
-  "errorMessage": "Error: {error}",
-  "@errorMessage": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "guestLoginDisabled": "Guest login is disabled. Please enable Anonymous Auth in Firebase Console.",
   "phoneInputHint": "000 000 0000",
   "otpInputHint": "••••••",
-
-  "accountSettings": "Account Settings",
   "fullName": "Full Name",
   "enterYourName": "Enter your name",
   "phoneNumber": "Phone Number",
   "phoneInputPlaceholder": "+1 (555) 123-4567",
-  "language": "Language",
   "privacy": "Privacy",
   "deleteAccount": "Delete Account",
-  "logout": "Logout",
-
   "appName": "Aqvioo",
   "appSubtitle": "AI-Powered Content Creation",
-
   "yourIdea": "📝 Your Idea",
   "settingsSection": "⚙️ Settings",
-  "edit": "Edit",
   "outputType": "Output Type",
   "video": "Video",
   "image": "Image",
   "style": "Style",
-  "aspectRatio": "Aspect Ratio",
   "aspectRatio16x9": "16:9 (Horizontal)",
   "aspectRatio9x16": "9:16 (Vertical)",
   "voice": "Voice",
-  "female": "Female",
-  "male": "Male",
   "size": "Size",
   "costSection": "💰 Cost",
   "cost": "2.99",
@@ -216,40 +194,31 @@
   "loginRequired": "Login Required",
   "pleaseLoginToGenerate": "Please login to generate your video.",
   "generateMagic": "Generate Magic",
-
   "dialectSaudi": "Saudi",
   "dialectEgyptian": "Egyptian",
   "dialectUAE": "UAE",
   "dialectLebanese": "Lebanese",
   "dialectJordanian": "Jordanian",
   "dialectMoroccan": "Moroccan",
-
   "sizeSquare": "Square (1024x1024)",
   "sizeLandscape": "Landscape (1920x1080)",
   "sizePortrait": "Portrait (1080x1920)",
-
   "chooseVisualMood": "Choose the visual mood of your video",
   "selectVideoLength": "Select video length",
   "chooseVideoOrientation": "Choose video orientation",
   "configureNarratorVoice": "Configure narrator voice",
-
   "durationQuick": "Quick",
   "durationStandard": "Standard",
-
   "bestForYouTube": "Best for YouTube",
   "bestForTikTok": "Best for TikTok",
-
   "noCreationsYetTitle": "No creations yet",
   "startCreatingVideos": "Start creating amazing videos!",
-
   "scriptStep": "Script",
   "audioStep": "Audio",
   "videoStep": "Video",
   "backgroundGenerationInfo": "You can safely exit the app. Your video will continue generating in the background.",
-
   "mediaGallery": "Media Gallery",
   "createNow": "Create Now",
-
   "videoDownloadSuccess": "Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.",
   "downloadError": "Error: {error}",
   "@downloadError": {
@@ -267,14 +236,12 @@
       }
     }
   },
-
   "completeYourPayment": "Complete Your Payment",
   "totalAmount": "Total Amount",
   "payWithTabby": "Pay with Tabby",
   "payWithApplePay": "Pay with Apple Pay",
   "payWithSTCPay": "Pay with STC Pay",
   "payWithCard": "Pay with Card",
-
   "emailOrPhone": "Email or Phone",
   "signIn": "Sign In",
   "continueButton": "Continue",
@@ -283,8 +250,6 @@
   "phone": "Phone",
   "createAccount": "Create Account",
   "joinAndStartCreating": "Join and start creating amazing videos",
-
-  "outputType": "Output Type",
   "styleHeader": "Style",
   "durationHeader": "Duration",
   "aspectRatioHeader": "Aspect Ratio",
@@ -297,10 +262,8 @@
   "square": "Square",
   "landscape": "Landscape",
   "portrait": "Portrait",
-
   "recentProjects": "Recent Projects",
   "viewAll": "View All",
-
   "createMagic": "Create Magic",
   "productAd": "Product Ad",
   "socialReel": "Social Reel",
@@ -311,9 +274,7 @@
   "viewLibrary": "View Library",
   "modelVersion": "Model v4.0",
   "generating": "Generating...",
-  "processing": "Processing...",
   "quickSuggestions": "Quick Suggestions",
-
   "buyCredits": "Buy Credits",
   "currentBalance": "Current Balance",
   "creditBalance": "{count} Credits",
@@ -393,7 +354,6 @@
       }
     }
   },
-
   "enhancingIdea": "Enhancing your idea...",
   "preparingPrompt": "Preparing your prompt...",
   "bringingImageToLife": "Bringing your image to life...",
@@ -401,7 +361,6 @@
   "generatingImage": "Generating your image...",
   "creatingMasterpiece": "Creating your masterpiece...",
   "magicComplete": "Magic Complete!",
-
   "library": "Library",
   "allCreations": "All Creations",
   "playVideo": "Play Video",
@@ -414,5 +373,105 @@
       }
     }
   },
-  "checkLaterInMyCreations": "Check later in My Creations"
+  "checkLaterInMyCreations": "Check later in My Creations",
+  "creator": "Creator",
+  "speechRecognitionNotAvailable": "Speech recognition not available",
+  "microphonePermissionRequired": "Microphone permission is required",
+  "failedToEnhancePrompt": "Failed to enhance prompt: {error}",
+  "moreStyles": "More Styles",
+  "showLess": "Show Less",
+  "enhancing": "Enhancing...",
+  "didNotReceiveCode": "Didn't receive the code? ",
+  "weSentCodeTo": "We sent a code to",
+  "youWillGenerate": "You will generate {label}",
+  "yourGallery": "YOUR GALLERY",
+  "emptyGalleryDescription": "Start creating amazing AI-generated videos and images with just a few taps",
+  "createYourFirst": "Create Your First",
+  "generatingMagic": "Generating Magic...",
+  "generationTimedOut": "Generation timed out",
+  "cinematic": "Cinematic",
+  "realEstate": "Real Estate",
+  "educational": "Educational",
+  "corporate": "Corporate",
+  "gaming": "Gaming",
+  "musicVideo": "Music Video",
+  "documentary": "Documentary",
+  "adminDashboard": "Dashboard",
+  "adminUsers": "Users",
+  "adminContent": "Content",
+  "adminPayments": "Payments",
+  "adminSettings": "Settings",
+  "dashboardMetrics": "Dashboard Metrics",
+  "totalUsers": "Total Users",
+  "totalVideos": "Total Videos",
+  "totalRevenue": "Total Revenue",
+  "videosGenerated": "Videos Generated",
+  "activeGenerations": "Active Generations",
+  "successRate": "Success Rate",
+  "recentUsers": "Recent Users",
+  "recentVideos": "Recent Videos",
+  "recentTransactions": "Recent Transactions",
+  "userList": "User List",
+  "searchByEmail": "Search by email or username",
+  "phoneNumberLabel": "Phone",
+  "creditsLabel": "Credits",
+  "statusLabel": "Status",
+  "actionLabel": "Action",
+  "banUser": "Ban User",
+  "unbanUser": "Unban User",
+  "viewDetails": "View Details",
+  "contentManagement": "Content Management",
+  "searchByPrompt": "Search by prompt or user",
+  "typeFilter": "Type",
+  "statusFilter": "Status",
+  "allTypes": "All Types",
+  "allStatus": "All Status",
+  "completed": "Completed",
+  "processing": "Processing",
+  "contentPreview": "Preview",
+  "copyUrl": "Copy URL",
+  "userInformation": "User Information",
+  "joined": "Joined",
+  "creditBalance": "Credit Balance",
+  "adjustCredits": "Adjust Credits",
+  "currentBalance": "Current Balance",
+  "amount": "Amount",
+  "reason": "Reason",
+  "bonus": "Bonus",
+  "refund": "Refund",
+  "correction": "Correction",
+  "other": "Other",
+  "notes": "Notes (optional)",
+  "accountStatus": "Account Status",
+  "active": "Active",
+  "banned": "Banned",
+  "bannedOn": "Banned on",
+  "banReason": "Reason",
+  "recentCreations": "Recent Creations",
+  "noCreations": "No creations yet",
+  "paymentsList": "Payments List",
+  "paymentId": "Payment ID",
+  "amount": "Amount",
+  "paymentStatus": "Status",
+  "paymentDate": "Date",
+  "transactionId": "Transaction ID",
+  "adminLogout": "Logout",
+  "adminProfile": "Admin Profile",
+  "adminEmail": "Email",
+  "adminRole": "Role",
+  "adminPermissions": "Permissions",
+  "areYouSure": "Are you sure?",
+  "deleteContentMsg": "This content will be permanently deleted",
+  "confirmBan": "Are you sure you want to ban this user?",
+  "unbanConfirm": "Are you sure you want to unban this user?",
+  "userNotFound": "User not found",
+  "contentNotFound": "Content not found",
+  "creditsAdjusted": "Credits adjusted successfully",
+  "userBanned": "User has been banned",
+  "userUnbanned": "User has been unbanned",
+  "contentDeleted": "Content deleted successfully",
+  "errorAdjustingCredits": "Error adjusting credits",
+  "errorBanningUser": "Error banning user",
+  "errorLoadingUsers": "Error loading users",
+  "errorLoadingContent": "Error loading content"
 }

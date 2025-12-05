@@ -3,16 +3,131 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
-class AccountSettingsScreen extends ConsumerWidget {
+class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountSettingsScreen> createState() =>
+      _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  bool _isSaving = false;
+  bool _hasChanges = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _nameController.text = user.displayName ?? '';
+      _phoneController.text = user.phoneNumber ?? '';
+    }
+
+    _nameController.addListener(_onFieldChanged);
+    _phoneController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    final user = FirebaseAuth.instance.currentUser;
+    final hasNameChanged = _nameController.text != (user?.displayName ?? '');
+    final hasPhoneChanged = _phoneController.text != (user?.phoneNumber ?? '');
+
+    if (_hasChanges != (hasNameChanged || hasPhoneChanged)) {
+      setState(() {
+        _hasChanges = hasNameChanged || hasPhoneChanged;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.removeListener(_onFieldChanged);
+    _phoneController.removeListener(_onFieldChanged);
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_hasChanges || _isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.updateDisplayName(_nameController.text.trim());
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline,
+                      color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Profile updated successfully',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF059669),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(12),
+            ),
+          );
+          setState(() => _hasChanges = false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Text(
+                  'Failed to update profile',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(12),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F6F8),
+      backgroundColor: const Color(0xFFF5F5F7),
       body: Stack(
         children: [
           // Background gradient orbs
@@ -20,41 +135,31 @@ class AccountSettingsScreen extends ConsumerWidget {
             top: -100,
             left: -100,
             child: Container(
-              width: 320,
-              height: 320,
+              width: 400,
+              height: 400,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFA882F7).withOpacity(0.2),
+                    AppColors.primaryPurple.withOpacity(0.15),
                     Colors.transparent,
                   ],
                 ),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: Container(),
               ),
             ),
           ),
           Positioned(
-            bottom: -100,
-            right: -100,
+            bottom: -50,
+            right: -50,
             child: Container(
-              width: 384,
-              height: 384,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF82C8F7).withOpacity(0.2),
+                    const Color(0xFF6B9DFF).withOpacity(0.12),
                     Colors.transparent,
                   ],
                 ),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                child: Container(),
               ),
             ),
           ),
@@ -64,188 +169,108 @@ class AccountSettingsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 24),
-                        color: const Color(0xFF18181B),
-                        onPressed: () => context.pop(),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Account Settings',
-                          style: GoogleFonts.outfit(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
+                _buildHeader(context),
 
-                // Settings card
+                // Settings content
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            // Profile Picture
-                            const SizedBox(height: 16),
-                            Stack(
-                              children: [
-                                Container(
-                                  width: 112,
-                                  height: 112,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.5),
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const CircleAvatar(
-                                    radius: 56,
-                                    backgroundColor: Color(0xFFA855F7),
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 48,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(0xFFF3F4F6),
-                                        width: 2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      Icons.edit_rounded,
-                                      size: 18,
-                                      color: AppColors.primaryPurple,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
 
-                            const SizedBox(height: 32),
+                        // Profile Card
+                        _buildProfileCard(user),
 
-                            // Name Input
-                            _buildInputField(
-                              label: 'Full Name',
-                              hint: 'Enter your name',
-                            ),
+                        const SizedBox(height: 24),
 
-                            const SizedBox(height: 20),
+                        // Settings Section
+                        _buildSettingsSection(context, ref),
 
-                            // Phone Input
-                            _buildInputField(
-                              label: 'Phone Number',
-                              hint: '+1 (555) 123-4567',
-                              keyboardType: TextInputType.phone,
-                            ),
+                        const SizedBox(height: 24),
 
-                            const SizedBox(height: 32),
+                        // Danger Zone
+                        _buildDangerZone(context, ref),
 
-                            // Settings Tiles
-                            _buildSettingsTile(
-                              icon: Icons.language,
-                              title: 'Language',
-                              iconColor: const Color(0xFFA855F7),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            _buildSettingsTile(
-                              icon: Icons.privacy_tip_outlined,
-                              title: 'Privacy',
-                              iconColor: const Color(0xFFA855F7),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            _buildSettingsTile(
-                              icon: Icons.delete_forever,
-                              title: 'Delete Account',
-                              iconColor: Colors.red,
-                              titleColor: Colors.red,
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // Logout Button
-                            _buildSettingsTile(
-                              context: context,
-                              ref: ref,
-                              icon: Icons.logout,
-                              title: 'Logout',
-                              iconColor: Colors.orange,
-                              titleColor: Colors.orange,
-                              onTap: () async {
-                                await ref
-                                    .read(authControllerProvider.notifier)
-                                    .signOut();
-                                if (context.mounted) {
-                                  context.go('/login');
-                                }
-                              },
-                            ),
-
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ),
+                        const SizedBox(height: 100),
+                      ],
                     ),
                   ),
                 ),
+              ],
+            ),
+          ),
 
-                // Save Button
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: _IridescentSaveButton(),
+          // Save Button - Fixed at bottom
+          if (_hasChanges)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildSaveButton(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          // Back Button
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+              onPressed: () => context.pop(),
+              color: AppColors.textPrimary,
+              padding: EdgeInsets.zero,
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // Title
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SETTINGS',
+                  style: GoogleFonts.outfit(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.2,
+                  ).copyWith(height: 1),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Account Settings',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ).copyWith(height: 1),
                 ),
               ],
             ),
@@ -255,9 +280,149 @@ class AccountSettingsScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildProfileCard(User? user) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Profile Picture
+          Stack(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryPurple.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: user?.photoURL != null
+                    ? ClipOval(
+                        child: Image.network(
+                          user!.photoURL!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.person_rounded,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person_rounded,
+                        size: 48,
+                        color: Colors.white,
+                      ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.lightGray,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.camera_alt_rounded,
+                    size: 16,
+                    color: AppColors.primaryPurple,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Email display
+          if (user?.email != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.lightGray.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.email_outlined,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    user!.email!,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 24),
+
+          // Name Input
+          _buildInputField(
+            controller: _nameController,
+            label: 'Full Name',
+            hint: 'Enter your name',
+            icon: Icons.person_outline,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Phone Input
+          _buildInputField(
+            controller: _phoneController,
+            label: 'Phone Number',
+            hint: '+966 5XX XXX XXXX',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInputField({
+    required TextEditingController controller,
     required String label,
     required String hint,
+    required IconData icon,
     TextInputType? keyboardType,
   }) {
     return Column(
@@ -268,7 +433,7 @@ class AccountSettingsScreen extends ConsumerWidget {
           child: Text(
             label,
             style: GoogleFonts.outfit(
-              fontSize: 14,
+              fontSize: 13,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
@@ -276,17 +441,18 @@ class AccountSettingsScreen extends ConsumerWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(16),
+            color: AppColors.lightGray.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: const Color(0xFFE5E7EB),
+              color: AppColors.neuShadowDark.withOpacity(0.15),
               width: 1,
             ),
           ),
           child: TextField(
+            controller: controller,
             keyboardType: keyboardType,
             style: GoogleFonts.outfit(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w500,
               color: AppColors.textPrimary,
             ),
@@ -294,11 +460,17 @@ class AccountSettingsScreen extends ConsumerWidget {
               hintText: hint,
               hintStyle: GoogleFonts.outfit(
                 color: AppColors.textHint,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Icon(
+                icon,
+                color: AppColors.textSecondary,
+                size: 20,
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
-                vertical: 16,
+                vertical: 14,
               ),
             ),
           ),
@@ -307,145 +479,332 @@ class AccountSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsTile({
-    BuildContext? context,
-    WidgetRef? ref,
-    required IconData icon,
-    required String title,
-    required Color iconColor,
-    Color? titleColor,
-    VoidCallback? onTap,
-  }) {
+  Widget _buildSettingsSection(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildSettingsTile(
+            icon: Icons.language_rounded,
+            title: 'Language',
+            subtitle: 'English',
+            iconColor: AppColors.primaryPurple,
+            onTap: () {},
+          ),
+          _buildDivider(),
+          _buildSettingsTile(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            subtitle: 'Enabled',
+            iconColor: const Color(0xFFF59E0B),
+            onTap: () {},
+          ),
+          _buildDivider(),
+          _buildSettingsTile(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            iconColor: const Color(0xFF06B6D4),
+            onTap: () {},
+          ),
+          _buildDivider(),
+          _buildSettingsTile(
+            icon: Icons.help_outline_rounded,
+            title: 'Help & Support',
+            iconColor: const Color(0xFF10B981),
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDangerZone(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFFF3F4F6),
+          color: Colors.red.withOpacity(0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
+      child: Column(
+        children: [
+          _buildSettingsTile(
+            icon: Icons.logout_rounded,
+            title: 'Logout',
+            iconColor: Colors.orange,
+            titleColor: Colors.orange,
+            onTap: () async {
+              final shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: Text(
+                    'Logout',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
                   ),
-                  child: Icon(icon, color: iconColor, size: 20),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: titleColor ?? AppColors.textPrimary,
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: GoogleFonts.outfit(),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.outfit(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600),
+                      ),
                     ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: GoogleFonts.outfit(
+                            color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldLogout == true) {
+                await ref.read(authControllerProvider.notifier).signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              }
+            },
+          ),
+          _buildDivider(),
+          _buildSettingsTile(
+            icon: Icons.delete_forever_rounded,
+            title: 'Delete Account',
+            iconColor: Colors.red,
+            titleColor: Colors.red,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: Text(
+                    'Delete Account',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700, color: Colors.red),
                   ),
+                  content: Text(
+                    'This action cannot be undone. All your data will be permanently deleted.',
+                    style: GoogleFonts.outfit(),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.outfit(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        'Delete',
+                        style: GoogleFonts.outfit(
+                            color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textHint,
-                  size: 20,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      color: AppColors.lightGray,
+      indent: 60,
+      endIndent: 16,
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    required Color iconColor,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: titleColor ?? AppColors.textPrimary,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textHint,
+                size: 22,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-class _IridescentSaveButton extends StatefulWidget {
-  @override
-  State<_IridescentSaveButton> createState() => _IridescentSaveButtonState();
-}
-
-class _IridescentSaveButtonState extends State<_IridescentSaveButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryPurple
-                    .withOpacity(0.3 + (_controller.value * 0.2)),
-                blurRadius: 20 + (_controller.value * 10),
-                spreadRadius: 0,
-                offset: const Offset(0, 8),
-              ),
-            ],
+  Widget _buildSaveButton() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -8),
           ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 56,
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {},
-              borderRadius: BorderRadius.circular(32),
-              child: Container(
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primaryPurple,
-                      Color(0xFF9F7AEA),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+              onTap: _isSaving ? null : _saveProfile,
+              borderRadius: BorderRadius.circular(16),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  gradient:
+                      _isSaving ? null : AppColors.primaryGradient,
+                  color: _isSaving ? AppColors.lightGray : null,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: _isSaving
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                 ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 32,
-                  color: Colors.white,
+                child: Center(
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.primaryPurple,
+                            ),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_rounded,
+                              size: 22,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Save Changes',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

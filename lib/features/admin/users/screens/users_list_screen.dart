@@ -42,16 +42,40 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Use collectionGroup to find all users via their creations
+      // (handles phantom documents that have subcollections but no parent doc)
+      final allCreationsSnapshot =
+          await _firestore.collectionGroup('creations').get();
+
+      // Extract unique user IDs from creations paths
+      Set<String> userIds = {};
+      for (var doc in allCreationsSnapshot.docs) {
+        final pathParts = doc.reference.path.split('/');
+        if (pathParts.length >= 2 && pathParts[0] == 'users') {
+          userIds.add(pathParts[1]);
+        }
+      }
+
+      // Also check users collection for any with actual documents
       final usersSnapshot = await _firestore.collection('users').get();
+      for (var doc in usersSnapshot.docs) {
+        userIds.add(doc.id);
+      }
+
+      debugPrint('Found ${userIds.length} unique users');
+
       final List<Map<String, dynamic>> users = [];
 
-      for (var userDoc in usersSnapshot.docs) {
-        final userData = userDoc.data();
+      for (var userId in userIds) {
+        // Try to get user document data (may not exist for phantom users)
+        final userDoc = await _firestore.collection('users').doc(userId).get();
+        final userData =
+            userDoc.exists ? userDoc.data() ?? {} : <String, dynamic>{};
 
         // Get credits
         final creditsDoc = await _firestore
             .collection('users')
-            .doc(userDoc.id)
+            .doc(userId)
             .collection('data')
             .doc('credits')
             .get();
@@ -60,30 +84,58 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
             ? (creditsDoc.data()?['credits'] as int? ?? 0)
             : 0;
 
-        // Get last active (from creations or set to created date)
+        // Get last active (from creations) - don't use orderBy since createdAt is string
         DateTime? lastActive;
         final creationsSnapshot = await _firestore
             .collection('users')
-            .doc(userDoc.id)
+            .doc(userId)
             .collection('creations')
-            .orderBy('createdAt', descending: true)
-            .limit(1)
             .get();
 
-        if (creationsSnapshot.docs.isNotEmpty) {
-          lastActive = (creationsSnapshot.docs.first.data()['createdAt'] as Timestamp?)?.toDate();
+        // Find the most recent creation manually
+        for (var creation in creationsSnapshot.docs) {
+          final data = creation.data();
+          DateTime? createdAt;
+          if (data['createdAt'] is Timestamp) {
+            createdAt = (data['createdAt'] as Timestamp).toDate();
+          } else if (data['createdAt'] is String) {
+            try {
+              createdAt = DateTime.parse(data['createdAt']);
+            } catch (_) {}
+          }
+          if (createdAt != null &&
+              (lastActive == null || createdAt.isAfter(lastActive))) {
+            lastActive = createdAt;
+          }
+        }
+
+        // Parse user createdAt
+        DateTime? userCreatedAt;
+        if (userData['createdAt'] is Timestamp) {
+          userCreatedAt = (userData['createdAt'] as Timestamp).toDate();
         }
 
         users.add({
-          'id': userDoc.id,
+          'id': userId,
           'email': userData['email'] ?? 'N/A',
-          'displayName': userData['displayName'] ?? 'Anonymous',
+          'displayName':
+              userData['displayName'] ?? 'User ${userId.substring(0, 6)}',
           'phoneNumber': userData['phoneNumber'] ?? 'N/A',
           'credits': credits,
-          'lastActive': lastActive ?? (userData['createdAt'] as Timestamp?)?.toDate(),
-          'status': 'active', // TODO: Add ban status to user document
+          'lastActive': lastActive ?? userCreatedAt,
+          'status': userData['status'] ?? 'active',
+          'bannedAt': userData['bannedAt'],
+          'bannedReason': userData['bannedReason'],
+          'creationsCount': creationsSnapshot.docs.length,
         });
       }
+
+      // Sort users by lastActive (most recent first)
+      users.sort((a, b) {
+        final aDate = a['lastActive'] as DateTime? ?? DateTime(2000);
+        final bDate = b['lastActive'] as DateTime? ?? DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
 
       setState(() {
         _users = users;
@@ -99,11 +151,18 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     return _users.where((user) {
       // Search filter
       final matchesSearch = _searchQuery.isEmpty ||
-          user['email'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          user['displayName'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+          user['email']
+              .toString()
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase()) ||
+          user['displayName']
+              .toString()
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase());
 
       // Status filter
-      final matchesStatus = _statusFilter == 'all' || user['status'] == _statusFilter;
+      final matchesStatus =
+          _statusFilter == 'all' || user['status'] == _statusFilter;
 
       // Credits filter
       bool matchesCredits = true;
@@ -426,7 +485,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
+                        backgroundColor:
+                            AppColors.primaryPurple.withOpacity(0.2),
                         child: Text(
                           user['displayName'][0].toUpperCase(),
                           style: GoogleFonts.outfit(
@@ -441,7 +501,8 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                         user['displayName'],
                         style: GoogleFonts.outfit(
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.white : AppColors.textPrimary,
+                          color:
+                              isDark ? AppColors.white : AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -451,7 +512,9 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                   Text(
                     user['email'],
                     style: GoogleFonts.outfit(
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -459,13 +522,16 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                   Text(
                     user['phoneNumber'],
                     style: GoogleFonts.outfit(
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
                 DataCell(
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.primaryPurple.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -485,7 +551,9 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                         ? DateFormat('MMM d, y').format(user['lastActive'])
                         : 'Never',
                     style: GoogleFonts.outfit(
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),

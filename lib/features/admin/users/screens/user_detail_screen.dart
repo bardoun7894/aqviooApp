@@ -37,18 +37,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Get user data
+      // Get user data - don't require document to exist (phantom users)
       final userDoc = await _firestore.collection('users').doc(widget.userId).get();
-      if (!userDoc.exists) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User not found')),
-          );
-        }
-        return;
-      }
-
-      _userData = userDoc.data();
+      _userData = userDoc.exists ? userDoc.data() : <String, dynamic>{};
 
       // Get credits
       final creditsDoc = await _firestore
@@ -62,22 +53,44 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           ? (creditsDoc.data()?['credits'] as int? ?? 0)
           : 0;
 
-      // Get creations
+      // Get creations - don't use orderBy since createdAt may be string
       final creationsSnapshot = await _firestore
           .collection('users')
           .doc(widget.userId)
           .collection('creations')
-          .orderBy('createdAt', descending: true)
-          .limit(10)
           .get();
 
-      _creations = creationsSnapshot.docs.map((doc) {
+      // Parse and sort creations manually
+      List<Map<String, dynamic>> creationsList = [];
+      for (var doc in creationsSnapshot.docs) {
         final data = doc.data();
-        return {
+        // Parse createdAt
+        DateTime? createdAt;
+        if (data['createdAt'] is Timestamp) {
+          createdAt = (data['createdAt'] as Timestamp).toDate();
+        } else if (data['createdAt'] is String) {
+          try {
+            createdAt = DateTime.parse(data['createdAt']);
+          } catch (_) {}
+        }
+        creationsList.add({
           'id': doc.id,
           ...data,
-        };
-      }).toList();
+          'createdAt': createdAt, // Override with parsed DateTime
+        });
+      }
+
+      // Sort by createdAt descending
+      creationsList.sort((a, b) {
+        final aDate = a['createdAt'] as DateTime?;
+        final bDate = b['createdAt'] as DateTime?;
+        if (aDate == null && bDate == null) return 0;
+        if (aDate == null) return 1;
+        if (bDate == null) return -1;
+        return bDate.compareTo(aDate);
+      });
+
+      _creations = creationsList.take(10).toList();
 
       setState(() => _isLoading = false);
     } catch (e) {
@@ -295,6 +308,10 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
 
                   // User Info Card
                   _buildUserInfoCard(isDark),
+                  const SizedBox(height: 24),
+
+                  // Ban Status Card
+                  _buildBanStatusCard(isDark),
                   const SizedBox(height: 24),
 
                   // Credits Card
@@ -554,7 +571,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   }
 
   Widget _buildCreationItem(Map<String, dynamic> creation, bool isDark) {
-    final createdAt = (creation['createdAt'] as Timestamp?)?.toDate();
+    final createdAt = creation['createdAt'] as DateTime?;
     final status = creation['status'] as String?;
 
     return Row(
@@ -627,6 +644,378 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
         return const Color(0xFFDC2626);
       default:
         return AppColors.mediumGray;
+    }
+  }
+
+  Widget _buildBanStatusCard(bool isDark) {
+    final status = _userData?['status'] ?? 'active';
+    final isBanned = status == 'banned';
+    final bannedAt = _userData?['bannedAt'] as Timestamp?;
+    final bannedReason = _userData?['bannedReason'] as String?;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkGray : AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: isBanned
+            ? Border.all(color: const Color(0xFFDC2626).withOpacity(0.5), width: 2)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.neuShadowDark.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isBanned ? Icons.block_rounded : Icons.verified_user_rounded,
+                    color: isBanned ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Account Status',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isBanned
+                      ? const Color(0xFFDC2626).withOpacity(0.1)
+                      : const Color(0xFF059669).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isBanned ? 'BANNED' : 'ACTIVE',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isBanned ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (isBanned) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDC2626).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (bannedAt != null) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 16,
+                          color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Banned on: ${DateFormat('MMM d, y • h:mm a').format(bannedAt.toDate())}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  if (bannedReason != null && bannedReason.isNotEmpty) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Reason: $bannedReason',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => isBanned ? _showUnbanDialog(isDark) : _showBanDialog(isDark),
+            icon: Icon(
+              isBanned ? Icons.check_circle_outline : Icons.block_rounded,
+              size: 18,
+            ),
+            label: Text(
+              isBanned ? 'Unban User' : 'Ban User',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isBanned ? const Color(0xFF059669) : const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showBanDialog(bool isDark) async {
+    final reasonController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_rounded, color: Color(0xFFDC2626)),
+            const SizedBox(width: 12),
+            Text(
+              'Ban User',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to ban this user? They will no longer be able to access the app.',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              style: GoogleFonts.outfit(
+                color: isDark ? AppColors.white : AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Reason for ban',
+                labelStyle: GoogleFonts.outfit(
+                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                ),
+                hintText: 'e.g., Violation of terms of service',
+                hintStyle: GoogleFonts.outfit(
+                  color: isDark ? AppColors.mediumGray.withOpacity(0.5) : AppColors.textHint,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.outfit(
+                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _banUser(reasonController.text);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text('Ban User', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showUnbanDialog(bool isDark) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Color(0xFF059669)),
+            const SizedBox(width: 12),
+            Text(
+              'Unban User',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to unban this user? They will regain access to the app.',
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.outfit(
+                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _unbanUser();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF059669),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text('Unban User', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _banUser(String reason) async {
+    try {
+      // Update user status
+      await _firestore.collection('users').doc(widget.userId).update({
+        'status': 'banned',
+        'bannedAt': FieldValue.serverTimestamp(),
+        'bannedReason': reason.isNotEmpty ? reason : 'No reason provided',
+      });
+
+      // Create audit log
+      final adminUser = ref.read(adminAuthControllerProvider).adminUser;
+      await _firestore.collection('audit_logs').add({
+        'adminId': adminUser?.id ?? 'unknown',
+        'adminName': adminUser?.displayName ?? 'Unknown Admin',
+        'action': 'user_banned',
+        'targetType': 'user',
+        'targetId': widget.userId,
+        'details': {
+          'reason': reason.isNotEmpty ? reason : 'No reason provided',
+        },
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User has been banned'),
+            backgroundColor: Color(0xFFDC2626),
+          ),
+        );
+      }
+
+      // Reload data
+      await _loadUserData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error banning user: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _unbanUser() async {
+    try {
+      // Update user status
+      await _firestore.collection('users').doc(widget.userId).update({
+        'status': 'active',
+        'bannedAt': FieldValue.delete(),
+        'bannedReason': FieldValue.delete(),
+      });
+
+      // Create audit log
+      final adminUser = ref.read(adminAuthControllerProvider).adminUser;
+      await _firestore.collection('audit_logs').add({
+        'adminId': adminUser?.id ?? 'unknown',
+        'adminName': adminUser?.displayName ?? 'Unknown Admin',
+        'action': 'user_unbanned',
+        'targetType': 'user',
+        'targetId': widget.userId,
+        'details': {},
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User has been unbanned'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      }
+
+      // Reload data
+      await _loadUserData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error unbanning user: $e')),
+        );
+      }
     }
   }
 }

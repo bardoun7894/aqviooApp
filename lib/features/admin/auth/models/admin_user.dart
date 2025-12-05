@@ -22,14 +22,18 @@ class AdminUser {
   factory AdminUser.fromMap(Map<String, dynamic> map) {
     return AdminUser(
       id: map['id'] as String,
-      email: map['email'] as String,
-      displayName: map['displayName'] as String,
+      email: map['email'] as String? ?? '',
+      displayName: map['displayName'] as String? ?? 'Admin',
       role: AdminRole.values.firstWhere(
         (r) => r.name == map['role'],
         orElse: () => AdminRole.admin,
       ),
-      permissions: AdminPermissions.fromMap(map['permissions'] as Map<String, dynamic>),
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      permissions: map['permissions'] != null
+          ? AdminPermissions.fromMap(map['permissions'] as Map<String, dynamic>)
+          : AdminPermissions.admin(),
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
       lastLoginAt: map['lastLoginAt'] != null
           ? (map['lastLoginAt'] as Timestamp).toDate()
           : null,

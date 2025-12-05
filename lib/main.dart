@@ -1,22 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'app.dart';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 import 'services/payment/tabby_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp();
 
-  // Initialize Tabby SDK
-  final tabbyApiKey = dotenv.env['TABBY_API_KEY'] ?? '';
-  if (tabbyApiKey.isNotEmpty) {
-    TabbyService().initialize(tabbyApiKey);
+  // Use path-based URLs instead of hash-based URLs on web
+  usePathUrlStrategy();
+
+  try {
+    // Load .env file (may fail on web if not bundled properly)
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      if (kDebugMode) {
+        print('Warning: Could not load .env file: $e');
+      }
+    }
+
+    // Initialize Firebase (only if not already initialized)
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } else {
+      // Use the existing app (auto-initialized by native SDK)
+      Firebase.app();
+    }
+
+    // Initialize Tabby SDK (only on mobile platforms, not web)
+    if (!kIsWeb) {
+      final tabbyApiKey = dotenv.env['TABBY_API_KEY'] ?? '';
+      if (tabbyApiKey.isNotEmpty) {
+        TabbyService().initialize(tabbyApiKey);
+      }
+    }
+
+    runApp(const ProviderScope(child: AqviooApp()));
+  } catch (e, stackTrace) {
+    if (kDebugMode) {
+      print('Error during initialization: $e');
+      print('Stack trace: $stackTrace');
+    }
+    // Show error UI
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Initialization Error: $e'),
+        ),
+      ),
+    ));
   }
-
-  runApp(const ProviderScope(child: AqviooApp()));
 }

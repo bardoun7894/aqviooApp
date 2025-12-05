@@ -16,6 +16,10 @@ class CreationItem {
   final DateTime createdAt;
   final String? duration; // e.g. "10s" or "Square"
   final String? errorMessage;
+  // Additional fields for admin dashboard
+  final String? style; // Video or image style
+  final String? aspectRatio; // e.g. "16:9", "9:16"
+  final String? outputType; // "video" or "image" (duplicate of type for admin compatibility)
 
   CreationItem({
     required this.id,
@@ -29,6 +33,9 @@ class CreationItem {
     required this.createdAt,
     this.duration,
     this.errorMessage,
+    this.style,
+    this.aspectRatio,
+    this.outputType,
   });
 
   CreationItem copyWith({
@@ -43,6 +50,9 @@ class CreationItem {
     DateTime? createdAt,
     String? duration,
     String? errorMessage,
+    String? style,
+    String? aspectRatio,
+    String? outputType,
   }) {
     return CreationItem(
       id: id ?? this.id,
@@ -56,6 +66,9 @@ class CreationItem {
       createdAt: createdAt ?? this.createdAt,
       duration: duration ?? this.duration,
       errorMessage: errorMessage ?? this.errorMessage,
+      style: style ?? this.style,
+      aspectRatio: aspectRatio ?? this.aspectRatio,
+      outputType: outputType ?? this.outputType,
     );
   }
 
@@ -72,6 +85,9 @@ class CreationItem {
       'createdAt': createdAt.toIso8601String(),
       'duration': duration,
       'errorMessage': errorMessage,
+      'style': style,
+      'aspectRatio': aspectRatio,
+      'outputType': outputType ?? type.name,
     };
   }
 
@@ -94,6 +110,9 @@ class CreationItem {
       createdAt: DateTime.parse(map['createdAt']),
       duration: map['duration'],
       errorMessage: map['errorMessage'],
+      style: map['style'],
+      aspectRatio: map['aspectRatio'],
+      outputType: map['outputType'] ?? map['type'],
     );
   }
 

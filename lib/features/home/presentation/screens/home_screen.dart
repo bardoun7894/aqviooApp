@@ -13,7 +13,6 @@ import 'package:video_player/video_player.dart';
 import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/animated_gradient_blob.dart';
 
 import '../../../creation/presentation/providers/creation_provider.dart';
 import '../../../creation/domain/models/creation_item.dart';
@@ -37,11 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isEnhancing = false;
   bool _isListening = false;
   bool _speechAvailable = false;
-
-  // Video playback state
-  VideoPlayerController? _videoController;
-  int? _playingVideoIndex;
-  bool _isVideoInitializing = false;
+  int? _selectedSuggestionIndex; // Track selected quick suggestion
 
   @override
   void initState() {
@@ -76,55 +71,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _promptController.dispose();
-    _videoController?.dispose();
     super.dispose();
-  }
-
-  Future<void> _playVideo(String videoUrl, int index) async {
-    if (_playingVideoIndex == index && _videoController?.value.isPlaying == true) {
-      // Already playing this video, pause it
-      await _videoController?.pause();
-      return;
-    }
-
-    // Stop and dispose previous video
-    await _videoController?.pause();
-    await _videoController?.dispose();
-
-    setState(() {
-      _isVideoInitializing = true;
-      _playingVideoIndex = index;
-    });
-
-    try {
-      _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-      await _videoController!.initialize();
-      await _videoController!.setLooping(true);
-      await _videoController!.setVolume(0.0); // Muted by default
-      await _videoController!.play();
-
-      if (mounted) {
-        setState(() {
-          _isVideoInitializing = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isVideoInitializing = false;
-          _playingVideoIndex = null;
-        });
-      }
-    }
-  }
-
-  void _stopVideo() {
-    _videoController?.pause();
-    _videoController?.dispose();
-    setState(() {
-      _videoController = null;
-      _playingVideoIndex = null;
-    });
   }
 
   Future<void> _pickImage() async {
@@ -169,7 +116,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to enhance prompt: ${e.toString()}'),
+          content: Text(AppLocalizations.of(context)!
+              .failedToEnhancePrompt(e.toString())),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -185,95 +133,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _applyQuickSuggestion(String suggestion) async {
-    // Don't show the prompt to user - directly generate
-    ref.read(creationControllerProvider.notifier).updatePrompt(suggestion);
+  Future<void> _applyQuickSuggestion(
+      String suggestion, int index, String label) async {
+    // Set the suggestion as hidden context (will be combined with user's prompt at generation time)
+    ref.read(creationControllerProvider.notifier).setHiddenContext(suggestion);
 
-    // Get output type from config
-    final config = ref.read(creationControllerProvider).config;
-    final outputType = config.outputType;
+    // Update selected state
+    setState(() {
+      _selectedSuggestionIndex = index;
+    });
 
-    // Check if user can generate
-    final creditsController = ref.read(creditsControllerProvider.notifier);
-    final canGenerate = await creditsController.canGenerate(outputType);
-    final creditsState = ref.read(creditsControllerProvider);
+    // Show a subtle visual indicator that context was added
+    if (mounted) {
+      final message = AppLocalizations.of(context)!.youWillGenerate(label);
 
-    if (!canGenerate) {
-      // Show payment dialog
-      final creditCost = creditsController.getCreditCost(outputType);
-      final contentType = outputType == OutputType.video ? AppLocalizations.of(context)!.video : AppLocalizations.of(context)!.image;
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            AppLocalizations.of(context)!.insufficientCredits,
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
             children: [
-              Text(
-                AppLocalizations.of(context)!.needCreditsMessage(creditCost, contentType),
-                style: GoogleFonts.outfit(),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppLocalizations.of(context)!.yourBalance(creditsState.credits),
-                style: GoogleFonts.outfit(
-                  color: AppColors.textSecondary,
+              const Icon(Icons.check_circle, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  message,
+                  style: GoogleFonts.outfit(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                AppLocalizations.of(context)!.cancel,
-                style: GoogleFonts.outfit(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.push('/payment', extra: 199.0);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                AppLocalizations.of(context)!.buyCredits,
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
+          backgroundColor: AppColors.primaryPurple,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+          duration: const Duration(seconds: 2),
         ),
       );
-      return;
     }
-
-    // Deduct credits
-    await creditsController.deductCreditsForGeneration(outputType);
-
-    // Start video generation
-    ref.read(creationControllerProvider.notifier).generateVideo();
-
-    // Navigate to magic loading screen
-    context.push('/magic-loading');
   }
 
   void _showAdvancedSettings() {
@@ -297,7 +197,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!_speechAvailable) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Speech recognition not available'),
+          content:
+              Text(AppLocalizations.of(context)!.speechRecognitionNotAvailable),
           backgroundColor: Colors.red,
         ),
       );
@@ -309,7 +210,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!permission.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Microphone permission is required'),
+          content:
+              Text(AppLocalizations.of(context)!.microphonePermissionRequired),
           backgroundColor: Colors.red,
         ),
       );
@@ -363,7 +265,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!canGenerate) {
       // Show payment dialog
       final creditCost = creditsController.getCreditCost(outputType);
-      final contentType = outputType == OutputType.video ? AppLocalizations.of(context)!.video : AppLocalizations.of(context)!.image;
+      final contentType = outputType == OutputType.video
+          ? AppLocalizations.of(context)!.video
+          : AppLocalizations.of(context)!.image;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -381,7 +285,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.needCreditsMessage(creditCost, contentType),
+                AppLocalizations.of(context)!
+                    .needCreditsMessage(creditCost, contentType),
                 style: GoogleFonts.outfit(),
               ),
               const SizedBox(height: 8),
@@ -588,7 +493,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Creator',
+                    AppLocalizations.of(context)!.creator,
                     style: GoogleFonts.outfit(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -831,7 +736,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     const SizedBox(width: 6),
                                     Text(
                                       _isEnhancing
-                                          ? 'Enhancing...'
+                                          ? AppLocalizations.of(context)!
+                                              .enhancing
                                           : AppLocalizations.of(context)!
                                               .enhance,
                                       style: GoogleFonts.outfit(
@@ -1070,11 +976,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'color': const Color(0xFF00BCD4),
       },
       {
+        'label': AppLocalizations.of(context)!.cinematic,
+        'icon': Icons.movie_creation_outlined,
+        'prompt':
+            'A high-end cinematic video with dramatic lighting, 4k resolution, and professional color grading',
+        'color': const Color(0xFFE91E63),
+      },
+      {
+        'label': AppLocalizations.of(context)!.realEstate,
+        'icon': Icons.home_work_outlined,
+        'prompt':
+            'A luxury real estate showcase featuring modern architecture, spacious interiors, and natural lighting',
+        'color': const Color(0xFF4CAF50),
+      },
+      {
         'label': AppLocalizations.of(context)!.render3D,
         'icon': Icons.view_in_ar_outlined,
         'prompt':
             'A stunning 3D rendered animation with realistic materials, lighting, and camera movement',
         'color': AppColors.primaryPurple,
+      },
+      {
+        'label': AppLocalizations.of(context)!.educational,
+        'icon': Icons.school_outlined,
+        'prompt':
+            'An engaging educational video with clear visuals, explanatory graphics, and professional narration',
+        'color': const Color(0xFF2196F3),
+      },
+      {
+        'label': AppLocalizations.of(context)!.corporate,
+        'icon': Icons.business_center_outlined,
+        'prompt':
+            'A professional corporate presentation with clean graphics, modern typography, and business context',
+        'color': const Color(0xFF607D8B),
       },
       {
         'label': AppLocalizations.of(context)!.avatar,
@@ -1083,6 +1017,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             'A professional avatar video with AI-generated character speaking directly to camera',
         'color': const Color(0xFF9C27B0),
       },
+      {
+        'label': AppLocalizations.of(context)!.gaming,
+        'icon': Icons.sports_esports_outlined,
+        'prompt':
+            'A dynamic gaming highlight with intense action, neon effects, and high energy atmosphere',
+        'color': const Color(0xFF673AB7),
+      },
+      {
+        'label': AppLocalizations.of(context)!.musicVideo,
+        'icon': Icons.music_note_outlined,
+        'prompt':
+            'A stylish music video with rhythmic editing, artistic visuals, and mood-enhancing effects',
+        'color': const Color(0xFFFF4081),
+      },
+      {
+        'label': AppLocalizations.of(context)!.documentary,
+        'icon': Icons.camera_alt_outlined,
+        'prompt':
+            'A compelling documentary style video with realistic footage, interviews, and narrative depth',
+        'color': const Color(0xFF795548),
+      },
     ];
 
     return Padding(
@@ -1090,31 +1045,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: suggestions.map((suggestion) {
+          children: suggestions.asMap().entries.map((entry) {
+            final index = entry.key;
+            final suggestion = entry.value;
+            final isSelected = _selectedSuggestionIndex == index;
+            final color = suggestion['color'] as Color;
+
             return Padding(
               padding: const EdgeInsets.only(right: 10),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () =>
-                      _applyQuickSuggestion(suggestion['prompt'] as String),
+                  onTap: () => _applyQuickSuggestion(
+                      suggestion['prompt'] as String,
+                      index,
+                      suggestion['label'] as String),
                   borderRadius: BorderRadius.circular(20),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
+                      color: isSelected
+                          ? color.withOpacity(0.1)
+                          : Colors.white.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.4),
-                        width: 1,
+                        color:
+                            isSelected ? color : Colors.white.withOpacity(0.4),
+                        width: isSelected ? 1.5 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
+                          color: isSelected
+                              ? color.withOpacity(0.2)
+                              : Colors.black.withOpacity(0.04),
+                          blurRadius: isSelected ? 12 : 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
@@ -1124,15 +1092,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Icon(
                           suggestion['icon'] as IconData,
                           size: 14,
-                          color: suggestion['color'] as Color,
+                          color: isSelected ? color : color.withOpacity(0.8),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           suggestion['label'] as String,
                           style: GoogleFonts.outfit(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? color : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -1196,6 +1165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // 2-Column Grid
           GridView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1206,235 +1176,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             itemCount: recentCreations.length,
             itemBuilder: (context, index) {
-              return _buildProjectCard(recentCreations[index], index);
+              return HomeProjectCard(item: recentCreations[index]);
             },
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildProjectCard(CreationItem item, int index) {
-    final isVideo = item.type == CreationType.video;
-    final isPlaying = _playingVideoIndex == index;
-    final isInitializing = isPlaying && _isVideoInitializing;
-
-    return GestureDetector(
-      onTap: () {
-        if (item.url != null) {
-          if (isVideo) {
-            // Play video inline
-            _playVideo(item.url!, index);
-          } else {
-            showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                backgroundColor: Colors.transparent,
-                child: Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(item.url!),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: Colors.white.withOpacity(0.7),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.4),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isVideo
-                        ? [const Color(0xFF6B9DFF), const Color(0xFF9D6BFF)]
-                        : [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
-                  ),
-                  image:
-                      item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
-                          ? DecorationImage(
-                              image: NetworkImage(item.thumbnailUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                ),
-                child: Stack(
-                  children: [
-                    // Show video player if playing, otherwise show thumbnail
-                    if (isPlaying && _videoController != null && _videoController!.value.isInitialized)
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        child: SizedBox.expand(
-                          child: FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: _videoController!.value.size.width,
-                              height: _videoController!.value.size.height,
-                              child: VideoPlayer(_videoController!),
-                            ),
-                          ),
-                        ),
-                      )
-                    else ...[
-                      // Gradient Overlay
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.0),
-                              Colors.black.withOpacity(0.3),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    // Loading indicator when initializing
-                    if (isInitializing)
-                      const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      ),
-
-                    // Play/Pause Icon
-                    if (isVideo && !isInitializing)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Icon(
-                            isPlaying && _videoController?.value.isPlaying == true
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Details
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.prompt,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          isVideo
-                              ? Icons.videocam_rounded
-                              : Icons.image_rounded,
-                          size: 11,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          isVideo ? "Video" : "Image",
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (isVideo && item.duration != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 3,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: AppColors.textSecondary.withOpacity(0.4),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            item.duration!,
-                            style: GoogleFonts.outfit(
-                              fontSize: 9,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -1709,7 +1454,7 @@ class _AdvancedSettingsSheetState
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'More Styles',
+                                    AppLocalizations.of(context)!.moreStyles,
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -1746,7 +1491,7 @@ class _AdvancedSettingsSheetState
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Show Less',
+                                    AppLocalizations.of(context)!.showLess,
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -1949,5 +1694,288 @@ class _AdvancedSettingsSheetState
 extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
+
+class HomeProjectCard extends StatefulWidget {
+  final CreationItem item;
+
+  const HomeProjectCard({super.key, required this.item});
+
+  @override
+  State<HomeProjectCard> createState() => _HomeProjectCardState();
+}
+
+class _HomeProjectCardState extends State<HomeProjectCard> {
+  VideoPlayerController? _videoController;
+  bool _isPlayerInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.type == CreationType.video &&
+        widget.item.status == CreationStatus.success &&
+        widget.item.url != null) {
+      _initializeVideo();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.item.url!),
+      );
+      await _videoController!.initialize();
+      await _videoController!.setVolume(0); // Mute for background play
+      await _videoController!.setLooping(true);
+      await _videoController!.play();
+      if (mounted) {
+        setState(() {
+          _isPlayerInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error initializing video preview: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.item.status == CreationStatus.success &&
+        widget.item.url != null) {
+      if (widget.item.type == CreationType.video) {
+        context.push(
+          '/preview',
+          extra: {
+            'videoUrl': widget.item.url,
+            'thumbnailUrl': widget.item.thumbnailUrl,
+            'prompt': widget.item.prompt,
+          },
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(widget.item.url!),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final isVideo = item.type == CreationType.video;
+
+    return GestureDetector(
+      onTap: _handleTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.9),
+              Colors.white.withOpacity(0.7),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryPurple.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail / Video Area
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isVideo
+                        ? [const Color(0xFF6B9DFF), const Color(0xFF9D6BFF)]
+                        : [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
+                  ),
+                  image:
+                      item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(item.thumbnailUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Video Player (if ready)
+                      if (_isPlayerInitialized && _videoController != null)
+                        FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _videoController!.value.size.width,
+                            height: _videoController!.value.size.height,
+                            child: VideoPlayer(_videoController!),
+                          ),
+                        ),
+
+                      // Gradient Overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.0),
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Play/Pause Icon (Visual indicator only since it plays automatically)
+                      if (isVideo)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Details
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.prompt,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          isVideo
+                              ? Icons.videocam_rounded
+                              : Icons.image_rounded,
+                          size: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isVideo
+                              ? AppLocalizations.of(context)!.video
+                              : AppLocalizations.of(context)!.image,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (isVideo && item.duration != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 3,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: AppColors.textSecondary.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            item.duration!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

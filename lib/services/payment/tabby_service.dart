@@ -8,11 +8,10 @@ class TabbyService {
   TabbyService._internal();
 
   /// Initialize Tabby SDK with API key
-  void initialize(String apiKey) {
+  void initialize(String apiKey, {bool useTestMode = false}) {
     TabbySDK().setup(
       withApiKey: apiKey,
-      environment:
-          Environment.production, // Use Environment.production for both
+      environment: useTestMode ? Environment.staging : Environment.production,
     );
   }
 
@@ -26,15 +25,21 @@ class TabbyService {
     required String userName,
     required int credits,
     required String orderId,
+    bool useTestMode = false,
   }) async {
     try {
+      // Use test data if in test mode
+      final testEmail = useTestMode ? 'successful.payment@tabby.ai' : userEmail;
+      final testPhone = useTestMode ? '+971500000001' : userPhone;
+      final testName = useTestMode ? 'Test User' : userName;
+
       final payment = Payment(
         amount: amount.toStringAsFixed(2),
         currency: _getCurrency(currency),
         buyer: Buyer(
-          email: userEmail,
-          phone: userPhone,
-          name: userName,
+          email: testEmail,
+          phone: testPhone,
+          name: testName,
           dob: '1990-01-01', // Default DOB - can be updated if needed
         ),
         buyerHistory: BuyerHistory(
@@ -75,7 +80,7 @@ class TabbyService {
       return session;
     } catch (e) {
       debugPrint('Error creating Tabby session: $e');
-      return null;
+      rethrow; // Re-throw to see the actual error
     }
   }
 
@@ -93,7 +98,7 @@ class TabbyService {
       case 'QAR':
         return Currency.qar;
       default:
-        return Currency.sar; // Default to SAR
+        throw ArgumentError('Unsupported currency: $currencyCode');
     }
   }
 

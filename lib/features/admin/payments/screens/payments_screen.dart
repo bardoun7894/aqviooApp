@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../services/payment/transaction_service.dart';
 import '../../dashboard/screens/admin_scaffold.dart';
 
 /// Payments Screen - View and manage payment transactions
@@ -41,60 +42,73 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // TODO: Replace with actual transactions collection when Tabby webhooks are implemented
-      // For now, we'll estimate from credit history
-
-      final usersSnapshot = await _firestore.collection('users').get();
-      final List<Map<String, dynamic>> estimatedTransactions = [];
+      // Load real transactions from Firestore
+      final transactions = await TransactionService().getAllTransactions();
       double totalRevenue = 0.0;
 
-      for (var userDoc in usersSnapshot.docs) {
-        final userData = userDoc.data();
+      final List<Map<String, dynamic>> transactionMaps = [];
 
-        // Get credit data
-        final creditsDoc = await _firestore
-            .collection('users')
-            .doc(userDoc.id)
-            .collection('data')
-            .doc('credits')
-            .get();
+      for (var transaction in transactions) {
+        // Calculate revenue from authorized/completed transactions
+        if (transaction.status == TransactionStatus.authorized ||
+            transaction.status == TransactionStatus.completed) {
+          totalRevenue += transaction.amount;
+        }
 
-        if (creditsDoc.exists) {
-          final data = creditsDoc.data()!;
-          final credits = data['credits'] as int? ?? 0;
+        transactionMaps.add({
+          'id': transaction.id,
+          'userId': transaction.userId,
+          'userName': transaction.userName,
+          'userEmail': transaction.userEmail,
+          'amount': transaction.amount,
+          'credits': transaction.credits,
+          'status': transaction.status.name,
+          'paymentMethod': transaction.paymentMethod,
+          'createdAt': Timestamp.fromDate(transaction.createdAt),
+          'orderId': transaction.orderId,
+        });
+      }
 
-          // Estimate transactions based on credits
-          // Assuming initial 10 credits are free
-          if (credits > 10) {
-            final purchasedCredits = credits - 10;
-            final amount = (purchasedCredits / 50) * 199.0; // Estimate based on 50 credits = 199 SAR
+      // If no real transactions, fall back to estimated data for existing users
+      if (transactionMaps.isEmpty) {
+        final usersSnapshot = await _firestore.collection('users').get();
 
-            totalRevenue += amount;
+        for (var userDoc in usersSnapshot.docs) {
+          final userData = userDoc.data();
+          final creditsDoc = await _firestore
+              .collection('users')
+              .doc(userDoc.id)
+              .collection('data')
+              .doc('credits')
+              .get();
 
-            estimatedTransactions.add({
-              'id': 'EST-${userDoc.id.substring(0, 8)}',
-              'userId': userDoc.id,
-              'userName': userData['displayName'] ?? 'Anonymous',
-              'userEmail': userData['email'] ?? 'N/A',
-              'amount': amount,
-              'credits': purchasedCredits,
-              'status': 'estimated',
-              'paymentMethod': 'Tabby',
-              'createdAt': data['lastUpdated'] ?? Timestamp.now(),
-            });
+          if (creditsDoc.exists) {
+            final data = creditsDoc.data()!;
+            final credits = data['credits'] as int? ?? 0;
+
+            if (credits > 10) {
+              final purchasedCredits = credits - 10;
+              final amount = (purchasedCredits / 50) * 199.0;
+              totalRevenue += amount;
+
+              transactionMaps.add({
+                'id': 'EST-${userDoc.id.substring(0, 8)}',
+                'userId': userDoc.id,
+                'userName': userData['displayName'] ?? 'Anonymous',
+                'userEmail': userData['email'] ?? 'N/A',
+                'amount': amount,
+                'credits': purchasedCredits,
+                'status': 'estimated',
+                'paymentMethod': 'Tabby',
+                'createdAt': data['lastUpdated'] ?? Timestamp.now(),
+              });
+            }
           }
         }
       }
 
-      // Sort by date
-      estimatedTransactions.sort((a, b) {
-        final aDate = (a['createdAt'] as Timestamp).toDate();
-        final bDate = (b['createdAt'] as Timestamp).toDate();
-        return bDate.compareTo(aDate);
-      });
-
       setState(() {
-        _transactions = estimatedTransactions;
+        _transactions = transactionMaps;
         _totalRevenue = totalRevenue;
         _isLoading = false;
       });
@@ -122,8 +136,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               .contains(_searchQuery.toLowerCase());
 
       // Status filter
-      final matchesStatus = _statusFilter == 'all' ||
-          transaction['status'] == _statusFilter;
+      final matchesStatus =
+          _statusFilter == 'all' || transaction['status'] == _statusFilter;
 
       return matchesSearch && matchesStatus;
     }).toList();
@@ -209,6 +223,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 
   Widget _buildRevenueSummary(bool isDark) {
+    // Check if we have real transactions (not estimated)
+    final hasRealTransactions = _transactions.any(
+      (t) => t['status'] != 'estimated',
+    );
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -231,7 +250,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Revenue (Estimated)',
+                  hasRealTransactions ? 'Total Revenue' : 'Total Revenue (Estimated)',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.9),
@@ -249,18 +268,32 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    'Note: Tabby webhooks not yet implemented',
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasRealTransactions ? Icons.check_circle : Icons.info_outline,
+                        size: 14,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        hasRealTransactions
+                            ? '${_transactions.length} transactions recorded'
+                            : 'Showing estimated data',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -277,72 +310,116 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 
   Widget _buildSearchAndFilters(bool isDark) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        // Search
-        SizedBox(
-          width: 300,
-          child: TextField(
-            controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value),
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              color: isDark ? AppColors.white : AppColors.textPrimary,
-            ),
-            decoration: InputDecoration(
-              hintText: 'Search by user or transaction ID...',
-              hintStyle: GoogleFonts.outfit(
-                color: isDark ? AppColors.mediumGray : AppColors.textHint,
-              ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-              ),
-              filled: true,
-              fillColor: isDark ? AppColors.darkGray : AppColors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 500;
 
-        // Status Filter
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkGray : AppColors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: DropdownButton<String>(
-            value: _statusFilter,
-            onChanged: (value) => setState(() => _statusFilter = value!),
-            underline: const SizedBox(),
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isDark ? AppColors.white : AppColors.textPrimary,
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            // Search - responsive width
+            SizedBox(
+              width: isWide ? 300 : constraints.maxWidth,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkGray : AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : AppColors.neuShadowDark.withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withOpacity(0.2)
+                          : AppColors.neuShadowDark.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search by user or transaction ID...',
+                    hintStyle: GoogleFonts.outfit(
+                      color: isDark ? AppColors.mediumGray : AppColors.textHint,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  ),
+                ),
+              ),
             ),
-            dropdownColor: isDark ? AppColors.darkGray : AppColors.white,
-            items: const {
-              'all': 'All Status',
-              'estimated': 'Estimated',
-              'success': 'Success',
-              'pending': 'Pending',
-              'failed': 'Failed',
-            }.entries.map((entry) {
-              return DropdownMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
+
+            // Status Filter
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkGray : AppColors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neuShadowDark.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.2)
+                        : AppColors.neuShadowDark.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: DropdownButton<String>(
+                value: _statusFilter,
+                onChanged: (value) => setState(() => _statusFilter = value!),
+                underline: const SizedBox(),
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                ),
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.white : AppColors.textPrimary,
+                ),
+                dropdownColor: isDark ? AppColors.darkGray : AppColors.white,
+                items: const {
+                  'all': 'All Status',
+                  'estimated': 'Estimated',
+                  'success': 'Success',
+                  'pending': 'Pending',
+                  'failed': 'Failed',
+                }.entries.map((entry) {
+                  return DropdownMenuItem(
+                    value: entry.key,
+                    child: Text(entry.value),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -361,18 +438,39 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: isDark ? AppColors.mediumGray : AppColors.textHint,
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.primaryPurple.withOpacity(0.15),
+                    AppColors.primaryPurple.withOpacity(0.05),
+                  ],
+                ),
+              ),
+              child: Icon(
+                Icons.receipt_long_outlined,
+                size: 48,
+                color: AppColors.primaryPurple.withOpacity(0.6),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               'No transactions found',
               style: GoogleFonts.outfit(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.white : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Transactions will appear here once customers make purchases',
+              style: GoogleFonts.outfit(
                 color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                fontSize: 14,
               ),
             ),
           ],
@@ -380,197 +478,536 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkGray : AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.2)
-                : AppColors.neuShadowDark.withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(
-            isDark
-                ? Colors.white.withOpacity(0.05)
-                : AppColors.lightGray.withOpacity(0.5),
-          ),
-          dataRowMinHeight: 60,
-          dataRowMaxHeight: 80,
-          columns: [
-            DataColumn(
-              label: Text(
-                'Transaction ID',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'User',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Amount',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Credits',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Method',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Status',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Date',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? AppColors.white : AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-          rows: transactions.map((transaction) {
-            final createdAt = (transaction['createdAt'] as Timestamp).toDate();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use card layout for mobile/tablet, table for desktop
+        if (constraints.maxWidth < 800) {
+          return _buildTransactionCards(transactions, isDark);
+        }
+        return _buildTransactionDataTable(transactions, isDark);
+      },
+    );
+  }
 
-            return DataRow(
-              cells: [
-                DataCell(
-                  Text(
-                    transaction['id'],
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'monospace',
-                      color: isDark ? AppColors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        transaction['userName'],
+  Widget _buildTransactionCards(
+      List<Map<String, dynamic>> transactions, bool isDark) {
+    return ListView.builder(
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        final transaction = transactions[index];
+        final createdAt = (transaction['createdAt'] as Timestamp).toDate();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkGray : AppColors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : AppColors.neuShadowDark.withOpacity(0.15),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.2)
+                    : AppColors.neuShadowDark.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row - ID and Status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.lightGray,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        transaction['id'],
                         style: GoogleFonts.outfit(
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.white : AppColors.textPrimary,
+                          color:
+                              isDark ? AppColors.white : AppColors.textPrimary,
                         ),
                       ),
-                      Text(
-                        transaction['userEmail'],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(transaction['status'])
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        transaction['status'].toString().toUpperCase(),
                         style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          color: isDark
-                              ? AppColors.mediumGray
-                              : AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: _getStatusColor(transaction['status']),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // User info
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.person_outline,
+                        color: AppColors.primaryPurple,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            transaction['userName'],
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: isDark
+                                  ? AppColors.white
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            transaction['userEmail'],
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              color: isDark
+                                  ? AppColors.mediumGray
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Amount and Credits row
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : AppColors.lightGray.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Amount',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.mediumGray
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${transaction['amount'].toStringAsFixed(2)} SAR',
+                              style: GoogleFonts.outfit(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF059669),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.neuShadowDark.withOpacity(0.2),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Credits',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.mediumGray
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Icon(
+                                  Icons.bolt,
+                                  size: 18,
+                                  color: AppColors.primaryPurple,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${transaction['credits']}',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryPurple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                DataCell(
-                  Text(
-                    '${transaction['amount'].toStringAsFixed(2)} SAR',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF059669),
+                const SizedBox(height: 12),
+
+                // Footer - Method and Date
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.payment_rounded,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          transaction['paymentMethod'],
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryPurple.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${transaction['credits']}',
+                    Text(
+                      DateFormat('MMM d, y • h:mm a').format(createdAt),
                       style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryPurple,
+                        fontSize: 12,
+                        color:
+                            isDark ? AppColors.mediumGray : AppColors.textHint,
                       ),
                     ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    transaction['paymentMethod'],
-                    style: GoogleFonts.outfit(
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(transaction['status']).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      transaction['status'].toString().toUpperCase(),
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: _getStatusColor(transaction['status']),
-                      ),
-                    ),
-                  ),
-                ),
-                DataCell(
-                  Text(
-                    DateFormat('MMM d, y • h:mm a').format(createdAt),
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                    ),
-                  ),
+                  ],
                 ),
               ],
-            );
-          }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTransactionDataTable(
+      List<Map<String, dynamic>> transactions, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkGray : AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.1)
+              : AppColors.neuShadowDark.withOpacity(0.15),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.neuShadowDark.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(
+              isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : AppColors.lightGray.withOpacity(0.5),
+            ),
+            dataRowMinHeight: 72,
+            dataRowMaxHeight: 88,
+            horizontalMargin: 24,
+            columnSpacing: 32,
+            columns: [
+              DataColumn(
+                label: Text(
+                  'Transaction ID',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'User',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Amount',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Credits',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Method',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Status',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Date',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+            rows: transactions.map((transaction) {
+              final createdAt =
+                  (transaction['createdAt'] as Timestamp).toDate();
+
+              return DataRow(
+                cells: [
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.lightGray,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        transaction['id'],
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isDark ? AppColors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryPurple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.person_outline,
+                            color: AppColors.primaryPurple,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              transaction['userName'],
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? AppColors.white
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              transaction['userEmail'],
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppColors.mediumGray
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      '${transaction['amount'].toStringAsFixed(2)} SAR',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: const Color(0xFF059669),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.bolt,
+                            size: 14,
+                            color: AppColors.primaryPurple,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${transaction['credits']}',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.payment_rounded,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          transaction['paymentMethod'],
+                          style: GoogleFonts.outfit(
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  DataCell(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(transaction['status'])
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        transaction['status'].toString().toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: _getStatusColor(transaction['status']),
+                        ),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      DateFormat('MMM d, y • h:mm a').format(createdAt),
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: isDark
+                            ? AppColors.mediumGray
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

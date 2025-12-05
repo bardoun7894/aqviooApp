@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Toggle this to switch between Mock and Firebase
@@ -119,6 +120,7 @@ class MockAuthRepository implements AuthRepository {
 
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   FirebaseAuthRepository(this._firebaseAuth);
 
@@ -134,7 +136,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInAnonymously() async {
-    await _firebaseAuth.signInAnonymously();
+    final userCredential = await _firebaseAuth.signInAnonymously();
+    // Save anonymous user to Firestore
+    if (userCredential.user != null) {
+      await _saveUserToFirestore(userCredential.user!, isAnonymous: true);
+    }
   }
 
   @override
@@ -149,7 +155,64 @@ class FirebaseAuthRepository implements AuthRepository {
     );
     // Update display name
     await userCredential.user?.updateDisplayName(name);
+
+    // Save user to Firestore
+    if (userCredential.user != null) {
+      await _saveUserToFirestore(
+        userCredential.user!,
+        displayName: name,
+        email: email,
+      );
+    }
+
     return userCredential;
+  }
+
+  /// Save user profile to Firestore users collection
+  Future<void> _saveUserToFirestore(
+    User user, {
+    String? displayName,
+    String? email,
+    bool isAnonymous = false,
+  }) async {
+    try {
+      final userDoc = _firestore.collection('users').doc(user.uid);
+
+      // Check if user document already exists
+      final existingDoc = await userDoc.get();
+
+      if (!existingDoc.exists) {
+        // Create new user document
+        await userDoc.set({
+          'displayName': displayName ?? user.displayName ?? 'Anonymous',
+          'email': email ?? user.email,
+          'phoneNumber': user.phoneNumber,
+          'photoURL': user.photoURL,
+          'isAnonymous': isAnonymous,
+          'status': 'active',
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        });
+
+        // Initialize credits subcollection
+        await userDoc.collection('data').doc('credits').set({
+          'credits': 10, // Initial free credits
+          'hasGeneratedFirstVideo': false,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        });
+
+        print('✅ New user saved to Firestore: ${user.uid}');
+      } else {
+        // Update last login time
+        await userDoc.update({
+          'lastLoginAt': FieldValue.serverTimestamp(),
+        });
+        print('✅ Existing user login updated: ${user.uid}');
+      }
+    } catch (e) {
+      print('❌ Error saving user to Firestore: $e');
+      // Don't rethrow - we don't want to block auth if Firestore save fails
+    }
   }
 
   @override
@@ -157,10 +220,20 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    return await _firebaseAuth.signInWithEmailAndPassword(
+    final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+
+    // Ensure user exists in Firestore (for existing auth users)
+    if (userCredential.user != null) {
+      await _saveUserToFirestore(
+        userCredential.user!,
+        email: email,
+      );
+    }
+
+    return userCredential;
   }
 
   @override
@@ -182,7 +255,12 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithCredential(PhoneAuthCredential credential) async {
-    await _firebaseAuth.signInWithCredential(credential);
+    final userCredential = await _firebaseAuth.signInWithCredential(credential);
+
+    // Save phone user to Firestore
+    if (userCredential.user != null) {
+      await _saveUserToFirestore(userCredential.user!);
+    }
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/data/auth_repository.dart';
@@ -31,6 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = authState.value == true;
       final isAdminLoggedIn = adminAuthState.isAuthenticated;
+      final isAdminLoading = adminAuthState.isLoading;
       final currentPath = state.uri.toString();
       final isAdminRoute = currentPath.startsWith('/admin');
       final isAdminLogin = currentPath == '/admin/login';
@@ -38,18 +40,37 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLogin = currentPath == '/login';
       final isSignup = currentPath == '/signup';
 
-      // Admin routes handling
+      debugPrint('🛣️ Router: path=$currentPath, isAdminRoute=$isAdminRoute, isAdminLoading=$isAdminLoading, isAdminLoggedIn=$isAdminLoggedIn, mobileAuthLoading=${authState.isLoading}');
+
+      // Admin routes handling - completely separate from mobile app
+      // IMPORTANT: Check admin routes FIRST before any mobile auth logic
       if (isAdminRoute) {
+        // Don't redirect while admin auth is still loading/checking
+        if (isAdminLoading) {
+          debugPrint('🛣️ Router: Admin loading, staying on $currentPath');
+          return null; // Stay on current page while checking auth
+        }
         if (!isAdminLoggedIn && !isAdminLogin) {
+          debugPrint('🛣️ Router: Not admin logged in, redirecting to /admin/login');
           return '/admin/login';
         }
         if (isAdminLogin && isAdminLoggedIn) {
+          debugPrint('🛣️ Router: Admin logged in on login page, redirecting to /admin/dashboard');
           return '/admin/dashboard';
         }
-        return null; // Allow access to admin route
+        debugPrint('🛣️ Router: Admin route OK, no redirect');
+        return null; // Allow access to admin route - don't run mobile app logic
       }
 
-      // Mobile app routes handling
+      // If admin is logged in and we're NOT on an admin route,
+      // but trying to access splash/home due to refresh, stay on admin dashboard
+      // This prevents the refreshListenable from redirecting away from admin
+      if (isAdminLoggedIn && !isAdminRoute && (isSplash || authState.isLoading)) {
+        debugPrint('🛣️ Router: Admin logged in, preventing redirect to mobile routes');
+        return '/admin/dashboard';
+      }
+
+      // Mobile app routes handling (only for non-admin routes)
       if (authState.isLoading) {
         return '/splash';
       }
@@ -74,7 +95,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/signup', builder: (context, state) => const SignUpScreen()),
+      GoRoute(
+          path: '/signup', builder: (context, state) => const SignUpScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/magic-loading',
@@ -85,11 +107,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           String? videoUrl;
           String? thumbnailUrl;
+          String? prompt;
 
           if (state.extra is Map<String, dynamic>) {
             final args = state.extra as Map<String, dynamic>;
             videoUrl = args['videoUrl'] as String?;
             thumbnailUrl = args['thumbnailUrl'] as String?;
+            prompt = args['prompt'] as String?;
           } else if (state.extra is String) {
             videoUrl = state.extra as String;
           }
@@ -98,6 +122,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return PreviewScreen(
             videoUrl: videoUrl,
             thumbnailUrl: thumbnailUrl,
+            prompt: prompt,
           );
         },
       ),
@@ -120,6 +145,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       // Admin Routes
+      GoRoute(
+        path: '/admin',
+        redirect: (context, state) => '/admin/dashboard',
+      ),
       GoRoute(
         path: '/admin/login',
         builder: (context, state) => const AdminLoginScreen(),

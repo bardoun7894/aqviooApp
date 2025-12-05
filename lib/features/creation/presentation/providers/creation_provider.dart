@@ -30,6 +30,8 @@ class CreationState {
   final List<CreationItem> creations;
   final String?
       currentTaskId; // ID of the task currently being watched in the wizard
+  final String?
+      hiddenContext; // Hidden context added by quick suggestions - not shown to user
 
   CreationState({
     this.status = CreationWizardStatus.idle,
@@ -40,6 +42,7 @@ class CreationState {
     CreationConfig? config,
     this.creations = const [],
     this.currentTaskId,
+    this.hiddenContext,
   }) : config = config ?? CreationConfig.empty();
 
   CreationState copyWith({
@@ -51,6 +54,8 @@ class CreationState {
     CreationConfig? config,
     List<CreationItem>? creations,
     String? currentTaskId,
+    String? hiddenContext,
+    bool clearHiddenContext = false,
   }) {
     return CreationState(
       status: status ?? this.status,
@@ -61,6 +66,8 @@ class CreationState {
       config: config ?? this.config,
       creations: creations ?? this.creations,
       currentTaskId: currentTaskId ?? this.currentTaskId,
+      hiddenContext:
+          clearHiddenContext ? null : (hiddenContext ?? this.hiddenContext),
     );
   }
 }
@@ -176,15 +183,34 @@ class CreationController extends Notifier<CreationState> {
     );
   }
 
+  // Hidden context management for quick suggestions
+  void setHiddenContext(String context) {
+    state = state.copyWith(hiddenContext: context);
+  }
+
+  void clearHiddenContext() {
+    state = state.copyWith(clearHiddenContext: true);
+  }
+
   // Main generation method using NEW Kie AI Service
   Future<void> generateVideo({
     String? prompt,
     String? imagePath,
   }) async {
     try {
-      // Get config from state (use provided prompt or state config prompt)
+      // Store the ORIGINAL user prompt (before enhancement)
+      final originalPrompt = prompt ?? state.config.prompt;
+
+      // Combine user prompt with hidden context if exists
+      String finalPrompt = originalPrompt;
+      if (state.hiddenContext != null && state.hiddenContext!.isNotEmpty) {
+        // Add hidden context to enhance the prompt
+        finalPrompt = '${state.hiddenContext}\n\n$finalPrompt';
+      }
+
+      // Get config from state (use combined prompt for generation)
       final config = state.config.copyWith(
-        prompt: prompt ?? state.config.prompt,
+        prompt: finalPrompt,
         imagePath: imagePath ?? state.config.imagePath,
       );
 
@@ -199,8 +225,8 @@ class CreationController extends Notifier<CreationState> {
         config: config,
         status: CreationWizardStatus.generatingScript,
         currentStepMessage: config.outputType == OutputType.video
-            ? "Enhancing your idea..."
-            : "Preparing your prompt...",
+            ? "enhancingIdea"
+            : "preparingPrompt",
         errorMessage: null,
       );
 
@@ -210,10 +236,8 @@ class CreationController extends Notifier<CreationState> {
       state = state.copyWith(
         status: CreationWizardStatus.generatingVideo,
         currentStepMessage: config.outputType == OutputType.video
-            ? (imageFile != null
-                ? "Bringing your image to life..."
-                : "Creating your video...")
-            : "Generating your image...",
+            ? (imageFile != null ? "bringingImageToLife" : "creatingVideo")
+            : "generatingImage",
       );
 
       // Call unified KieAI service
@@ -222,11 +246,11 @@ class CreationController extends Notifier<CreationState> {
         imageFile: imageFile,
       );
 
-      // Create new item
+      // Create new item - SAVE ORIGINAL PROMPT, not enhanced
       final newItem = CreationItem(
         id: _uuid.v4(),
         taskId: result['taskId'],
-        prompt: config.prompt,
+        prompt: originalPrompt, // Save original user prompt for Remix feature
         type: config.outputType == OutputType.video
             ? CreationType.video
             : CreationType.image,
@@ -238,6 +262,14 @@ class CreationController extends Notifier<CreationState> {
         duration: config.outputType == OutputType.video
             ? '${config.videoDurationSeconds}s'
             : config.imageSize,
+        // Additional fields for admin dashboard
+        style: config.outputType == OutputType.video
+            ? config.videoStyle?.name ?? 'default'
+            : config.imageStyle?.name ?? 'default',
+        aspectRatio: config.outputType == OutputType.video
+            ? config.videoAspectRatio
+            : config.imageSize,
+        outputType: config.outputType == OutputType.video ? 'video' : 'image',
       );
 
       // Save to repository
@@ -249,6 +281,9 @@ class CreationController extends Notifier<CreationState> {
       state = state.copyWith(creations: currentList);
 
       if (newItem.status == CreationStatus.processing) {
+        // Clear hidden context since it's been used
+        state = state.copyWith(clearHiddenContext: true);
+
         // Start polling in background
         _pollTask(newItem);
 
@@ -256,14 +291,17 @@ class CreationController extends Notifier<CreationState> {
         state = state.copyWith(
           status: CreationWizardStatus.generatingVideo,
           currentTaskId: newItem.id,
-          currentStepMessage: "Creating your masterpiece...",
+          currentStepMessage: "creatingMasterpiece",
         );
       } else {
+        // Clear hidden context since it's been used
+        state = state.copyWith(clearHiddenContext: true);
+
         // Immediate success (Image)
         state = state.copyWith(
           status: CreationWizardStatus.success,
           videoUrl: result['url'],
-          currentStepMessage: "Magic Complete!",
+          currentStepMessage: "magicComplete",
         );
       }
     } catch (e) {
@@ -304,7 +342,7 @@ class CreationController extends Notifier<CreationState> {
               state = state.copyWith(
                 status: CreationWizardStatus.success,
                 videoUrl: status['videoUrl'],
-                currentStepMessage: "Magic Complete!",
+                currentStepMessage: "magicComplete",
               );
             }
             return;

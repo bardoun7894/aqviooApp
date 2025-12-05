@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get back;
 
+  /// No description provided for @backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to login'**
+  String get backToLogin;
+
   /// No description provided for @google.
   ///
   /// In en, this message translates to:
@@ -869,7 +875,7 @@ abstract class AppLocalizations {
   /// No description provided for @processing.
   ///
   /// In en, this message translates to:
-  /// **'Processing...'**
+  /// **'Processing'**
   String get processing;
 
   /// No description provided for @waitForOtp.
@@ -1553,7 +1559,7 @@ abstract class AppLocalizations {
   /// No description provided for @creditBalance.
   ///
   /// In en, this message translates to:
-  /// **'{count} Credits'**
+  /// **'Credit Balance'**
   String creditBalance(int count);
 
   /// No description provided for @purchaseCredits.
@@ -1741,6 +1747,582 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check later in My Creations'**
   String get checkLaterInMyCreations;
+
+  /// No description provided for @creator.
+  ///
+  /// In en, this message translates to:
+  /// **'Creator'**
+  String get creator;
+
+  /// No description provided for @speechRecognitionNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition not available'**
+  String get speechRecognitionNotAvailable;
+
+  /// No description provided for @microphonePermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission is required'**
+  String get microphonePermissionRequired;
+
+  /// No description provided for @failedToEnhancePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to enhance prompt: {error}'**
+  String failedToEnhancePrompt(Object error);
+
+  /// No description provided for @moreStyles.
+  ///
+  /// In en, this message translates to:
+  /// **'More Styles'**
+  String get moreStyles;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Less'**
+  String get showLess;
+
+  /// No description provided for @enhancing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhancing...'**
+  String get enhancing;
+
+  /// No description provided for @didNotReceiveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t receive the code? '**
+  String get didNotReceiveCode;
+
+  /// No description provided for @weSentCodeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to'**
+  String get weSentCodeTo;
+
+  /// No description provided for @youWillGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'You will generate {label}'**
+  String youWillGenerate(Object label);
+
+  /// No description provided for @yourGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR GALLERY'**
+  String get yourGallery;
+
+  /// No description provided for @emptyGalleryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Start creating amazing AI-generated videos and images with just a few taps'**
+  String get emptyGalleryDescription;
+
+  /// No description provided for @createYourFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Your First'**
+  String get createYourFirst;
+
+  /// No description provided for @generatingMagic.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating Magic...'**
+  String get generatingMagic;
+
+  /// No description provided for @generationTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation timed out'**
+  String get generationTimedOut;
+
+  /// No description provided for @cinematic.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinematic'**
+  String get cinematic;
+
+  /// No description provided for @realEstate.
+  ///
+  /// In en, this message translates to:
+  /// **'Real Estate'**
+  String get realEstate;
+
+  /// No description provided for @educational.
+  ///
+  /// In en, this message translates to:
+  /// **'Educational'**
+  String get educational;
+
+  /// No description provided for @corporate.
+  ///
+  /// In en, this message translates to:
+  /// **'Corporate'**
+  String get corporate;
+
+  /// No description provided for @gaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaming'**
+  String get gaming;
+
+  /// No description provided for @musicVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Video'**
+  String get musicVideo;
+
+  /// No description provided for @documentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Documentary'**
+  String get documentary;
+
+  /// No description provided for @adminDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get adminDashboard;
+
+  /// No description provided for @adminUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get adminUsers;
+
+  /// No description provided for @adminContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get adminContent;
+
+  /// No description provided for @adminPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get adminPayments;
+
+  /// No description provided for @adminSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get adminSettings;
+
+  /// No description provided for @dashboardMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard Metrics'**
+  String get dashboardMetrics;
+
+  /// No description provided for @totalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Users'**
+  String get totalUsers;
+
+  /// No description provided for @totalVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Videos'**
+  String get totalVideos;
+
+  /// No description provided for @totalRevenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Revenue'**
+  String get totalRevenue;
+
+  /// No description provided for @videosGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos Generated'**
+  String get videosGenerated;
+
+  /// No description provided for @activeGenerations.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Generations'**
+  String get activeGenerations;
+
+  /// No description provided for @successRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Success Rate'**
+  String get successRate;
+
+  /// No description provided for @recentUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Users'**
+  String get recentUsers;
+
+  /// No description provided for @recentVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Videos'**
+  String get recentVideos;
+
+  /// No description provided for @recentTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transactions'**
+  String get recentTransactions;
+
+  /// No description provided for @userList.
+  ///
+  /// In en, this message translates to:
+  /// **'User List'**
+  String get userList;
+
+  /// No description provided for @searchByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by email or username'**
+  String get searchByEmail;
+
+  /// No description provided for @phoneNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneNumberLabel;
+
+  /// No description provided for @creditsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get creditsLabel;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusLabel;
+
+  /// No description provided for @actionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get actionLabel;
+
+  /// No description provided for @banUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Ban User'**
+  String get banUser;
+
+  /// No description provided for @unbanUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unban User'**
+  String get unbanUser;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View Details'**
+  String get viewDetails;
+
+  /// No description provided for @contentManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Management'**
+  String get contentManagement;
+
+  /// No description provided for @searchByPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by prompt or user'**
+  String get searchByPrompt;
+
+  /// No description provided for @typeFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get typeFilter;
+
+  /// No description provided for @statusFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusFilter;
+
+  /// No description provided for @allTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'All Types'**
+  String get allTypes;
+
+  /// No description provided for @allStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'All Status'**
+  String get allStatus;
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @contentPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get contentPreview;
+
+  /// No description provided for @copyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get copyUrl;
+
+  /// No description provided for @userInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'User Information'**
+  String get userInformation;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @adjustCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust Credits'**
+  String get adjustCredits;
+
+  /// No description provided for @amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amount;
+
+  /// No description provided for @reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reason;
+
+  /// No description provided for @bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus'**
+  String get bonus;
+
+  /// No description provided for @refund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get refund;
+
+  /// No description provided for @correction.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get correction;
+
+  /// No description provided for @other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get other;
+
+  /// No description provided for @notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get notes;
+
+  /// No description provided for @accountStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Status'**
+  String get accountStatus;
+
+  /// No description provided for @active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get active;
+
+  /// No description provided for @banned.
+  ///
+  /// In en, this message translates to:
+  /// **'Banned'**
+  String get banned;
+
+  /// No description provided for @bannedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Banned on'**
+  String get bannedOn;
+
+  /// No description provided for @banReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get banReason;
+
+  /// No description provided for @recentCreations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Creations'**
+  String get recentCreations;
+
+  /// No description provided for @noCreations.
+  ///
+  /// In en, this message translates to:
+  /// **'No creations yet'**
+  String get noCreations;
+
+  /// No description provided for @paymentsList.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments List'**
+  String get paymentsList;
+
+  /// No description provided for @paymentId.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment ID'**
+  String get paymentId;
+
+  /// No description provided for @paymentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get paymentStatus;
+
+  /// No description provided for @paymentDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get paymentDate;
+
+  /// No description provided for @transactionId.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction ID'**
+  String get transactionId;
+
+  /// No description provided for @adminLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get adminLogout;
+
+  /// No description provided for @adminProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Profile'**
+  String get adminProfile;
+
+  /// No description provided for @adminEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get adminEmail;
+
+  /// No description provided for @adminRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get adminRole;
+
+  /// No description provided for @adminPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get adminPermissions;
+
+  /// No description provided for @areYouSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get areYouSure;
+
+  /// No description provided for @deleteContentMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'This content will be permanently deleted'**
+  String get deleteContentMsg;
+
+  /// No description provided for @confirmBan.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to ban this user?'**
+  String get confirmBan;
+
+  /// No description provided for @unbanConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to unban this user?'**
+  String get unbanConfirm;
+
+  /// No description provided for @userNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get userNotFound;
+
+  /// No description provided for @contentNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Content not found'**
+  String get contentNotFound;
+
+  /// No description provided for @creditsAdjusted.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits adjusted successfully'**
+  String get creditsAdjusted;
+
+  /// No description provided for @userBanned.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been banned'**
+  String get userBanned;
+
+  /// No description provided for @userUnbanned.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been unbanned'**
+  String get userUnbanned;
+
+  /// No description provided for @contentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Content deleted successfully'**
+  String get contentDeleted;
+
+  /// No description provided for @errorAdjustingCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adjusting credits'**
+  String get errorAdjustingCredits;
+
+  /// No description provided for @errorBanningUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Error banning user'**
+  String get errorBanningUser;
+
+  /// No description provided for @errorLoadingUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading users'**
+  String get errorLoadingUsers;
+
+  /// No description provided for @errorLoadingContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading content'**
+  String get errorLoadingContent;
 }
 
 class _AppLocalizationsDelegate

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -111,11 +112,19 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
     final isLoading = authState.isLoading;
 
     // Listen for auth state changes
-    ref.listen(adminAuthControllerProvider, (previous, next) {
+    ref.listen<AdminAuthState>(adminAuthControllerProvider, (previous, next) {
+      debugPrint('🔐 Login Screen: Auth state changed - isAuthenticated=${next.isAuthenticated}, hasUser=${next.adminUser != null}, error=${next.errorMessage}');
       if (next.errorMessage != null) {
+        debugPrint('🔐 Login Screen: Showing error snackbar');
         _showSnackBar(next.errorMessage!, isError: true);
       } else if (next.isAuthenticated && next.adminUser != null) {
-        context.go('/admin/dashboard');
+        debugPrint('🔐 Login Screen: ✅ Navigating to /admin/dashboard');
+        // Use post-frame callback to ensure navigation happens after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.go('/admin/dashboard');
+          }
+        });
       }
     });
 

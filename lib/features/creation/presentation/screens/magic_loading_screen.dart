@@ -12,6 +12,33 @@ import '../widgets/magic_animation.dart';
 class MagicLoadingScreen extends ConsumerWidget {
   const MagicLoadingScreen({super.key});
 
+  String _translateStepMessage(String? key, BuildContext context) {
+    if (key == null) {
+      return AppLocalizations.of(context)!.creatingMagic;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    switch (key) {
+      case 'enhancingIdea':
+        return l10n.enhancingIdea;
+      case 'preparingPrompt':
+        return l10n.preparingPrompt;
+      case 'bringingImageToLife':
+        return l10n.bringingImageToLife;
+      case 'creatingVideo':
+        return l10n.creatingVideo;
+      case 'generatingImage':
+        return l10n.generatingImage;
+      case 'creatingMasterpiece':
+        return l10n.creatingMasterpiece;
+      case 'magicComplete':
+        return l10n.magicComplete;
+      case 'generationTimedOut':
+        return l10n.generationTimedOut;
+      default:
+        return key;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(creationControllerProvider);
@@ -86,8 +113,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 24),
                               child: Text(
-                                state.currentStepMessage ??
-                                    AppLocalizations.of(context)!.creatingMagic,
+                                _translateStepMessage(
+                                    state.currentStepMessage, context),
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineMedium
@@ -112,7 +139,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.auto_awesome,
-                                    label: AppLocalizations.of(context)!.scriptStep,
+                                    label: AppLocalizations.of(context)!
+                                        .scriptStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingScript,
                                     isCompleted: state.status.index >
@@ -127,7 +155,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.graphic_eq,
-                                    label: AppLocalizations.of(context)!.audioStep,
+                                    label:
+                                        AppLocalizations.of(context)!.audioStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingAudio,
                                     isCompleted: state.status.index >
@@ -142,7 +171,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                                   _buildStepIndicator(
                                     context,
                                     icon: Icons.video_library,
-                                    label: AppLocalizations.of(context)!.videoStep,
+                                    label:
+                                        AppLocalizations.of(context)!.videoStep,
                                     isActive: state.status ==
                                         CreationWizardStatus.generatingVideo,
                                     isCompleted: state.status ==
@@ -218,7 +248,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        AppLocalizations.of(context)!.backgroundGenerationInfo,
+                                        AppLocalizations.of(context)!
+                                            .backgroundGenerationInfo,
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.9),
                                           fontSize: 13,
@@ -244,7 +275,8 @@ class MagicLoadingScreen extends ConsumerWidget {
                               icon: const Icon(Icons.arrow_back,
                                   color: Colors.white70),
                               label: Text(
-                                AppLocalizations.of(context)!.checkLaterInMyCreations,
+                                AppLocalizations.of(context)!
+                                    .checkLaterInMyCreations,
                                 style: const TextStyle(
                                   color: Colors.white70,
                                   fontSize: 16,

@@ -257,3 +257,9 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Build outputs
+android/app/build/
+build/
+*.apk
+*.aab
