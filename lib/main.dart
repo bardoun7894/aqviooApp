@@ -8,7 +8,7 @@ import 'app.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-import 'services/payment/tabby_service.dart';
+import 'services/payment/tap_payment_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +36,25 @@ void main() async {
       Firebase.app();
     }
 
-    // Initialize Tabby SDK (only on mobile platforms, not web)
+    // Initialize Tap Payments SDK (only on mobile platforms, not web)
     if (!kIsWeb) {
-      final tabbyApiKey = dotenv.env['TABBY_API_KEY'] ?? '';
-      if (tabbyApiKey.isNotEmpty) {
-        TabbyService().initialize(tabbyApiKey);
+      final tapSecretKey = dotenv.env['TAP_SECRET_KEY'] ?? '';
+      // Bundle ID for iOS, package name for Android
+      const bundleId = 'com.aqvioo.akvioo';
+      if (kDebugMode) {
+        print('🔵 Tap SECRET_KEY from env: ${tapSecretKey.isNotEmpty ? "${tapSecretKey.substring(0, 10)}..." : "empty"}');
+        print('🔵 Tap Bundle ID: $bundleId');
+      }
+      if (tapSecretKey.isNotEmpty) {
+        TapPaymentService().initialize(
+          secretKey: tapSecretKey,
+          bundleId: bundleId,
+        );
+        if (kDebugMode) {
+          print('🔵 Tap Payment initialized successfully');
+        }
+      } else {
+        print('❌ Tap Payment SECRET_KEY is empty!');
       }
     }
 

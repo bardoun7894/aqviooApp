@@ -4,25 +4,37 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../features/creation/domain/models/creation_config.dart';
 
+/// Pricing in SAR (Saudi Riyal)
+class Pricing {
+  static const double videoCost = 2.99;  // SAR per video
+  static const double imageCost = 1.99;  // SAR per image
+  static const double initialBalance = 10.0;  // SAR for new users
+  static const String currency = 'ر.س';  // Saudi Riyal symbol
+  static const String currencyCode = 'SAR';
+}
+
 class CreditsState {
-  final int credits;
-  final bool hasGeneratedFirstVideo;
+  final double balance;  // Balance in SAR
+  final bool hasGeneratedFirst;
   final bool isLoading;
 
   const CreditsState({
-    required this.credits,
-    required this.hasGeneratedFirstVideo,
+    required this.balance,
+    required this.hasGeneratedFirst,
     this.isLoading = false,
   });
 
+  /// For backward compatibility - returns balance as int credits
+  int get credits => balance.floor();
+
   CreditsState copyWith({
-    int? credits,
-    bool? hasGeneratedFirstVideo,
+    double? balance,
+    bool? hasGeneratedFirst,
     bool? isLoading,
   }) {
     return CreditsState(
-      credits: credits ?? this.credits,
-      hasGeneratedFirstVideo: hasGeneratedFirstVideo ?? this.hasGeneratedFirstVideo,
+      balance: balance ?? this.balance,
+      hasGeneratedFirst: hasGeneratedFirst ?? this.hasGeneratedFirst,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -33,18 +45,15 @@ class CreditsController extends StateNotifier<CreditsState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static const String _cacheCreditsKey = 'cached_user_credits';
-  static const String _cacheFirstVideoKey = 'cached_has_generated_first_video';
-  static const int _initialCredits = 10;
-  static const int _creditCostPerVideo = 10;
-  static const int _creditCostPerImage = 5;
+  static const String _cacheBalanceKey = 'cached_user_balance_sar';
+  static const String _cacheFirstGenKey = 'cached_has_generated_first';
 
   CreditsController(this.ref)
       : super(const CreditsState(
-          credits: _initialCredits,
-          hasGeneratedFirstVideo: false,
+          balance: Pricing.initialBalance,
+          hasGeneratedFirst: false,
         )) {
-    _loadCredits();
+    _loadBalance();
   }
 
   String? get _userId => _auth.currentUser?.uid;
@@ -55,145 +64,172 @@ class CreditsController extends StateNotifier<CreditsState> {
     return _firestore.collection('users').doc(userId).collection('data').doc('credits');
   }
 
-  Future<void> _loadCredits() async {
+  Future<void> _loadBalance() async {
     state = state.copyWith(isLoading: true);
 
     try {
       final userId = _userId;
 
       if (userId == null) {
-        // Not logged in, use default
         state = CreditsState(
-          credits: _initialCredits,
-          hasGeneratedFirstVideo: false,
+          balance: Pricing.initialBalance,
+          hasGeneratedFirst: false,
           isLoading: false,
         );
         return;
       }
 
-      // Try to load from cache first for instant UI
+      // Load from cache first
       final prefs = await SharedPreferences.getInstance();
-      final cachedCredits = prefs.getInt(_cacheCreditsKey);
-      final cachedFirstVideo = prefs.getBool(_cacheFirstVideoKey);
+      final cachedBalance = prefs.getDouble(_cacheBalanceKey);
+      final cachedFirstGen = prefs.getBool(_cacheFirstGenKey);
 
-      if (cachedCredits != null) {
+      if (cachedBalance != null) {
         state = state.copyWith(
-          credits: cachedCredits,
-          hasGeneratedFirstVideo: cachedFirstVideo ?? false,
+          balance: cachedBalance,
+          hasGeneratedFirst: cachedFirstGen ?? false,
         );
       }
 
-      // Then load from Firebase (source of truth)
+      // Load from Firebase
       final doc = await _userCreditsDoc?.get();
 
       if (doc != null && doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
-        final credits = data['credits'] as int? ?? _initialCredits;
-        final hasGeneratedFirstVideo = data['hasGeneratedFirstVideo'] as bool? ?? false;
+
+        // Support both old 'credits' (int) and new 'balance' (double) fields
+        double balance;
+        if (data.containsKey('balance')) {
+          balance = (data['balance'] as num).toDouble();
+        } else if (data.containsKey('credits')) {
+          // Migrate old credits to SAR balance (1 credit = 1 SAR for migration)
+          balance = (data['credits'] as num).toDouble();
+        } else {
+          balance = Pricing.initialBalance;
+        }
+
+        final hasGeneratedFirst = data['hasGeneratedFirst'] as bool? ??
+                                   data['hasGeneratedFirstVideo'] as bool? ?? false;
 
         // Update cache
-        await prefs.setInt(_cacheCreditsKey, credits);
-        await prefs.setBool(_cacheFirstVideoKey, hasGeneratedFirstVideo);
+        await prefs.setDouble(_cacheBalanceKey, balance);
+        await prefs.setBool(_cacheFirstGenKey, hasGeneratedFirst);
 
         state = CreditsState(
-          credits: credits,
-          hasGeneratedFirstVideo: hasGeneratedFirstVideo,
+          balance: balance,
+          hasGeneratedFirst: hasGeneratedFirst,
           isLoading: false,
         );
       } else {
-        // First time user - initialize in Firestore
+        // First time user
         await _userCreditsDoc?.set({
-          'credits': _initialCredits,
-          'hasGeneratedFirstVideo': false,
+          'balance': Pricing.initialBalance,
+          'hasGeneratedFirst': false,
           'lastUpdated': FieldValue.serverTimestamp(),
         });
 
-        // Update cache
-        await prefs.setInt(_cacheCreditsKey, _initialCredits);
-        await prefs.setBool(_cacheFirstVideoKey, false);
+        await prefs.setDouble(_cacheBalanceKey, Pricing.initialBalance);
+        await prefs.setBool(_cacheFirstGenKey, false);
 
         state = CreditsState(
-          credits: _initialCredits,
-          hasGeneratedFirstVideo: false,
+          balance: Pricing.initialBalance,
+          hasGeneratedFirst: false,
           isLoading: false,
         );
       }
     } catch (e) {
-      // On error, keep current state or use cached values
-      print('Error loading credits: $e');
+      print('Error loading balance: $e');
       state = state.copyWith(isLoading: false);
     }
   }
 
-  int getCreditCost(OutputType outputType) {
+  /// Get cost in SAR for output type
+  double getCost(OutputType outputType) {
     return outputType == OutputType.video
-        ? _creditCostPerVideo
-        : _creditCostPerImage;
+        ? Pricing.videoCost
+        : Pricing.imageCost;
   }
 
+  /// For backward compatibility
+  int getCreditCost(OutputType outputType) {
+    return getCost(outputType).ceil();
+  }
+
+  /// Check if user can afford generation
   Future<bool> canGenerate(OutputType outputType) async {
-    // Check if user has enough credits based on output type
-    final cost = getCreditCost(outputType);
-    return state.credits >= cost;
+    final cost = getCost(outputType);
+    return state.balance >= cost;
   }
 
+  /// Deduct cost for generation
   Future<void> deductCreditsForGeneration(OutputType outputType) async {
     try {
       final userId = _userId;
       if (userId == null) throw Exception('User not logged in');
 
-      final cost = getCreditCost(outputType);
-      final newCredits = state.credits - cost;
+      final cost = getCost(outputType);
+      final newBalance = state.balance - cost;
 
-      // Update Firestore first (source of truth)
+      if (newBalance < 0) throw Exception('Insufficient balance');
+
+      // Update Firestore
       await _userCreditsDoc?.update({
-        'credits': newCredits,
-        'hasGeneratedFirstVideo': true,
+        'balance': newBalance,
+        'hasGeneratedFirst': true,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
-      // Update local cache
+      // Update cache
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_cacheCreditsKey, newCredits);
-      await prefs.setBool(_cacheFirstVideoKey, true);
+      await prefs.setDouble(_cacheBalanceKey, newBalance);
+      await prefs.setBool(_cacheFirstGenKey, true);
 
       // Update state
       state = state.copyWith(
-        credits: newCredits,
-        hasGeneratedFirstVideo: true,
+        balance: newBalance,
+        hasGeneratedFirst: true,
       );
     } catch (e) {
-      print('Error deducting credits: $e');
+      print('Error deducting balance: $e');
       rethrow;
     }
   }
 
-  Future<void> addCredits(int amount) async {
+  /// Add balance (from payment) - amount in SAR
+  Future<void> addBalance(double amount) async {
     try {
       final userId = _userId;
       if (userId == null) throw Exception('User not logged in');
 
-      final newCredits = state.credits + amount;
+      final newBalance = state.balance + amount;
 
-      // Update Firestore first (source of truth)
+      // Update Firestore
       await _userCreditsDoc?.update({
-        'credits': newCredits,
+        'balance': newBalance,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
 
-      // Update local cache
+      // Update cache
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_cacheCreditsKey, newCredits);
+      await prefs.setDouble(_cacheBalanceKey, newBalance);
 
       // Update state
-      state = state.copyWith(credits: newCredits);
+      state = state.copyWith(balance: newBalance);
     } catch (e) {
-      print('Error adding credits: $e');
+      print('Error adding balance: $e');
       rethrow;
     }
   }
 
-  int get creditCost => _creditCostPerVideo;
+  /// For backward compatibility - add credits as SAR
+  Future<void> addCredits(int amount) async {
+    await addBalance(amount.toDouble());
+  }
+
+  /// Reload balance from server
+  Future<void> refreshBalance() async {
+    await _loadBalance();
+  }
 }
 
 final creditsControllerProvider =

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Aqvioo is a Flutter app (iOS/Android/Web) that generates promotional videos and images from text or photos using AI. It integrates Kie.ai for video/image generation, OpenAI for text, Eleven Labs for voiceover, Firebase for backend, and Tabby for payments.
+Aqvioo is a Flutter app (iOS/Android/Web) that generates promotional videos and images from text or photos using AI. It integrates Kie.ai for video/image generation, OpenAI for text, Eleven Labs for voiceover, Firebase for backend, and Tap Payments for payments.
 
 ## Common Commands
 
@@ -57,7 +57,7 @@ lib/features/{feature}/
 - `home/` - Multi-step video creation wizard (idea → style → review)
 - `creation/` - AI pipeline orchestration, loading animations
 - `preview/` - Video player, sharing
-- `payment/` - Tabby BNPL integration
+- `payment/` - Tap Payments integration (credit/debit cards, MADA)
 - `admin/` - Web dashboard (users, content, payments)
 
 ### AI Services (`lib/services/ai/`)
@@ -85,7 +85,9 @@ Required `.env` file (not committed):
 KIE_API_KEY=your_key
 OPENAI_API_KEY=your_key
 ELEVEN_LABS_API_KEY=your_key
-TABBY_API_KEY=your_key
+TAP_PUBLIC_KEY=pk_live_xxxxx
+TAP_SECRET_KEY=sk_live_xxxxx
+TAP_MERCHANT_ID=your_merchant_id
 ```
 
 ## Key Patterns

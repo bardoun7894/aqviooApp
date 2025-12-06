@@ -40,9 +40,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLogin = currentPath == '/login';
       final isSignup = currentPath == '/signup';
 
-      debugPrint('🛣️ Router: path=$currentPath, isAdminRoute=$isAdminRoute, isAdminLoading=$isAdminLoading, isAdminLoggedIn=$isAdminLoggedIn, mobileAuthLoading=${authState.isLoading}');
+      debugPrint(
+          '🛣️ Router: path=$currentPath, isAdminRoute=$isAdminRoute, isAdminLoading=$isAdminLoading, isAdminLoggedIn=$isAdminLoggedIn, mobileAuthLoading=${authState.isLoading}');
 
-      // Admin routes handling - completely separate from mobile app
+      // Platform-specific routing
+      // Admin dashboard is WEB ONLY - redirect mobile users away from admin routes
+      if (isAdminRoute && !kIsWeb) {
+        debugPrint(
+            '🛣️ Router: Admin routes not available on mobile, redirecting to /home');
+        return isLoggedIn ? '/home' : '/login';
+      }
+
+      // Payment route is MOBILE ONLY - redirect web users away from payment
+      if (currentPath == '/payment' && kIsWeb) {
+        debugPrint(
+            '🛣️ Router: Payment not available on web, redirecting to /home');
+        return '/home';
+      }
+
+      // Admin routes handling - completely separate from mobile app (WEB ONLY)
       // IMPORTANT: Check admin routes FIRST before any mobile auth logic
       if (isAdminRoute) {
         // Don't redirect while admin auth is still loading/checking
@@ -51,11 +67,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           return null; // Stay on current page while checking auth
         }
         if (!isAdminLoggedIn && !isAdminLogin) {
-          debugPrint('🛣️ Router: Not admin logged in, redirecting to /admin/login');
+          debugPrint(
+              '🛣️ Router: Not admin logged in, redirecting to /admin/login');
           return '/admin/login';
         }
         if (isAdminLogin && isAdminLoggedIn) {
-          debugPrint('🛣️ Router: Admin logged in on login page, redirecting to /admin/dashboard');
+          debugPrint(
+              '🛣️ Router: Admin logged in on login page, redirecting to /admin/dashboard');
           return '/admin/dashboard';
         }
         debugPrint('🛣️ Router: Admin route OK, no redirect');
@@ -65,8 +83,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If admin is logged in and we're NOT on an admin route,
       // but trying to access splash/home due to refresh, stay on admin dashboard
       // This prevents the refreshListenable from redirecting away from admin
-      if (isAdminLoggedIn && !isAdminRoute && (isSplash || authState.isLoading)) {
-        debugPrint('🛣️ Router: Admin logged in, preventing redirect to mobile routes');
+      if (isAdminLoggedIn &&
+          !isAdminRoute &&
+          (isSplash || authState.isLoading)) {
+        debugPrint(
+            '🛣️ Router: Admin logged in, preventing redirect to mobile routes');
         return '/admin/dashboard';
       }
 
@@ -108,12 +129,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           String? videoUrl;
           String? thumbnailUrl;
           String? prompt;
+          bool isImage = false;
 
           if (state.extra is Map<String, dynamic>) {
             final args = state.extra as Map<String, dynamic>;
             videoUrl = args['videoUrl'] as String?;
             thumbnailUrl = args['thumbnailUrl'] as String?;
             prompt = args['prompt'] as String?;
+            isImage = args['isImage'] as bool? ?? false;
           } else if (state.extra is String) {
             videoUrl = state.extra as String;
           }
@@ -123,6 +146,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             videoUrl: videoUrl,
             thumbnailUrl: thumbnailUrl,
             prompt: prompt,
+            isImage: isImage,
           );
         },
       ),

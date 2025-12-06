@@ -22,6 +22,7 @@ class MyCreationsScreen extends ConsumerStatefulWidget {
 
 class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
   String _selectedFilter = 'All'; // All, Video, Image
+  bool _isGridView = true; // Toggle between grid and list view
 
   @override
   Widget build(BuildContext context) {
@@ -83,24 +84,59 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                // Filter Chips and View Toggle
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      _buildFilterChip('All'),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('Videos'),
-                      const SizedBox(width: 8),
-                      _buildFilterChip('Images'),
+                      // Filter Chips
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildFilterChip('All'),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('Videos'),
+                              const SizedBox(width: 8),
+                              _buildFilterChip('Images'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // View Toggle
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildViewToggleButton(
+                              Icons.grid_view_rounded,
+                              _isGridView,
+                              () => setState(() => _isGridView = true),
+                            ),
+                            _buildViewToggleButton(
+                              Icons.view_list_rounded,
+                              !_isGridView,
+                              () => setState(() => _isGridView = false),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                // Creations List
+                // Creations List/Grid
                 Expanded(
                   child: filteredCreations.isEmpty
                       ? _buildEmptyState()
@@ -109,15 +145,34 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                             await Future.delayed(const Duration(seconds: 1));
                           },
                           color: AppColors.primaryPurple,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: filteredCreations.length,
-                            itemBuilder: (context, index) {
-                              return _buildCreationCard(
-                                  filteredCreations[index]);
-                            },
-                          ),
+                          child: _isGridView
+                              ? GridView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  physics: const BouncingScrollPhysics(),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    childAspectRatio: 0.75,
+                                  ),
+                                  itemCount: filteredCreations.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildGridCard(
+                                        filteredCreations[index]);
+                                  },
+                                )
+                              : ListView.builder(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 20),
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: filteredCreations.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildCreationCard(
+                                        filteredCreations[index]);
+                                  },
+                                ),
                         ),
                 ),
               ],
@@ -429,15 +484,133 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
     );
   }
 
+  Widget _buildViewToggleButton(
+      IconData icon, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryPurple.withOpacity(0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: isSelected ? AppColors.primaryPurple : AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridCard(CreationItem item) {
+    return GridCreationCard(
+      item: item,
+      onDelete: () => _showDeleteDialog(item),
+    );
+  }
+
   Widget _buildCreationCard(CreationItem item) {
-    return CreationCard(item: item);
+    return CreationCard(
+      item: item,
+      onDelete: () => _showDeleteDialog(item),
+    );
+  }
+
+  void _showDeleteDialog(CreationItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Text(
+          AppLocalizations.of(context)!.deleteConfirmation,
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          AppLocalizations.of(context)!.deleteCreationMsg,
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: GoogleFonts.outfit(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref
+                    .read(creationControllerProvider.notifier)
+                    .deleteCreation(item.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)!.contentDeleted,
+                        style: GoogleFonts.outfit(),
+                      ),
+                      backgroundColor: AppColors.primaryPurple,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context)!.error,
+                        style: GoogleFonts.outfit(),
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              AppLocalizations.of(context)!.delete,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
 class CreationCard extends StatefulWidget {
   final CreationItem item;
+  final VoidCallback? onDelete;
 
-  const CreationCard({super.key, required this.item});
+  const CreationCard({super.key, required this.item, this.onDelete});
 
   @override
   State<CreationCard> createState() => _CreationCardState();
@@ -512,20 +685,57 @@ class _CreationCardState extends State<CreationCard>
           },
         );
       } else {
+        // Show image in fullscreen dialog
         showDialog(
           context: context,
           builder: (context) => Dialog(
             backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(16),
             child: Stack(
               alignment: Alignment.topRight,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(widget.item.url!),
+                InteractiveViewer(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      widget.item.url!,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -598,7 +808,7 @@ class _CreationCardState extends State<CreationCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Thumbnail / Video Area
+                    // Thumbnail / Video / Image Area
                     Container(
                       height: 220,
                       decoration: BoxDecoration(
@@ -610,13 +820,6 @@ class _CreationCardState extends State<CreationCard>
                           end: Alignment.bottomRight,
                           colors: _getGradientColors(item),
                         ),
-                        image: item.thumbnailUrl != null &&
-                                item.thumbnailUrl!.isNotEmpty
-                            ? DecorationImage(
-                                image: NetworkImage(item.thumbnailUrl!),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
                       ),
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
@@ -625,6 +828,54 @@ class _CreationCardState extends State<CreationCard>
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
+                            // Show image directly for image type
+                            if (!isVideo &&
+                                item.url != null &&
+                                item.url!.isNotEmpty)
+                              Image.network(
+                                item.url!,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      size: 48,
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                  );
+                                },
+                              ),
+
+                            // Show thumbnail for video if available
+                            if (isVideo &&
+                                !_isPlayerInitialized &&
+                                item.thumbnailUrl != null &&
+                                item.thumbnailUrl!.isNotEmpty)
+                              Image.network(
+                                item.thumbnailUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const SizedBox(),
+                              ),
+
                             // Video Player (if ready)
                             if (_isPlayerInitialized &&
                                 _videoController != null)
@@ -637,36 +888,79 @@ class _CreationCardState extends State<CreationCard>
                                 ),
                               ),
 
-                            // Overlay / Status Icon
-                            if (isProcessing ||
-                                isFailed ||
-                                (!_isPlayerInitialized && isVideo) ||
-                                !isVideo)
+                            // Gradient Overlay
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.0),
+                                    Colors.black.withOpacity(0.3),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Overlay / Status Icon for processing/failed
+                            if (isProcessing || isFailed)
                               Center(
                                 child: isProcessing
                                     ? const CircularProgressIndicator(
                                         color: Colors.white)
-                                    : AnimatedBuilder(
-                                        animation: _animationController,
-                                        builder: (context, child) {
-                                          return Transform.scale(
-                                            scale: 1.0 +
-                                                (_animationController.value *
-                                                    0.2),
-                                            child: Icon(
-                                              isFailed
-                                                  ? Icons.error_outline
-                                                  : (isVideo
-                                                      ? Icons
-                                                          .play_circle_outline
-                                                      : Icons.image_outlined),
-                                              size: 64,
-                                              color:
-                                                  Colors.white.withOpacity(0.9),
-                                            ),
-                                          );
-                                        },
+                                    : Icon(
+                                        Icons.error_outline,
+                                        size: 64,
+                                        color: Colors.white.withOpacity(0.9),
                                       ),
+                              ),
+
+                            // Play icon for video
+                            if (isVideo && !isProcessing && !isFailed)
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.4),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_arrow_rounded,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+
+                            // Expand icon for image
+                            if (!isVideo && !isProcessing && !isFailed)
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.4),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.fullscreen_rounded,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
 
                             if (isProcessing)
@@ -768,6 +1062,24 @@ class _CreationCardState extends State<CreationCard>
                                   color: AppColors.textHint,
                                 ),
                               ),
+                              if (widget.onDelete != null) ...[
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: widget.onDelete,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 18,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                           if (isFailed && item.errorMessage != null) ...[
@@ -833,5 +1145,414 @@ class _CreationCardState extends State<CreationCard>
     } else {
       return [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)];
     }
+  }
+}
+
+// Grid Card for grid view
+class GridCreationCard extends StatefulWidget {
+  final CreationItem item;
+  final VoidCallback? onDelete;
+
+  const GridCreationCard({super.key, required this.item, this.onDelete});
+
+  @override
+  State<GridCreationCard> createState() => _GridCreationCardState();
+}
+
+class _GridCreationCardState extends State<GridCreationCard> {
+  VideoPlayerController? _videoController;
+  bool _isPlayerInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.type == CreationType.video &&
+        widget.item.status == CreationStatus.success &&
+        widget.item.url != null) {
+      _initializeVideo();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _videoController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.item.url!),
+      );
+      await _videoController!.initialize();
+      await _videoController!.setVolume(0);
+      await _videoController!.setLooping(true);
+      await _videoController!.play();
+      if (mounted) {
+        setState(() {
+          _isPlayerInitialized = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error initializing video preview: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    if (widget.item.status == CreationStatus.success &&
+        widget.item.url != null) {
+      if (widget.item.type == CreationType.video) {
+        context.push(
+          '/preview',
+          extra: {
+            'videoUrl': widget.item.url,
+            'thumbnailUrl': widget.item.thumbnailUrl,
+            'prompt': widget.item.prompt,
+          },
+        );
+      } else {
+        // Show image in fullscreen dialog
+        showDialog(
+          context: context,
+          builder: (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(16),
+            child: Stack(
+              alignment: Alignment.topRight,
+              children: [
+                InteractiveViewer(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      widget.item.url!,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final isVideo = item.type == CreationType.video;
+    final isImage = item.type == CreationType.image;
+    final hasImageUrl = isImage && item.url != null && item.url!.isNotEmpty;
+
+    return GestureDetector(
+      onTap: _handleTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.9),
+              Colors.white.withOpacity(0.7),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryPurple.withOpacity(0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: -4,
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail / Video / Image Area
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isVideo
+                        ? [const Color(0xFF6B9DFF), const Color(0xFF9D6BFF)]
+                        : [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Show image directly for image type
+                      if (hasImageUrl)
+                        Image.network(
+                          item.url!,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 32,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            );
+                          },
+                        ),
+
+                      // Show thumbnail for video if available
+                      if (isVideo &&
+                          !_isPlayerInitialized &&
+                          item.thumbnailUrl != null &&
+                          item.thumbnailUrl!.isNotEmpty)
+                        Image.network(
+                          item.thumbnailUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(),
+                        ),
+
+                      // Video Player
+                      if (_isPlayerInitialized && _videoController != null)
+                        FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _videoController!.value.size.width,
+                            height: _videoController!.value.size.height,
+                            child: VideoPlayer(_videoController!),
+                          ),
+                        ),
+
+                      // Gradient Overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.0),
+                              Colors.black.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Play icon for video
+                      if (isVideo)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+
+                      // Expand icon for image
+                      if (isImage)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.fullscreen_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+
+                      // Delete button
+                      if (widget.onDelete != null)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: GestureDetector(
+                            onTap: widget.onDelete,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Details
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.prompt,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          isVideo
+                              ? Icons.videocam_rounded
+                              : Icons.image_rounded,
+                          size: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isVideo
+                              ? AppLocalizations.of(context)!.video
+                              : AppLocalizations.of(context)!.image,
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (isVideo && item.duration != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 3,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: AppColors.textSecondary.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            item.duration!,
+                            style: GoogleFonts.outfit(
+                              fontSize: 9,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

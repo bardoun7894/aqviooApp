@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'dart:async';
+import 'dart:io'; // Added for File support
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +10,6 @@ import 'package:video_player/video_player.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/responsive_extensions.dart';
 import '../../../../core/utils/file_utils.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../core/providers/credits_provider.dart';
@@ -19,12 +20,14 @@ class PreviewScreen extends ConsumerStatefulWidget {
   final String? videoUrl;
   final String? thumbnailUrl;
   final String? prompt;
+  final bool isImage;
 
   const PreviewScreen({
     super.key,
     this.videoUrl,
     this.thumbnailUrl,
     this.prompt,
+    this.isImage = false,
   });
 
   @override
@@ -32,38 +35,63 @@ class PreviewScreen extends ConsumerStatefulWidget {
 }
 
 class _PreviewScreenState extends ConsumerState<PreviewScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   bool _isPlaying = true;
   bool _isDownloading = false;
+  bool _areControlsVisible = true;
+  Timer? _hideTimer;
+  late AnimationController _controlsAnimationController;
+  late Animation<double> _controlsOpacity;
   late AnimationController _titleAnimationController;
-  Animation<double>? _titleOpacity;
+  // Animation<double>? _titleOpacity; // Removed as per instruction
 
   @override
   void initState() {
     super.initState();
 
-    // Debug: Check if prompt is being passed
-    debugPrint('PreviewScreen - Prompt received: ${widget.prompt}');
-
-    if (widget.videoUrl != null) {
+    if (widget.videoUrl != null && !widget.isImage) {
       _initializePlayer();
     }
+
     _titleAnimationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _titleOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _titleAnimationController,
-        curve: Curves.easeOut,
-      ),
-    );
-    // Start animation after a short delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        _titleAnimationController.forward();
+
+    // Initial title animation setup (opacity) - unused but kept for controller init structure
+    // _titleOpacity logic removed per previous refactor
+
+    _controlsAnimationController = AnimationController(
+        duration: const Duration(milliseconds: 300), vsync: this);
+
+    _controlsOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+            parent: _controlsAnimationController, curve: Curves.easeInOut));
+
+    _controlsAnimationController.forward();
+    _startHideTimer();
+  }
+
+  void _startHideTimer() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted && _isPlaying && !widget.isImage) {
+        setState(() => _areControlsVisible = false);
+        _controlsAnimationController.reverse();
+      }
+    });
+  }
+
+  void _toggleControls() {
+    setState(() {
+      _areControlsVisible = !_areControlsVisible;
+      if (_areControlsVisible) {
+        _controlsAnimationController.forward();
+        _startHideTimer();
+      } else {
+        _controlsAnimationController.reverse();
       }
     });
   }
@@ -79,7 +107,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
         videoPlayerController: _videoPlayerController!,
         autoPlay: true,
         looping: true,
-        showControls: false,
+        showControls: true, // Enable standard controls
         placeholder: widget.thumbnailUrl != null
             ? Center(
                 child: Image.network(
@@ -105,13 +133,68 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     });
   }
 
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onTap,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(25),
+              child: Icon(
+                icon,
+                color: onTap == null
+                    ? AppColors.textSecondary.withOpacity(0.5)
+                    : AppColors.primaryPurple,
+                size: 24,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _videoPlayerController?.dispose();
     _chewieController?.dispose();
     _titleAnimationController.dispose();
+    _controlsAnimationController.dispose();
+    _hideTimer?.cancel();
     super.dispose();
   }
+
+  bool _isLooping = true;
 
   void _togglePlayPause() {
     setState(() {
@@ -123,21 +206,64 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     });
   }
 
+  void _toggleSpeed() {
+    if (_videoPlayerController == null) return;
+    double currentSpeed = _videoPlayerController!.value.playbackSpeed;
+    double newSpeed;
+    if (currentSpeed == 1.0)
+      newSpeed = 1.5;
+    else if (currentSpeed == 1.5)
+      newSpeed = 2.0;
+    else if (currentSpeed == 2.0)
+      newSpeed = 0.5;
+    else
+      newSpeed = 1.0;
+
+    _videoPlayerController!.setPlaybackSpeed(newSpeed);
+    setState(() {}); // Update UI
+  }
+
+  void _toggleLoop() {
+    if (_videoPlayerController == null) return;
+    setState(() {
+      _isLooping = !_isLooping;
+      _videoPlayerController!.setLooping(_isLooping);
+    });
+  }
+
   Future<void> _handleDownload() async {
     if (widget.videoUrl == null || _isDownloading) return;
 
     setState(() => _isDownloading = true);
 
     try {
-      // Download the file to temp directory
-      await FileUtils.downloadFile(widget.videoUrl!);
+      final isNetwork = widget.videoUrl!.startsWith('http');
+      String filePath;
+
+      if (isNetwork) {
+        // Download the file to temp directory first
+        final file = await FileUtils.downloadFile(widget.videoUrl!);
+        if (file == null) throw Exception("Failed to download file");
+        filePath = file.path;
+      } else {
+        // Already a local file
+        filePath = widget.videoUrl!;
+      }
+
+      // Save to gallery
+      final success = await FileUtils.saveToGallery(
+        filePath,
+        isVideo: !widget.isImage,
+      );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-                'Video downloaded to temp folder!\nNote: Gallery save requires additional permissions.'),
-            backgroundColor: AppColors.primaryPurple,
+            content: Text(success
+                ? l10n.savedToPhotos
+                : l10n.failedToSave),
+            backgroundColor: success ? AppColors.primaryPurple : Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -148,9 +274,10 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(l10n.shareFailed(e.toString())),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -163,12 +290,91 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     }
   }
 
+  void _showPromptInspector() {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.auto_awesome, color: AppColors.primaryPurple),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.promptDetails,
+                  style: GoogleFonts.outfit(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: SelectableText(
+                widget.prompt ?? l10n.noPromptAvailable,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  height: 1.5,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _handleRemix(); // Reuse remix logic
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(l10n.tryAgainWithPrompt),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _handleRemix() {
     if (widget.prompt == null || widget.prompt!.isEmpty) {
       // No prompt available, just go to home
       context.go('/home');
       return;
     }
+
+    final l10n = AppLocalizations.of(context)!;
 
     // Show confirmation dialog with 3 options
     showDialog(
@@ -191,7 +397,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'Generate New Video?',
+                widget.isImage ? l10n.generateNewContent : l10n.generateNewVideo,
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -200,7 +406,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Choose how you want to create a new variation',
+                l10n.chooseVariation,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
@@ -211,7 +417,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
 
               // Option 1: Use Same Prompt
               _buildDialogButton(
-                label: 'Use Same Prompt',
+                label: l10n.useSamePrompt,
                 icon: Icons.copy_rounded,
                 onTap: () {
                   Navigator.pop(context);
@@ -224,7 +430,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
 
               // Option 2: Enhance Prompt
               _buildDialogButton(
-                label: 'Enhance Prompt',
+                label: l10n.enhancePrompt,
                 icon: Icons.auto_fix_high_rounded,
                 onTap: () {
                   Navigator.pop(context);
@@ -237,7 +443,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
 
               // Option 3: New Prompt
               _buildDialogButton(
-                label: 'New Prompt',
+                label: l10n.newPrompt,
                 icon: Icons.add_circle_outline_rounded,
                 onTap: () {
                   Navigator.pop(context);
@@ -339,13 +545,14 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
 
     // Add random enhancement if requested
     if (useEnhancement) {
+      final l10n = AppLocalizations.of(context)!;
       final enhancements = [
-        'with cinematic lighting and professional color grading',
-        'in stunning 4K quality with dramatic atmosphere',
-        'with epic music and smooth transitions',
-        'featuring dynamic camera movements and vivid colors',
-        'with Hollywood-style production value',
-        'in premium quality with artistic composition',
+        l10n.enhanceCinematic,
+        l10n.enhance4K,
+        l10n.enhanceMusic,
+        l10n.enhanceDynamic,
+        l10n.enhanceHollywood,
+        l10n.enhancePremium,
       ];
       final randomEnhancement =
           enhancements[DateTime.now().millisecond % enhancements.length];
@@ -425,352 +632,161 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     }
   }
 
-  String _truncatePrompt(String? prompt) {
-    if (prompt == null || prompt.isEmpty) {
-      return '';
-    }
-    final words = prompt.trim().split(RegExp(r'\s+'));
-    if (words.length <= 3) {
-      return prompt;
-    }
-    return '${words.take(3).join(' ')}...';
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: Stack(
-        children: [
-          // Video Preview Area
-          if (_chewieController != null)
-            Positioned.fill(child: Chewie(controller: _chewieController!))
-          else
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF0F172A), // AppColors.backgroundDark
-                      Color(0xFF1E293B), // Dark slate
-                      Color(0xFF334155), // Dark gray
-                    ],
-                  ),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.play_circle_outline,
-                    size: 80,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-
-          // Top Bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildCircleButton(
-                      icon: Icons.close_rounded,
-                      onTap: () => context.go('/my-creations'),
-                    ),
-                    FadeTransition(
-                      opacity: _titleOpacity ?? AlwaysStoppedAnimation(0.0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          widget.prompt != null
-                              ? _truncatePrompt(widget.prompt)
-                              : AppLocalizations.of(context)!.preview,
-                          style: GoogleFonts.outfit(
-                            fontSize: 16.sp(context),
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 0.5,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    _buildCircleButton(
-                      icon: Icons.share_rounded,
-                      onTap: _handleShare,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      appBar: AppBar(
+        title: Text(
+          widget.isImage ? l10n.imagePreview : l10n.videoPreviewTitle,
+          style: GoogleFonts.outfit(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
-
-          // Bottom Control Bar
-          Positioned(
-            bottom: 24,
-            left: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Timeline/Progress
-                  Row(
-                    children: [
-                      Text(
-                        _videoPlayerController != null
-                            ? _formatDuration(
-                                _videoPlayerController!.value.position,
-                              )
-                            : '0:00',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          fontFeatures: [const FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Directionality(
-                          textDirection: TextDirection
-                              .ltr, // Always LTR for video timeline
-                          child: SliderTheme(
-                            data: SliderThemeData(
-                              trackHeight: 6,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 8,
-                              ),
-                              overlayShape: const RoundSliderOverlayShape(
-                                overlayRadius: 16,
-                              ),
-                              activeTrackColor: AppColors.primaryPurple,
-                              inactiveTrackColor: Colors.grey.shade300,
-                              thumbColor: AppColors.primaryPurple,
-                              overlayColor:
-                                  AppColors.primaryPurple.withOpacity(0.2),
-                            ),
-                            child: Slider(
-                              value: _videoPlayerController != null &&
-                                      _videoPlayerController!
-                                              .value.duration.inMilliseconds >
-                                          0
-                                  ? (_videoPlayerController!
-                                          .value.position.inMilliseconds /
-                                      _videoPlayerController!
-                                          .value.duration.inMilliseconds)
-                                  : 0.0,
-                              min: 0.0,
-                              max: 1.0,
-                              onChanged: (value) {
-                                if (_videoPlayerController != null) {
-                                  final duration =
-                                      _videoPlayerController!.value.duration;
-                                  _videoPlayerController!.seekTo(
-                                    Duration(
-                                      milliseconds:
-                                          (duration.inMilliseconds * value)
-                                              .toInt(),
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _videoPlayerController != null
-                            ? _formatDuration(
-                                _videoPlayerController!.value.duration,
-                              )
-                            : '0:30',
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          fontFeatures: [const FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Control Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildControlButton(
-                        icon: _isDownloading
-                            ? Icons.downloading_rounded
-                            : Icons.download_rounded,
-                        onTap: _isDownloading ? null : _handleDownload,
-                      ),
-                      _buildControlButton(
-                        icon: Icons.content_cut_rounded,
-                        onTap: () {
-                          // Handle cut/trim
-                        },
-                      ),
-                      // Play/Pause Button (larger)
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _togglePlayPause,
-                          borderRadius: BorderRadius.circular(35),
-                          child: Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  AppColors.primaryPurple,
-                                  Color(0xFF9F7AEA),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      AppColors.primaryPurple.withOpacity(0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              _isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              color: Colors.white,
-                              size: 36,
-                            ),
-                          ),
-                        ),
-                      ),
-                      _buildControlButton(
-                        icon: Icons.auto_fix_high_rounded,
-                        onTap: () {
-                          // Handle effects
-                        },
-                      ),
-                      _buildControlButton(
-                        icon: Icons.style_rounded,
-                        onTap: _handleRemix,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.close_rounded, color: AppColors.textPrimary),
+          onPressed: () => context.go('/my-creations'),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.share_rounded, color: AppColors.textPrimary),
+            onPressed: _handleShare,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCircleButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Preview Area
+            Container(
+              color: Colors.black,
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: Center(
+                child: widget.isImage && widget.videoUrl != null
+                    ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNetwork =
+                              widget.videoUrl!.startsWith('http') ||
+                                  widget.videoUrl!.startsWith('https');
+                          return Image(
+                            image: isNetwork
+                                ? NetworkImage(widget.videoUrl!)
+                                : FileImage(File(widget.videoUrl!))
+                                    as ImageProvider,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes !=
+                                          null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                          AppColors.primaryPurple),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(Icons.broken_image_outlined,
+                                    color: Colors.white, size: 64),
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : _chewieController != null
+                        ? Chewie(controller: _chewieController!)
+                        : const SizedBox(),
               ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-        ),
-      ),
-    );
-  }
+            ),
 
-  Widget _buildControlButton({
-    required IconData icon,
-    required VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Opacity(
-          opacity: onTap == null ? 0.5 : 1.0,
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(24),
+            const SizedBox(height: 24),
+
+            // Action Buttons Row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildActionButton(
+                    icon: _isDownloading
+                        ? Icons.downloading_rounded
+                        : Icons.download_rounded,
+                    label: l10n.saveToPhotos,
+                    onTap: _isDownloading ? null : _handleDownload,
+                  ),
+                  _buildActionButton(
+                    icon: Icons.refresh_rounded,
+                    label: l10n.remix,
+                    onTap: _handleRemix,
+                  ),
+                  if (!widget.isImage) ...[
+                    _buildActionButton(
+                      icon: _isLooping
+                          ? Icons.repeat_one_rounded
+                          : Icons.repeat_rounded,
+                      label: _isLooping ? l10n.loop : l10n.noLoop,
+                      onTap: _toggleLoop,
+                    ),
+                    _buildActionButton(
+                      icon: Icons.speed_rounded,
+                      label:
+                          '${_videoPlayerController?.value.playbackSpeed ?? 1}x',
+                      onTap: _toggleSpeed,
+                    ),
+                  ],
+                ],
+              ),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.textSecondary,
-              size: 24,
+
+            const SizedBox(height: 24),
+
+            // Prompt Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.prompt,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      widget.prompt ?? l10n.noPromptAvailable,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

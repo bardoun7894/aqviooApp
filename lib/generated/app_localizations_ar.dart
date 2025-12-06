@@ -640,6 +640,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get payWithTabby => 'الدفع عبر تابي';
 
   @override
+  String get payWithTap => 'الدفع عبر تاب';
+
+  @override
   String get payWithApplePay => 'الدفع عبر Apple Pay';
 
   @override
@@ -748,7 +751,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickSuggestions => 'اقتراحات سريعة';
 
   @override
-  String get buyCredits => 'شراء الرصيد';
+  String get buyCredits => 'إضافة رصيد';
 
   @override
   String get currentBalance => 'الرصيد الحالي';
@@ -760,7 +763,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String purchaseCredits(int count, String price) {
-    return 'شراء $count رصيد - $price ريال';
+    return 'إضافة $count ر.س - $price ريال';
   }
 
   @override
@@ -788,6 +791,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get continueToTabby => 'المتابعة إلى تابي';
 
   @override
+  String get tapPaymentInfo => 'دفع آمن عبر بطاقة ائتمان/خصم من تاب';
+
+  @override
+  String get tapPaymentMethods =>
+      'مدعوم: فيزا، ماستركارد، مدى، أمريكان إكسبريس';
+
+  @override
+  String get balanceToAdd => 'الرصيد المضاف';
+
+  @override
+  String get continueToPayment => 'المتابعة للدفع';
+
+  @override
+  String get addedToBalance => 'تمت إضافته لرصيدك';
+
+  @override
+  String get securePaymentTap => 'دفع آمن عبر تاب';
+
+  @override
   String firstPayment(String amount) {
     return 'الدفعة الأولى: $amount ريال';
   }
@@ -808,7 +830,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get paymentFailedMessage =>
-      'تعذرت معالجة الدفع عبر تابي. يرجى المحاولة مرة أخرى.';
+      'تعذرت معالجة الدفع. يرجى المحاولة مرة أخرى.';
 
   @override
   String get securePaymentTabby => 'اشترِ الآن وادفع لاحقاً بأمان عبر تابي';
@@ -1159,4 +1181,121 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get errorLoadingContent => 'خطأ في تحميل المحتوى';
+
+  @override
+  String get profileUpdatedSuccess => 'تم تحديث الملف الشخصي بنجاح';
+
+  @override
+  String get profileUpdateFailed => 'فشل تحديث الملف الشخصي';
+
+  @override
+  String get helpSupport => 'المساعدة والدعم';
+
+  @override
+  String get accountSettingsTitle => 'إعدادات الحساب';
+
+  @override
+  String get enhanceCinematic => 'بإضاءة سينمائية وتصحيح ألوان احترافي';
+
+  @override
+  String get enhance4K => 'بجودة 4K مذهلة وجو درامي';
+
+  @override
+  String get enhanceMusic => 'مع موسيقى ملحمية وانتقالات سلسة';
+
+  @override
+  String get enhanceDynamic => 'بلمسات ديناميكية وألوان زاهية';
+
+  @override
+  String get enhanceHollywood => 'بجودة إنتاج سينمائية';
+
+  @override
+  String get enhancePremium => 'بجودة ممتازة وتكوين فني';
+
+  @override
+  String get enterName => 'أدخل اسمك';
+
+  @override
+  String get enterPhone => 'أدخل رقم هاتفك';
+
+  @override
+  String get logoutConfirmationTitle => 'تسجيل الخروج';
+
+  @override
+  String get logoutConfirmationMessage => 'هل أنت متأكد أنك تريد تسجيل الخروج؟';
+
+  @override
+  String get deleteAccountTitle => 'حذف الحساب';
+
+  @override
+  String get deleteAccountMessage =>
+      'لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك بشكل دائم.';
+
+  @override
+  String get paymentMobileOnly => 'المدفوعات متاحة فقط على تطبيق الجوال';
+
+  @override
+  String get imagePreview => 'معاينة الصورة';
+
+  @override
+  String get videoPreviewTitle => 'معاينة الفيديو';
+
+  @override
+  String get saveToPhotos => 'حفظ';
+
+  @override
+  String get remix => 'إعادة إنشاء';
+
+  @override
+  String get loop => 'تكرار';
+
+  @override
+  String get noLoop => 'بدون تكرار';
+
+  @override
+  String get prompt => 'الوصف';
+
+  @override
+  String get noPromptAvailable => 'لا يوجد وصف متاح';
+
+  @override
+  String get promptDetails => 'تفاصيل الوصف';
+
+  @override
+  String get tryAgainWithPrompt => 'حاول مرة أخرى بهذا الوصف';
+
+  @override
+  String get generateNewVideo => 'إنشاء فيديو جديد؟';
+
+  @override
+  String get generateNewContent => 'إنشاء محتوى جديد؟';
+
+  @override
+  String get chooseVariation => 'اختر كيف تريد إنشاء نسخة جديدة';
+
+  @override
+  String get useSamePrompt => 'استخدام نفس الوصف';
+
+  @override
+  String get enhancePrompt => 'تحسين الوصف';
+
+  @override
+  String get newPrompt => 'وصف جديد';
+
+  @override
+  String get savedToPhotos => 'تم الحفظ في الصور بنجاح!';
+
+  @override
+  String get failedToSave => 'فشل الحفظ في الصور. هل تم رفض الإذن؟';
+
+  @override
+  String shareFailed(Object error) {
+    return 'فشلت المشاركة: $error';
+  }
+
+  @override
+  String get listView => 'قائمة';
+
+  @override
+  String get gridView => 'شبكة';
 }

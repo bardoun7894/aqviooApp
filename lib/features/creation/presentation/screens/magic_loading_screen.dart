@@ -6,6 +6,8 @@ import '../../../../generated/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_extensions.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../domain/models/creation_config.dart';
 import '../providers/creation_provider.dart';
 import '../widgets/magic_animation.dart';
 
@@ -41,7 +43,31 @@ class MagicLoadingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(creationControllerProvider, (previous, next) {
+      if (next.status == CreationWizardStatus.success &&
+          next.videoUrl != null) {
+        // Navigate to preview/result
+        context.pushReplacement('/preview', extra: {
+          'videoUrl': next.videoUrl,
+          'prompt': next.config.prompt,
+          'isImage': next.config.outputType == OutputType.image,
+        });
+      }
+    });
+
     final state = ref.watch(creationControllerProvider);
+
+    // Handle case where state is already success when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (state.status == CreationWizardStatus.success &&
+          state.videoUrl != null) {
+        context.pushReplacement('/preview', extra: {
+          'videoUrl': state.videoUrl,
+          'prompt': state.config.prompt,
+          'isImage': state.config.outputType == OutputType.image,
+        });
+      }
+    });
 
     // Prevent back navigation while generating
     return PopScope(

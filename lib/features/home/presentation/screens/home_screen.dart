@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:akvioo/features/auth/data/auth_repository.dart';
+import 'package:akvioo/core/providers/credits_provider.dart' show Pricing;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -94,7 +96,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _isEnhancing = true);
 
     try {
-      final enhancedText = await _openAIService.enhancePrompt(currentText);
+      final locale = AppLocalizations.of(context)?.localeName ?? 'en';
+      final languageCode = locale.split('_').first;
+      final enhancedText = await _openAIService.enhancePrompt(
+        currentText,
+        languageCode: languageCode,
+      );
       if (!mounted) return;
 
       _promptController.text = enhancedText;
@@ -134,9 +141,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _applyQuickSuggestion(
-      String suggestion, int index, String label) async {
+      String suggestion, int index, String label, VideoStyle? style) async {
     // Set the suggestion as hidden context (will be combined with user's prompt at generation time)
-    ref.read(creationControllerProvider.notifier).setHiddenContext(suggestion);
+    final notifier = ref.read(creationControllerProvider.notifier);
+    notifier.setHiddenContext(suggestion);
+
+    // Set style if provided
+    if (style != null) {
+      notifier.updateVideoStyle(style);
+    }
 
     // Update selected state
     setState(() {
@@ -264,7 +277,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (!canGenerate) {
       // Show payment dialog
-      final creditCost = creditsController.getCreditCost(outputType);
+      final cost = creditsController.getCost(outputType);
       final contentType = outputType == OutputType.video
           ? AppLocalizations.of(context)!.video
           : AppLocalizations.of(context)!.image;
@@ -285,13 +298,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!
-                    .needCreditsMessage(creditCost, contentType),
+                '${contentType} costs ${cost.toStringAsFixed(2)} ${Pricing.currency}',
                 style: GoogleFonts.outfit(),
               ),
               const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.yourBalance(creditsState.credits),
+                'Your balance: ${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
                 style: GoogleFonts.outfit(
                   color: AppColors.textSecondary,
                 ),
@@ -308,25 +320,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.push('/payment', extra: 199.0);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            if (!kIsWeb)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.push('/payment', extra: 199.0);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.buyCredits,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              child: Text(
-                AppLocalizations.of(context)!.buyCredits,
-                style: GoogleFonts.outfit(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ],
         ),
       );
@@ -553,7 +566,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${creditsState.credits}',
+                  '${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
                   style: GoogleFonts.outfit(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -789,10 +802,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Row(
                         children: [
                           // Image Upload
+                          // Image Upload / Preview
                           GestureDetector(
-                            onTap: _pickImage,
+                            onTap: _selectedImage != null
+                                ? () {
+                                    context.push(
+                                      '/preview',
+                                      extra: {
+                                        'videoUrl': _selectedImage!.path,
+                                        'thumbnailUrl': null,
+                                        'prompt': _promptController.text,
+                                        'isImage': true,
+                                      },
+                                    );
+                                  }
+                                : _pickImage,
+                            onLongPress: _pickImage, // Allow changing image
                             child: Container(
-                              padding: const EdgeInsets.all(10),
+                              width: 44,
+                              height: 44,
+                              padding: _selectedImage != null
+                                  ? EdgeInsets.zero
+                                  : const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color:
                                     AppColors.primaryPurple.withOpacity(0.05),
@@ -801,12 +832,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   color:
                                       AppColors.primaryPurple.withOpacity(0.15),
                                 ),
+                                image: _selectedImage != null
+                                    ? DecorationImage(
+                                        image: FileImage(_selectedImage!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
                               ),
-                              child: Icon(
-                                Icons.image_outlined,
-                                size: 18,
-                                color: AppColors.primaryPurple,
-                              ),
+                              child: _selectedImage != null
+                                  ? Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.fullscreen_rounded,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.image_outlined,
+                                      size: 18,
+                                      color: AppColors.primaryPurple,
+                                    ),
                             ),
                           ),
 
@@ -927,18 +979,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: 6),
                                     Container(
-                                      width: 24,
-                                      height: 24,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.black.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Icon(
-                                        Icons.arrow_forward_rounded,
-                                        size: 14,
-                                        color: Colors.white,
+                                      child: Text(
+                                        ref
+                                                    .watch(
+                                                        creationControllerProvider)
+                                                    .config
+                                                    .outputType ==
+                                                OutputType.video
+                                            ? '${Pricing.videoCost} ${Pricing.currency}'
+                                            : '${Pricing.imageCost} ${Pricing.currency}',
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white.withOpacity(0.9),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -960,6 +1024,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildQuickSuggestions() {
+    final currentConfig = ref.watch(creationControllerProvider).config;
+
     final suggestions = [
       {
         'label': AppLocalizations.of(context)!.productAd,
@@ -967,6 +1033,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A premium product advertisement showcasing a luxury item with cinematic lighting and elegant presentation',
         'color': const Color(0xFFFF9800),
+        'style': VideoStyle.modern,
       },
       {
         'label': AppLocalizations.of(context)!.socialReel,
@@ -974,6 +1041,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'An engaging social media reel with dynamic transitions and trendy visual effects',
         'color': const Color(0xFF00BCD4),
+        'style': VideoStyle.socialMedia,
       },
       {
         'label': AppLocalizations.of(context)!.cinematic,
@@ -981,6 +1049,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A high-end cinematic video with dramatic lighting, 4k resolution, and professional color grading',
         'color': const Color(0xFFE91E63),
+        'style': VideoStyle.cinematic,
       },
       {
         'label': AppLocalizations.of(context)!.realEstate,
@@ -988,6 +1057,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A luxury real estate showcase featuring modern architecture, spacious interiors, and natural lighting',
         'color': const Color(0xFF4CAF50),
+        'style': VideoStyle.minimal,
       },
       {
         'label': AppLocalizations.of(context)!.render3D,
@@ -995,6 +1065,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A stunning 3D rendered animation with realistic materials, lighting, and camera movement',
         'color': AppColors.primaryPurple,
+        'style': VideoStyle.animation,
       },
       {
         'label': AppLocalizations.of(context)!.educational,
@@ -1002,6 +1073,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'An engaging educational video with clear visuals, explanatory graphics, and professional narration',
         'color': const Color(0xFF2196F3),
+        'style': VideoStyle.documentary,
       },
       {
         'label': AppLocalizations.of(context)!.corporate,
@@ -1009,6 +1081,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A professional corporate presentation with clean graphics, modern typography, and business context',
         'color': const Color(0xFF607D8B),
+        'style': VideoStyle.corporate,
       },
       {
         'label': AppLocalizations.of(context)!.avatar,
@@ -1016,6 +1089,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A professional avatar video with AI-generated character speaking directly to camera',
         'color': const Color(0xFF9C27B0),
+        'style': null,
       },
       {
         'label': AppLocalizations.of(context)!.gaming,
@@ -1023,13 +1097,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A dynamic gaming highlight with intense action, neon effects, and high energy atmosphere',
         'color': const Color(0xFF673AB7),
-      },
-      {
-        'label': AppLocalizations.of(context)!.musicVideo,
-        'icon': Icons.music_note_outlined,
-        'prompt':
-            'A stylish music video with rhythmic editing, artistic visuals, and mood-enhancing effects',
-        'color': const Color(0xFFFF4081),
+        'style': VideoStyle.sciFi,
       },
       {
         'label': AppLocalizations.of(context)!.documentary,
@@ -1037,6 +1105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         'prompt':
             'A compelling documentary style video with realistic footage, interviews, and narrative depth',
         'color': const Color(0xFF795548),
+        'style': VideoStyle.documentary,
       },
     ];
 
@@ -1048,7 +1117,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: suggestions.asMap().entries.map((entry) {
             final index = entry.key;
             final suggestion = entry.value;
-            final isSelected = _selectedSuggestionIndex == index;
+            final style = suggestion['style'] as VideoStyle?;
+
+            bool isSelected;
+            if (style != null) {
+              isSelected = currentConfig.videoStyle == style;
+            } else {
+              isSelected = _selectedSuggestionIndex == index;
+            }
+
             final color = suggestion['color'] as Color;
 
             return Padding(
@@ -1059,7 +1136,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onTap: () => _applyQuickSuggestion(
                       suggestion['prompt'] as String,
                       index,
-                      suggestion['label'] as String),
+                      suggestion['label'] as String,
+                      style),
                   borderRadius: BorderRadius.circular(20),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -1221,7 +1299,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }),
                   const SizedBox(width: 70), // Space for FAB
                   _buildNavItem(Icons.credit_card_rounded, false, () {
-                    context.push('/payment', extra: 199.0);
+                    if (kIsWeb) {
+                      // Show message that payments are only on mobile
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)!.paymentMobileOnly,
+                          ),
+                          backgroundColor: AppColors.primaryPurple,
+                        ),
+                      );
+                    } else {
+                      context.push('/payment', extra: 199.0);
+                    }
                   }),
                   _buildNavItem(Icons.person_rounded, false, () {
                     context.push('/account-settings');
@@ -1330,7 +1420,7 @@ class _AdvancedSettingsSheetState
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0F0F11),
+        color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SafeArea(
@@ -1347,7 +1437,7 @@ class _AdvancedSettingsSheetState
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade800,
+                      color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -1361,7 +1451,7 @@ class _AdvancedSettingsSheetState
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                   ),
                 ),
 
@@ -1436,11 +1526,12 @@ class _AdvancedSettingsSheetState
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade900,
+                                color:
+                                    AppColors.primaryPurple.withOpacity(0.05),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color:
-                                      AppColors.primaryPurple.withOpacity(0.5),
+                                      AppColors.primaryPurple.withOpacity(0.15),
                                   width: 1,
                                 ),
                               ),
@@ -1474,10 +1565,10 @@ class _AdvancedSettingsSheetState
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade900,
+                                color: Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.grey.shade800,
+                                  color: Colors.grey.shade300,
                                   width: 1,
                                 ),
                               ),
@@ -1487,7 +1578,7 @@ class _AdvancedSettingsSheetState
                                   Icon(
                                     Icons.remove_circle_outline,
                                     size: 16,
-                                    color: Colors.grey.shade400,
+                                    color: Colors.grey.shade600,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
@@ -1495,7 +1586,7 @@ class _AdvancedSettingsSheetState
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade400,
+                                      color: Colors.grey.shade600,
                                     ),
                                   ),
                                 ],
@@ -1570,38 +1661,6 @@ class _AdvancedSettingsSheetState
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Voice Settings
-                  _buildSection(
-                    context,
-                    ref,
-                    AppLocalizations.of(context)!.voice,
-                    Row(
-                      children: [
-                        _buildChoiceChip(
-                          context,
-                          ref,
-                          AppLocalizations.of(context)!.female,
-                          config.voiceGender == VoiceGender.female,
-                          () => ref
-                              .read(creationControllerProvider.notifier)
-                              .updateVoiceSettings(gender: VoiceGender.female),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildChoiceChip(
-                          context,
-                          ref,
-                          AppLocalizations.of(context)!.male,
-                          config.voiceGender == VoiceGender.male,
-                          () => ref
-                              .read(creationControllerProvider.notifier)
-                              .updateVoiceSettings(gender: VoiceGender.male),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
 
                 const SizedBox(height: 32),
@@ -1612,8 +1671,8 @@ class _AdvancedSettingsSheetState
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
+                      backgroundColor: AppColors.primaryPurple,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -1650,7 +1709,7 @@ class _AdvancedSettingsSheetState
           style: GoogleFonts.outfit(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Colors.grey.shade400,
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 12),
@@ -1671,10 +1730,10 @@ class _AdvancedSettingsSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryPurple : Colors.grey.shade900,
+          color: isSelected ? AppColors.primaryPurple : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primaryPurple : Colors.grey.shade800,
+            color: isSelected ? AppColors.primaryPurple : Colors.grey.shade300,
             width: 1,
           ),
         ),
@@ -1683,7 +1742,7 @@ class _AdvancedSettingsSheetState
           style: GoogleFonts.outfit(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.grey.shade400,
+            color: isSelected ? Colors.white : AppColors.textPrimary,
           ),
         ),
       ),
@@ -1748,36 +1807,16 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
   void _handleTap() {
     if (widget.item.status == CreationStatus.success &&
         widget.item.url != null) {
-      if (widget.item.type == CreationType.video) {
-        context.push(
-          '/preview',
-          extra: {
-            'videoUrl': widget.item.url,
-            'thumbnailUrl': widget.item.thumbnailUrl,
-            'prompt': widget.item.prompt,
-          },
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(widget.item.url!),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
+      // Navigate to full preview screen for both video and image
+      context.push(
+        '/preview',
+        extra: {
+          'videoUrl': widget.item.url,
+          'thumbnailUrl': widget.item.thumbnailUrl,
+          'prompt': widget.item.prompt,
+          'isImage': widget.item.type == CreationType.image,
+        },
+      );
     }
   }
 
@@ -1785,6 +1824,8 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
   Widget build(BuildContext context) {
     final item = widget.item;
     final isVideo = item.type == CreationType.video;
+    final isImage = item.type == CreationType.image;
+    final hasImageUrl = isImage && item.url != null && item.url!.isNotEmpty;
 
     return GestureDetector(
       onTap: _handleTap,
@@ -1821,7 +1862,7 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail / Video Area
+            // Thumbnail / Video / Image Area
             Expanded(
               flex: 3,
               child: Container(
@@ -1836,13 +1877,6 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                         ? [const Color(0xFF6B9DFF), const Color(0xFF9D6BFF)]
                         : [const Color(0xFFFF6B9D), const Color(0xFFFFA06B)],
                   ),
-                  image:
-                      item.thumbnailUrl != null && item.thumbnailUrl!.isNotEmpty
-                          ? DecorationImage(
-                              image: NetworkImage(item.thumbnailUrl!),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
                 ),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
@@ -1851,6 +1885,48 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
+                      // Show image directly for image type
+                      if (hasImageUrl)
+                        Image.network(
+                          item.url!,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 32,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            );
+                          },
+                        ),
+
+                      // Show thumbnail for video if available (before video loads)
+                      if (isVideo &&
+                          !_isPlayerInitialized &&
+                          item.thumbnailUrl != null &&
+                          item.thumbnailUrl!.isNotEmpty)
+                        Image.network(
+                          item.thumbnailUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(),
+                        ),
+
                       // Video Player (if ready)
                       if (_isPlayerInitialized && _videoController != null)
                         FittedBox(
@@ -1876,7 +1952,7 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                         ),
                       ),
 
-                      // Play/Pause Icon (Visual indicator only since it plays automatically)
+                      // Play icon for video
                       if (isVideo)
                         Positioned(
                           top: 8,
@@ -1895,6 +1971,30 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                             child: const Icon(
                               Icons.play_arrow_rounded,
                               size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+
+                      // Expand icon for image
+                      if (isImage)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.4),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.fullscreen_rounded,
+                              size: 16,
                               color: Colors.white,
                             ),
                           ),

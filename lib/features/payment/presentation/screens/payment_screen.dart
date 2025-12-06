@@ -1,40 +1,45 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tabby_flutter_inapp_sdk/tabby_flutter_inapp_sdk.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
 import '../../../../generated/app_localizations.dart';
-import '../../../../services/payment/tabby_service.dart';
+import '../../../../services/payment/tap_payment_service.dart';
 import '../../../../services/payment/transaction_service.dart';
 
-// Credit packages
-class CreditPackage {
-  final int credits;
-  final double price;
+// Balance packages in SAR
+class BalancePackage {
+  final double amount;  // SAR to add to balance
+  final double price;   // Price in SAR
   final String? badge;
   final bool isPopular;
+  final int videosCount;  // How many videos this can generate
+  final int imagesCount;  // How many images this can generate
 
-  const CreditPackage({
-    required this.credits,
+  const BalancePackage({
+    required this.amount,
     required this.price,
     this.badge,
     this.isPopular = false,
+    required this.videosCount,
+    required this.imagesCount,
   });
 }
 
-const List<CreditPackage> creditPackages = [
-  CreditPackage(credits: 50, price: 99.0),
-  CreditPackage(credits: 100, price: 179.0, isPopular: true, badge: 'Popular'),
-  CreditPackage(credits: 200, price: 299.0, badge: 'Best Value'),
-  CreditPackage(credits: 500, price: 599.0),
+// Video: 2.99 SAR, Image: 1.99 SAR
+const List<BalancePackage> balancePackages = [
+  BalancePackage(amount: 15, price: 15.0, videosCount: 5, imagesCount: 7),
+  BalancePackage(amount: 30, price: 30.0, isPopular: true, badge: 'Popular', videosCount: 10, imagesCount: 15),
+  BalancePackage(amount: 50, price: 50.0, badge: 'Best Value', videosCount: 16, imagesCount: 25),
+  BalancePackage(amount: 100, price: 100.0, videosCount: 33, imagesCount: 50),
 ];
+
+// Legacy alias for backward compatibility
+typedef CreditPackage = BalancePackage;
+const List<BalancePackage> creditPackages = balancePackages;
 
 class PaymentScreen extends ConsumerStatefulWidget {
   final double amount;
@@ -110,7 +115,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.creditBalance(creditsState.credits),
+                      '${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
                       style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: 28,
@@ -210,7 +215,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    '${package.credits} Credits',
+                                    '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
                                     style: GoogleFonts.outfit(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -247,8 +252,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 l10n.videosOrImages(
-                                  (package.credits / 10).toStringAsFixed(0),
-                                  (package.credits / 5).toStringAsFixed(0),
+                                  '${package.videosCount}',
+                                  '${package.imagesCount}',
                                 ),
                                 style: GoogleFonts.outfit(
                                   fontSize: 13,
@@ -261,7 +266,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                         // Price
                         Text(
-                          '${package.price.toStringAsFixed(0)} SAR',
+                          '${package.price.toStringAsFixed(0)} ${Pricing.currency}',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -300,7 +305,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     child: ElevatedButton(
                       onPressed: _isProcessing ? null : _handlePurchase,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
+                        backgroundColor: const Color(0xFF2ACE82), // Tap green color
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -322,10 +327,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.shopping_bag, size: 20),
+                                const Icon(Icons.credit_card, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '${l10n.payWithTabby} - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR',
+                                  '${l10n.payWithTap} - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR',
                                   style: GoogleFonts.outfit(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -346,7 +351,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        l10n.securePaymentTabby,
+                        l10n.securePaymentTap,
                         style: GoogleFonts.outfit(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -372,7 +377,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     try {
       final package = creditPackages[_selectedPackageIndex];
 
-      // Show Tabby payment info dialog
+      // Show Tap payment info dialog
       final shouldProceed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -384,18 +389,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3ECDCC),
+                  color: const Color(0xFF2ACE82),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.shopping_bag,
+                  Icons.credit_card,
                   color: Colors.white,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
-                l10n.payWithTabby,
+                l10n.payWithTap,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -408,7 +413,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.tabbyInstallments,
+                l10n.tapPaymentInfo,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: AppColors.textSecondary,
@@ -447,16 +452,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          l10n.paymentsOf,
+                          l10n.balanceToAdd,
                           style: GoogleFonts.outfit(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                           ),
                         ),
                         Text(
-                          '${(package.price / 4).toStringAsFixed(2)} SAR',
+                          '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
                           style: GoogleFonts.outfit(
-                            color: const Color(0xFF3ECDCC),
+                            color: const Color(0xFF2ACE82),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -467,7 +472,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                l10n.tabbyBenefits,
+                l10n.tapPaymentMethods,
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -489,14 +494,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3ECDCC),
+                backgroundColor: const Color(0xFF2ACE82),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text(
-                l10n.continueToTabby,
+                l10n.continueToPayment,
                 style: GoogleFonts.outfit(
                   fontWeight: FontWeight.w600,
                 ),
@@ -519,8 +524,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         throw Exception('User not authenticated');
       }
 
-      // Get Tabby configuration from environment
-      final merchantCode = dotenv.env['TABBY_MERCHANT_CODE'] ?? 'sa';
       final orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
 
       // Create transaction record in Firestore (pending status)
@@ -530,104 +533,75 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         userEmail: user.email ?? 'N/A',
         amount: package.price,
         currency: 'SAR',
-        credits: package.credits,
+        credits: package.amount.toInt(),  // Store balance amount as credits for compatibility
         orderId: orderId,
-        paymentMethod: 'Tabby',
+        paymentMethod: 'Tap',
         metadata: {
-          'packageCredits': package.credits,
+          'balanceAmount': package.amount,
           'packagePrice': package.price,
+          'videosCount': package.videosCount,
+          'imagesCount': package.imagesCount,
         },
       );
 
-      // Create Tabby checkout session
-      final session = await TabbyService().createCheckoutSession(
-        merchantCode: merchantCode,
+      // Get user name parts
+      final nameParts = (user.displayName ?? 'User').split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : 'User';
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+      // Configure SDK with current language
+      final lang = Localizations.localeOf(context).languageCode;
+      TapPaymentService().configureApp(lang: lang);
+
+      // Start Tap Payment (Official SDK)
+      final result = await TapPaymentService().startPayment(
         amount: package.price,
         currency: 'SAR',
-        userEmail: user.email ?? 'user@aqvioo.com',
-        userPhone: user.phoneNumber ?? '+966500000001',
-        userName: user.displayName ?? 'User',
-        credits: package.credits,
+        customerEmail: user.email ?? 'user@aqvioo.com',
+        customerPhone: user.phoneNumber ?? '+966500000001',
+        customerFirstName: firstName,
+        customerLastName: lastName,
         orderId: orderId,
+        itemName: '${package.amount.toStringAsFixed(0)} SAR Balance',
+        itemDescription: 'Aqvioo AI Video/Image Generation Balance',
       );
+
+      // Parse result
+      final paymentResult = TapPaymentService().parseResult(result);
 
       if (!mounted) return;
 
-      if (session == null) {
-        throw Exception('Failed to create Tabby session');
+      if (paymentResult.success) {
+        // Update transaction status to completed
+        await TransactionService().updateTransactionStatus(
+          transactionId: transactionId,
+          status: TransactionStatus.authorized,
+        );
+
+        // Add balance in SAR
+        await ref
+            .read(creditsControllerProvider.notifier)
+            .addBalance(package.amount);
+
+        if (!mounted) return;
+        _showSuccessDialog(package);
+      } else {
+        // Update transaction status to failed
+        await TransactionService().updateTransactionStatus(
+          transactionId: transactionId,
+          status: TransactionStatus.failed,
+        );
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(paymentResult.message),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-
-      // Session status check removed - SDK version doesn't support it
-      // Payment will fail gracefully in the WebView if rejected
-
-      // Open Tabby WebView for payment
-      if (!mounted) return;
-      TabbyWebView.showWebView(
-        context: context,
-        webUrl: session.availableProducts.installments?.webUrl ?? '',
-        onResult: (WebViewResult resultCode) async {
-          switch (resultCode) {
-            case WebViewResult.authorized:
-              // Update transaction status to authorized/completed
-              await TransactionService().updateTransactionStatus(
-                transactionId: transactionId,
-                status: TransactionStatus.authorized,
-              );
-
-              // Payment authorized - add credits
-              await ref
-                  .read(creditsControllerProvider.notifier)
-                  .addCredits(package.credits);
-
-              if (!mounted) return;
-              _showSuccessDialog(package);
-              break;
-
-            case WebViewResult.rejected:
-              // Update transaction status to failed
-              await TransactionService().updateTransactionStatus(
-                transactionId: transactionId,
-                status: TransactionStatus.failed,
-              );
-
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.paymentFailedMessage),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              break;
-
-            case WebViewResult.expired:
-              // Update transaction status to failed
-              await TransactionService().updateTransactionStatus(
-                transactionId: transactionId,
-                status: TransactionStatus.failed,
-              );
-
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.paymentFailedMessage),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-              break;
-
-            case WebViewResult.close:
-              // User closed the checkout - leave as pending
-              break;
-          }
-
-          if (mounted) {
-            setState(() {
-              _isProcessing = false;
-            });
-          }
-        },
-      );
     } catch (e) {
+      debugPrint('❌ Tap Payment Error: $e');
       if (!mounted) return;
 
       // Show error dialog
@@ -702,38 +676,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.creditsAdded(package.credits),
+              '${package.amount.toStringAsFixed(0)} ${Pricing.currency} ${l10n.addedToBalance}',
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.shopping_bag,
-                    color: Color(0xFF3ECDCC),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.firstPayment((package.price / 4).toStringAsFixed(2)),
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 24),
             SizedBox(

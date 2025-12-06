@@ -408,6 +408,18 @@ class CreationController extends Notifier<CreationState> {
   void reset() {
     state = CreationState(creations: state.creations); // Keep creations
   }
+
+  Future<void> deleteCreation(String id) async {
+    try {
+      await _repository.deleteCreation(id);
+      final currentList = List<CreationItem>.from(state.creations);
+      currentList.removeWhere((item) => item.id == id);
+      state = state.copyWith(creations: currentList);
+    } catch (e) {
+      print('Error deleting creation: $e');
+      rethrow;
+    }
+  }
 }
 
 final creationControllerProvider =

@@ -71,8 +71,8 @@ dependencies:
   speech_to_text: ^7.3.0
   permission_handler: ^11.3.1
 
-  # Payments
-  tabby_flutter_inapp_sdk: ^1.11.0  # Upgraded for Android compatibility
+  # Payments - Official Tap Payments Gateway
+  go_sell_sdk_flutter: ^2.4.27  # Official Tap Payments SDK from github.com/Tap-Payments
   wakelock_plus: ^1.4.0
 
   # Admin Dashboard (Web)
@@ -80,6 +80,7 @@ dependencies:
   data_table_2: ^2.5.11
   csv: ^6.0.0
   url_launcher: ^6.3.2
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -136,5 +137,4 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-dependency_overrides:
-  webview_flutter_wkwebview: 3.7.0
+

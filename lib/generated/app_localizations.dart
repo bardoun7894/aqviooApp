@@ -1328,6 +1328,12 @@ abstract class AppLocalizations {
   /// **'Pay with Tabby'**
   String get payWithTabby;
 
+  /// No description provided for @payWithTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay with Tap'**
+  String get payWithTap;
+
   /// No description provided for @payWithApplePay.
   ///
   /// In en, this message translates to:
@@ -1547,7 +1553,7 @@ abstract class AppLocalizations {
   /// No description provided for @buyCredits.
   ///
   /// In en, this message translates to:
-  /// **'Buy Credits'**
+  /// **'Add Balance'**
   String get buyCredits;
 
   /// No description provided for @currentBalance.
@@ -1565,7 +1571,7 @@ abstract class AppLocalizations {
   /// No description provided for @purchaseCredits.
   ///
   /// In en, this message translates to:
-  /// **'Purchase {count} Credits - {price} SAR'**
+  /// **'Add {count} ر.س - {price} SAR'**
   String purchaseCredits(int count, String price);
 
   /// No description provided for @videosOrImages.
@@ -1610,6 +1616,42 @@ abstract class AppLocalizations {
   /// **'Continue to Tabby'**
   String get continueToTabby;
 
+  /// No description provided for @tapPaymentInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payment with credit/debit card via Tap Payments'**
+  String get tapPaymentInfo;
+
+  /// No description provided for @tapPaymentMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Supported: Visa, Mastercard, MADA, American Express'**
+  String get tapPaymentMethods;
+
+  /// No description provided for @balanceToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance to add'**
+  String get balanceToAdd;
+
+  /// No description provided for @continueToPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Payment'**
+  String get continueToPayment;
+
+  /// No description provided for @addedToBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'added to your balance'**
+  String get addedToBalance;
+
+  /// No description provided for @securePaymentTap.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payment powered by Tap'**
+  String get securePaymentTap;
+
   /// No description provided for @firstPayment.
   ///
   /// In en, this message translates to:
@@ -1643,7 +1685,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentFailedMessage.
   ///
   /// In en, this message translates to:
-  /// **'Unable to process payment with Tabby. Please try again.'**
+  /// **'Unable to process payment. Please try again.'**
   String get paymentFailedMessage;
 
   /// No description provided for @securePaymentTabby.
@@ -2323,6 +2365,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error loading content'**
   String get errorLoadingContent;
+
+  /// No description provided for @profileUpdatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSuccess;
+
+  /// No description provided for @profileUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile'**
+  String get profileUpdateFailed;
+
+  /// No description provided for @helpSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get helpSupport;
+
+  /// No description provided for @accountSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT SETTINGS'**
+  String get accountSettingsTitle;
+
+  /// No description provided for @enhanceCinematic.
+  ///
+  /// In en, this message translates to:
+  /// **'with cinematic lighting and professional color grading'**
+  String get enhanceCinematic;
+
+  /// No description provided for @enhance4K.
+  ///
+  /// In en, this message translates to:
+  /// **'in stunning 4K quality with dramatic atmosphere'**
+  String get enhance4K;
+
+  /// No description provided for @enhanceMusic.
+  ///
+  /// In en, this message translates to:
+  /// **'with epic music and smooth transitions'**
+  String get enhanceMusic;
+
+  /// No description provided for @enhanceDynamic.
+  ///
+  /// In en, this message translates to:
+  /// **'featuring dynamic camera movements and vivid colors'**
+  String get enhanceDynamic;
+
+  /// No description provided for @enhanceHollywood.
+  ///
+  /// In en, this message translates to:
+  /// **'with Hollywood-style production value'**
+  String get enhanceHollywood;
+
+  /// No description provided for @enhancePremium.
+  ///
+  /// In en, this message translates to:
+  /// **'in premium quality with artistic composition'**
+  String get enhancePremium;
+
+  /// No description provided for @enterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name'**
+  String get enterName;
+
+  /// No description provided for @enterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number'**
+  String get enterPhone;
+
+  /// No description provided for @logoutConfirmationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutConfirmationTitle;
+
+  /// No description provided for @logoutConfirmationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirmationMessage;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All your data will be permanently deleted.'**
+  String get deleteAccountMessage;
+
+  /// No description provided for @paymentMobileOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments are only available on the mobile app'**
+  String get paymentMobileOnly;
+
+  /// No description provided for @imagePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Preview'**
+  String get imagePreview;
+
+  /// No description provided for @videoPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Preview'**
+  String get videoPreviewTitle;
+
+  /// No description provided for @saveToPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveToPhotos;
+
+  /// No description provided for @remix.
+  ///
+  /// In en, this message translates to:
+  /// **'Remix'**
+  String get remix;
+
+  /// No description provided for @loop.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop'**
+  String get loop;
+
+  /// No description provided for @noLoop.
+  ///
+  /// In en, this message translates to:
+  /// **'No Loop'**
+  String get noLoop;
+
+  /// No description provided for @prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get prompt;
+
+  /// No description provided for @noPromptAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No prompt available'**
+  String get noPromptAvailable;
+
+  /// No description provided for @promptDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt Details'**
+  String get promptDetails;
+
+  /// No description provided for @tryAgainWithPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again with this Prompt'**
+  String get tryAgainWithPrompt;
+
+  /// No description provided for @generateNewVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate New Video?'**
+  String get generateNewVideo;
+
+  /// No description provided for @generateNewContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate New Content?'**
+  String get generateNewContent;
+
+  /// No description provided for @chooseVariation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to create a new variation'**
+  String get chooseVariation;
+
+  /// No description provided for @useSamePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Same Prompt'**
+  String get useSamePrompt;
+
+  /// No description provided for @enhancePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhance Prompt'**
+  String get enhancePrompt;
+
+  /// No description provided for @newPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'New Prompt'**
+  String get newPrompt;
+
+  /// No description provided for @savedToPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to Photos successfully!'**
+  String get savedToPhotos;
+
+  /// No description provided for @failedToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save to Photos. Access denied?'**
+  String get failedToSave;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Share failed: {error}'**
+  String shareFailed(Object error);
+
+  /// No description provided for @listView.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get listView;
+
+  /// No description provided for @gridView.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get gridView;
 }
 
 class _AppLocalizationsDelegate

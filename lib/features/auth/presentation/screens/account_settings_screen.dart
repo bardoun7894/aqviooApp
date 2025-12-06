@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../admin/auth/providers/admin_auth_provider.dart';
+import '../../../../generated/app_localizations.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -79,7 +80,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       color: Colors.white, size: 18),
                   const SizedBox(width: 10),
                   Text(
-                    'Profile updated successfully',
+                    AppLocalizations.of(context)!.profileUpdatedSuccess,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -103,7 +104,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 const Icon(Icons.error_outline, color: Colors.white, size: 18),
                 const SizedBox(width: 10),
                 Text(
-                  'Failed to update profile',
+                  AppLocalizations.of(context)!.profileUpdateFailed,
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
                 ),
               ],
@@ -182,7 +183,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         const SizedBox(height: 24),
 
                         // Profile Card
-                        _buildProfileCard(user),
+                        // Profile Card
+                        _buildProfileCard(context, user),
 
                         const SizedBox(height: 24),
 
@@ -256,7 +258,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SETTINGS',
+                  AppLocalizations.of(context)!.settings.toUpperCase(),
                   style: GoogleFonts.outfit(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -266,7 +268,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Account Settings',
+                  AppLocalizations.of(context)!.accountSettingsTitle,
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -281,7 +283,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
   }
 
-  Widget _buildProfileCard(User? user) {
+  Widget _buildProfileCard(BuildContext context, User? user) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -399,8 +402,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           // Name Input
           _buildInputField(
             controller: _nameController,
-            label: 'Full Name',
-            hint: 'Enter your name',
+            label: l10n.fullName,
+            hint: l10n.enterName,
             icon: Icons.person_outline,
           ),
 
@@ -409,7 +412,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           // Phone Input
           _buildInputField(
             controller: _phoneController,
-            label: 'Phone Number',
+            label: l10n.phoneNumber,
             hint: '+966 5XX XXX XXXX',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
@@ -483,6 +486,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   Widget _buildSettingsSection(BuildContext context, WidgetRef ref) {
     final adminAuthState = ref.watch(adminAuthControllerProvider);
     final isAdmin = adminAuthState.isAuthenticated;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -502,7 +506,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           if (isAdmin) ...[
             _buildSettingsTile(
               icon: Icons.admin_panel_settings_rounded,
-              title: 'Admin Dashboard',
+              title: l10n.adminDashboard,
               subtitle: 'Switch to admin view',
               iconColor: const Color(0xFF8B5CF6),
               onTap: () {
@@ -513,15 +517,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           ],
           _buildSettingsTile(
             icon: Icons.language_rounded,
-            title: 'Language',
-            subtitle: 'English',
+            title: l10n.language,
+            subtitle: l10n.english,
             iconColor: AppColors.primaryPurple,
             onTap: () {},
           ),
           _buildDivider(),
           _buildSettingsTile(
             icon: Icons.notifications_outlined,
-            title: 'Notifications',
+            title: l10n.notifications,
             subtitle: 'Enabled',
             iconColor: const Color(0xFFF59E0B),
             onTap: () {},
@@ -529,14 +533,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           _buildDivider(),
           _buildSettingsTile(
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
+            title: l10n.privacyPolicy,
             iconColor: const Color(0xFF06B6D4),
             onTap: () {},
           ),
           _buildDivider(),
           _buildSettingsTile(
             icon: Icons.help_outline_rounded,
-            title: 'Help & Support',
+            title: l10n.helpSupport,
             iconColor: const Color(0xFF10B981),
             onTap: () {},
           ),
@@ -546,6 +550,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Widget _buildDangerZone(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -566,7 +571,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         children: [
           _buildSettingsTile(
             icon: Icons.logout_rounded,
-            title: 'Logout',
+            title: l10n.logout,
             iconColor: Colors.orange,
             titleColor: Colors.orange,
             onTap: () async {
@@ -576,18 +581,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   title: Text(
-                    'Logout',
+                    l10n.logoutConfirmationTitle,
                     style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
                   ),
                   content: Text(
-                    'Are you sure you want to logout?',
+                    l10n.logoutConfirmationMessage,
                     style: GoogleFonts.outfit(),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
                       child: Text(
-                        'Cancel',
+                        l10n.cancel,
                         style: GoogleFonts.outfit(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600),
@@ -601,7 +606,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        'Logout',
+                        l10n.logout,
                         style: GoogleFonts.outfit(
                             color: Colors.white, fontWeight: FontWeight.w600),
                       ),
@@ -621,7 +626,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           _buildDivider(),
           _buildSettingsTile(
             icon: Icons.delete_forever_rounded,
-            title: 'Delete Account',
+            title: l10n.deleteAccountTitle,
             iconColor: Colors.red,
             titleColor: Colors.red,
             onTap: () {
@@ -631,19 +636,19 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   title: Text(
-                    'Delete Account',
+                    l10n.deleteAccountTitle,
                     style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w700, color: Colors.red),
                   ),
                   content: Text(
-                    'This action cannot be undone. All your data will be permanently deleted.',
+                    l10n.deleteAccountMessage,
                     style: GoogleFonts.outfit(),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(
-                        'Cancel',
+                        l10n.cancel,
                         style: GoogleFonts.outfit(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w600),
@@ -657,7 +662,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(
-                        'Delete',
+                        l10n.delete,
                         style: GoogleFonts.outfit(
                             color: Colors.white, fontWeight: FontWeight.w600),
                       ),
@@ -771,8 +776,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  gradient:
-                      _isSaving ? null : AppColors.primaryGradient,
+                  gradient: _isSaving ? null : AppColors.primaryGradient,
                   color: _isSaving ? AppColors.lightGray : null,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: _isSaving

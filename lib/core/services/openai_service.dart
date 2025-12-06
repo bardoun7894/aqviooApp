@@ -7,12 +7,35 @@ class OpenAIService {
 
   String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
 
-  Future<String> enhancePrompt(String userPrompt) async {
+  Future<String> enhancePrompt(String userPrompt,
+      {String languageCode = 'en'}) async {
     if (_apiKey.isEmpty) {
       throw Exception('OpenAI API key not found in environment variables');
     }
 
-    final systemPrompt = '''You are a professional video prompt engineer for an AI video generation app called Aqvioo.
+    final isArabic = languageCode == 'ar';
+
+    final systemPrompt = isArabic
+        ? '''أنت مهندس محترف في تصميم النصوص (Prompts) لتطبيق توليد الفيديو بالذكاء الاصطناعي يسمى Aqvioo.
+مهمتك هي تحسين نصوص المستخدم لإنشاء نصوص أفضل وأكثر تفصيلاً لتوليد الفيديو.
+
+الإرشادات:
+- حافظ على الفكرة الأساسية لنص المستخدم
+- أضف تفاصيل سينمائية (زوايا الكاميرا، الإضاءة، المزاج)
+- قم بتضمين وصف للأسلوب البصري (واقعي، رسوم متحركة، فني)
+- حدد تفاصيل الحركة والأكشن
+- أضف عناصر جوية (وقت من اليوم، الطقس، البيئة)
+- كن موجزاً وواضحاً (2-3 جمل كحد أقصى)
+- اجعل النص احترافياً وجاهزاً للإنتاج
+- ركز على العناصر المرئية التي تعمل بشكل جيد في الفيديو
+- رد باللغة العربية حصراً
+
+مثال:
+المستخدم: "قطة تلعب بالكرة"
+محسن: "قطة برتقالية منفوشة تلعب بمرح بكرة صوف حمراء على أرضية خشبية مشمسة، بلقطة من زاوية منخفضة ديناميكية تتبع حركة الكرة. ضوء الظهيرة الدافئ يتدفق عبر النوافذ القريبة، مما يخلق ظلالاً ناعمة ويبرز شوارب القطة بحركة بطيئة."
+
+الآن قم بتحسين هذا النص:'''
+        : '''You are a professional video prompt engineer for an AI video generation app called Aqvioo.
 Your task is to enhance user prompts to create better, more detailed prompts for AI video generation.
 
 Guidelines:
@@ -24,6 +47,7 @@ Guidelines:
 - Keep it concise but vivid (2-3 sentences max)
 - Make it professional and production-ready
 - Focus on visual elements that work well in video
+- Respond in English only
 
 Example:
 User: "A cat playing with a ball"
@@ -39,7 +63,7 @@ Now enhance this prompt:''';
           'Authorization': 'Bearer $_apiKey',
         },
         body: jsonEncode({
-          'model': 'gpt-4o',  // Using GPT-4 Optimized (latest and best)
+          'model': 'gpt-4o', // Using GPT-4 Optimized (latest and best)
           'messages': [
             {
               'role': 'system',
@@ -57,11 +81,13 @@ Now enhance this prompt:''';
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final enhancedPrompt = data['choices'][0]['message']['content'] as String;
+        final enhancedPrompt =
+            data['choices'][0]['message']['content'] as String;
         return enhancedPrompt.trim();
       } else {
         final errorData = jsonDecode(response.body);
-        throw Exception('OpenAI API Error: ${errorData['error']['message'] ?? 'Unknown error'}');
+        throw Exception(
+            'OpenAI API Error: ${errorData['error']['message'] ?? 'Unknown error'}');
       }
     } catch (e) {
       throw Exception('Failed to enhance prompt: $e');

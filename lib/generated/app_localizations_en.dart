@@ -639,6 +639,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payWithTabby => 'Pay with Tabby';
 
   @override
+  String get payWithTap => 'Pay with Tap';
+
+  @override
   String get payWithApplePay => 'Pay with Apple Pay';
 
   @override
@@ -747,7 +750,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickSuggestions => 'Quick Suggestions';
 
   @override
-  String get buyCredits => 'Buy Credits';
+  String get buyCredits => 'Add Balance';
 
   @override
   String get currentBalance => 'Current Balance';
@@ -759,7 +762,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String purchaseCredits(int count, String price) {
-    return 'Purchase $count Credits - $price SAR';
+    return 'Add $count ر.س - $price SAR';
   }
 
   @override
@@ -788,6 +791,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueToTabby => 'Continue to Tabby';
 
   @override
+  String get tapPaymentInfo =>
+      'Secure payment with credit/debit card via Tap Payments';
+
+  @override
+  String get tapPaymentMethods =>
+      'Supported: Visa, Mastercard, MADA, American Express';
+
+  @override
+  String get balanceToAdd => 'Balance to add';
+
+  @override
+  String get continueToPayment => 'Continue to Payment';
+
+  @override
+  String get addedToBalance => 'added to your balance';
+
+  @override
+  String get securePaymentTap => 'Secure payment powered by Tap';
+
+  @override
   String firstPayment(String amount) {
     return 'First payment: $amount SAR';
   }
@@ -808,7 +831,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentFailedMessage =>
-      'Unable to process payment with Tabby. Please try again.';
+      'Unable to process payment. Please try again.';
 
   @override
   String get securePaymentTabby => 'Secure buy now, pay later with Tabby';
@@ -1161,4 +1184,124 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorLoadingContent => 'Error loading content';
+
+  @override
+  String get profileUpdatedSuccess => 'Profile updated successfully';
+
+  @override
+  String get profileUpdateFailed => 'Failed to update profile';
+
+  @override
+  String get helpSupport => 'Help & Support';
+
+  @override
+  String get accountSettingsTitle => 'ACCOUNT SETTINGS';
+
+  @override
+  String get enhanceCinematic =>
+      'with cinematic lighting and professional color grading';
+
+  @override
+  String get enhance4K => 'in stunning 4K quality with dramatic atmosphere';
+
+  @override
+  String get enhanceMusic => 'with epic music and smooth transitions';
+
+  @override
+  String get enhanceDynamic =>
+      'featuring dynamic camera movements and vivid colors';
+
+  @override
+  String get enhanceHollywood => 'with Hollywood-style production value';
+
+  @override
+  String get enhancePremium => 'in premium quality with artistic composition';
+
+  @override
+  String get enterName => 'Enter your name';
+
+  @override
+  String get enterPhone => 'Enter your phone number';
+
+  @override
+  String get logoutConfirmationTitle => 'Logout';
+
+  @override
+  String get logoutConfirmationMessage => 'Are you sure you want to logout?';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountMessage =>
+      'This action cannot be undone. All your data will be permanently deleted.';
+
+  @override
+  String get paymentMobileOnly =>
+      'Payments are only available on the mobile app';
+
+  @override
+  String get imagePreview => 'Image Preview';
+
+  @override
+  String get videoPreviewTitle => 'Video Preview';
+
+  @override
+  String get saveToPhotos => 'Save';
+
+  @override
+  String get remix => 'Remix';
+
+  @override
+  String get loop => 'Loop';
+
+  @override
+  String get noLoop => 'No Loop';
+
+  @override
+  String get prompt => 'Prompt';
+
+  @override
+  String get noPromptAvailable => 'No prompt available';
+
+  @override
+  String get promptDetails => 'Prompt Details';
+
+  @override
+  String get tryAgainWithPrompt => 'Try Again with this Prompt';
+
+  @override
+  String get generateNewVideo => 'Generate New Video?';
+
+  @override
+  String get generateNewContent => 'Generate New Content?';
+
+  @override
+  String get chooseVariation => 'Choose how you want to create a new variation';
+
+  @override
+  String get useSamePrompt => 'Use Same Prompt';
+
+  @override
+  String get enhancePrompt => 'Enhance Prompt';
+
+  @override
+  String get newPrompt => 'New Prompt';
+
+  @override
+  String get savedToPhotos => 'Saved to Photos successfully!';
+
+  @override
+  String get failedToSave => 'Failed to save to Photos. Access denied?';
+
+  @override
+  String shareFailed(Object error) {
+    return 'Share failed: $error';
+  }
+
+  @override
+  String get listView => 'List';
+
+  @override
+  String get gridView => 'Grid';
 }

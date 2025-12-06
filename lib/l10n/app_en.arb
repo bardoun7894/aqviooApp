@@ -239,6 +239,7 @@
   "completeYourPayment": "Complete Your Payment",
   "totalAmount": "Total Amount",
   "payWithTabby": "Pay with Tabby",
+  "payWithTap": "Pay with Tap",
   "payWithApplePay": "Pay with Apple Pay",
   "payWithSTCPay": "Pay with STC Pay",
   "payWithCard": "Pay with Card",
@@ -275,9 +276,9 @@
   "modelVersion": "Model v4.0",
   "generating": "Generating...",
   "quickSuggestions": "Quick Suggestions",
-  "buyCredits": "Buy Credits",
+  "buyCredits": "Add Balance",
   "currentBalance": "Current Balance",
-  "creditBalance": "{count} Credits",
+  "creditBalance": "{count} ر.س",
   "@creditBalance": {
     "placeholders": {
       "count": {
@@ -285,7 +286,7 @@
       }
     }
   },
-  "purchaseCredits": "Purchase {count} Credits - {price} SAR",
+  "purchaseCredits": "Add {count} ر.س - {price} SAR",
   "@purchaseCredits": {
     "placeholders": {
       "count": {
@@ -313,6 +314,12 @@
   "paymentsOf": "4 payments of",
   "tabbyBenefits": "• Pay the first installment now\n• Remaining 3 payments every 2 weeks\n• No interest, no fees",
   "continueToTabby": "Continue to Tabby",
+  "tapPaymentInfo": "Secure payment with credit/debit card via Tap Payments",
+  "tapPaymentMethods": "Supported: Visa, Mastercard, MADA, American Express",
+  "balanceToAdd": "Balance to add",
+  "continueToPayment": "Continue to Payment",
+  "addedToBalance": "added to your balance",
+  "securePaymentTap": "Secure payment powered by Tap",
   "firstPayment": "First payment: {amount} SAR",
   "@firstPayment": {
     "placeholders": {
@@ -332,7 +339,7 @@
   },
   "startCreatingButton": "Start Creating",
   "paymentFailedTitle": "Payment Failed",
-  "paymentFailedMessage": "Unable to process payment with Tabby. Please try again.",
+  "paymentFailedMessage": "Unable to process payment. Please try again.",
   "securePaymentTabby": "Secure buy now, pay later with Tabby",
   "insufficientCredits": "Insufficient Credits",
   "needCreditsMessage": "You need {count} credits to generate a {type}.",
@@ -473,5 +480,43 @@
   "errorAdjustingCredits": "Error adjusting credits",
   "errorBanningUser": "Error banning user",
   "errorLoadingUsers": "Error loading users",
-  "errorLoadingContent": "Error loading content"
+  "errorLoadingContent": "Error loading content",
+  "profileUpdatedSuccess": "Profile updated successfully",
+  "profileUpdateFailed": "Failed to update profile",
+  "helpSupport": "Help & Support",
+  "accountSettingsTitle": "ACCOUNT SETTINGS",
+  "enhanceCinematic": "with cinematic lighting and professional color grading",
+  "enhance4K": "in stunning 4K quality with dramatic atmosphere",
+  "enhanceMusic": "with epic music and smooth transitions",
+  "enhanceDynamic": "featuring dynamic camera movements and vivid colors",
+  "enhanceHollywood": "with Hollywood-style production value",
+  "enhancePremium": "in premium quality with artistic composition",
+  "enterName": "Enter your name",
+  "enterPhone": "Enter your phone number",
+  "logoutConfirmationTitle": "Logout",
+  "logoutConfirmationMessage": "Are you sure you want to logout?",
+  "deleteAccountTitle": "Delete Account",
+  "deleteAccountMessage": "This action cannot be undone. All your data will be permanently deleted.",
+  "paymentMobileOnly": "Payments are only available on the mobile app",
+  "imagePreview": "Image Preview",
+  "videoPreviewTitle": "Video Preview",
+  "saveToPhotos": "Save",
+  "remix": "Remix",
+  "loop": "Loop",
+  "noLoop": "No Loop",
+  "prompt": "Prompt",
+  "noPromptAvailable": "No prompt available",
+  "promptDetails": "Prompt Details",
+  "tryAgainWithPrompt": "Try Again with this Prompt",
+  "generateNewVideo": "Generate New Video?",
+  "generateNewContent": "Generate New Content?",
+  "chooseVariation": "Choose how you want to create a new variation",
+  "useSamePrompt": "Use Same Prompt",
+  "enhancePrompt": "Enhance Prompt",
+  "newPrompt": "New Prompt",
+  "savedToPhotos": "Saved to Photos successfully!",
+  "failedToSave": "Failed to save to Photos. Access denied?",
+  "shareFailed": "Share failed: {error}",
+  "listView": "List",
+  "gridView": "Grid"
 }

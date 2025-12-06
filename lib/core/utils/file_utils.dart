@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gal/gal.dart';
 
 class FileUtils {
   static Future<File?> downloadFile(String url) async {
@@ -31,6 +32,28 @@ class FileUtils {
       }
     } catch (e) {
       print("Error sharing video: $e");
+    }
+  }
+
+  static Future<bool> saveToGallery(String filePath,
+      {bool isVideo = true}) async {
+    try {
+      // Check for access permission
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        await Gal.requestAccess();
+      }
+
+      // Save to gallery
+      if (isVideo) {
+        await Gal.putVideo(filePath);
+      } else {
+        await Gal.putImage(filePath);
+      }
+      return true;
+    } catch (e) {
+      print("Error saving to gallery: $e");
+      return false;
     }
   }
 }
