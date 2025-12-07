@@ -192,6 +192,19 @@ class CreationController extends Notifier<CreationState> {
     state = state.copyWith(clearHiddenContext: true);
   }
 
+  /// Set style-enhanced prompt based on user's prompt language
+  /// This should be called before generateVideo() with the localized style prompt
+  void setStyleEnhancement(String stylePrompt) {
+    if (stylePrompt.isNotEmpty) {
+      // Combine with any existing hidden context
+      final existingContext = state.hiddenContext ?? '';
+      final newContext = existingContext.isEmpty
+          ? stylePrompt
+          : '$existingContext, $stylePrompt';
+      state = state.copyWith(hiddenContext: newContext);
+    }
+  }
+
   // Main generation method using NEW Kie AI Service
   Future<void> generateVideo({
     String? prompt,

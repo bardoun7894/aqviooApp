@@ -853,7 +853,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enhancingIdea => 'Enhancing your idea...';
 
   @override
+  String get enhancingVideoIdea => 'Enhancing your video idea...';
+
+  @override
+  String get enhancingImageIdea => 'Enhancing your image idea...';
+
+  @override
   String get preparingPrompt => 'Preparing your prompt...';
+
+  @override
+  String get preparingVideoPrompt => 'Preparing your video prompt...';
+
+  @override
+  String get preparingImagePrompt => 'Preparing your image prompt...';
 
   @override
   String get bringingImageToLife => 'Bringing your image to life...';
@@ -868,7 +880,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get creatingMasterpiece => 'Creating your masterpiece...';
 
   @override
+  String get creatingVideoMasterpiece => 'Creating your video masterpiece...';
+
+  @override
+  String get creatingImageMasterpiece => 'Creating your image masterpiece...';
+
+  @override
   String get magicComplete => 'Magic Complete!';
+
+  @override
+  String get videoComplete => 'Video Complete!';
+
+  @override
+  String get imageComplete => 'Image Complete!';
+
+  @override
+  String get generatingVideoTitle => 'Generating Video';
+
+  @override
+  String get generatingImageTitle => 'Generating Image';
 
   @override
   String get library => 'Library';
@@ -1144,6 +1174,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminPermissions => 'Permissions';
 
   @override
+  String get switchToApp => 'Switch to App';
+
+  @override
+  String get administrator => 'Administrator';
+
+  @override
   String get areYouSure => 'Are you sure?';
 
   @override
@@ -1304,4 +1340,247 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gridView => 'Grid';
+
+  @override
+  String get styleCinematic => 'Cinematic';
+
+  @override
+  String get styleAnimation => 'Animation';
+
+  @override
+  String get styleMinimal => 'Minimal';
+
+  @override
+  String get styleModern => 'Modern';
+
+  @override
+  String get styleCorporate => 'Corporate';
+
+  @override
+  String get styleSocialMedia => 'Social Media';
+
+  @override
+  String get styleVintage => 'Vintage';
+
+  @override
+  String get styleFantasy => 'Fantasy';
+
+  @override
+  String get styleDocumentary => 'Documentary';
+
+  @override
+  String get styleHorror => 'Horror';
+
+  @override
+  String get styleComedy => 'Comedy';
+
+  @override
+  String get styleSciFi => 'Sci-Fi';
+
+  @override
+  String get styleNoir => 'Noir';
+
+  @override
+  String get styleDreamlike => 'Dreamlike';
+
+  @override
+  String get styleRetro => 'Retro';
+
+  @override
+  String get styleTealFrame => 'Teal Frame';
+
+  @override
+  String get styleNavyExecutive => 'Navy Executive';
+
+  @override
+  String get styleForestGreen => 'Forest Green';
+
+  @override
+  String get styleRoyalPurple => 'Royal Purple';
+
+  @override
+  String get styleSunsetOrange => 'Sunset Orange';
+
+  @override
+  String get stylePromptCinematic =>
+      'cinematic style with dramatic lighting and composition';
+
+  @override
+  String get stylePromptAnimation =>
+      'animated style with vibrant colors and smooth motion';
+
+  @override
+  String get stylePromptMinimal =>
+      'minimal and clean aesthetic with simple compositions';
+
+  @override
+  String get stylePromptModern => 'modern and contemporary style';
+
+  @override
+  String get stylePromptCorporate => 'professional corporate style';
+
+  @override
+  String get stylePromptSocialMedia =>
+      'engaging social media style with dynamic energy';
+
+  @override
+  String get stylePromptVintage =>
+      'vintage style with retro aesthetics and aged film look';
+
+  @override
+  String get stylePromptFantasy =>
+      'fantasy style with magical and otherworldly elements';
+
+  @override
+  String get stylePromptDocumentary =>
+      'documentary style with realistic and observational approach';
+
+  @override
+  String get stylePromptHorror =>
+      'horror style with dark atmosphere and suspenseful mood';
+
+  @override
+  String get stylePromptComedy =>
+      'comedy style with lighthearted and playful energy';
+
+  @override
+  String get stylePromptSciFi =>
+      'sci-fi style with futuristic technology and advanced aesthetics';
+
+  @override
+  String get stylePromptNoir =>
+      'film noir style with high contrast and moody shadows';
+
+  @override
+  String get stylePromptDreamlike =>
+      'dreamlike style with surreal and ethereal atmosphere';
+
+  @override
+  String get stylePromptRetro => 'retro style with 80s and 90s aesthetic';
+
+  @override
+  String get stylePromptTealFrame =>
+      'professional teal frame with clean card layout, rounded corners, and soft shadows on light background';
+
+  @override
+  String get stylePromptNavyExecutive =>
+      'executive navy blue style with gold accents, formal composition, and corporate elegance';
+
+  @override
+  String get stylePromptForestGreen =>
+      'nature-inspired forest green palette with organic shapes, earthy tones, and calming atmosphere';
+
+  @override
+  String get stylePromptRoyalPurple =>
+      'royal purple elegant style with luxurious gradients, sophisticated typography, and premium feel';
+
+  @override
+  String get stylePromptSunsetOrange =>
+      'warm sunset orange gradient with vibrant energy, golden hour lighting, and inspiring mood';
+
+  @override
+  String get supportTitle => 'Help & Support';
+
+  @override
+  String get supportSubtitle =>
+      'We\'re here to help! Contact us for any questions or issues.';
+
+  @override
+  String get emailUs => 'Email Us';
+
+  @override
+  String get responseTime => 'Response Time';
+
+  @override
+  String get responseTimeValue => 'Within 24-48 hours';
+
+  @override
+  String get faqTitle => 'Frequently Asked Questions';
+
+  @override
+  String get faqQuestion1 => 'How do I create a video?';
+
+  @override
+  String get faqAnswer1 =>
+      'Simply enter your idea in the text field, choose your preferred style and settings, then tap \'Generate\'. Our AI will create your video automatically.';
+
+  @override
+  String get faqQuestion2 => 'How do credits work?';
+
+  @override
+  String get faqAnswer2 =>
+      'Credits are used to generate videos and images. Each generation costs a certain amount of credits based on the output type and settings.';
+
+  @override
+  String get faqQuestion3 => 'Can I get a refund?';
+
+  @override
+  String get faqAnswer3 =>
+      'Please contact our support team for refund requests. We review each case individually.';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get privacyIntro => 'Introduction';
+
+  @override
+  String get privacyIntroContent =>
+      'At Aqvioo, we respect the privacy of our users and strive to protect their personal data. This policy aims to explain how we collect, use, and protect information when you use our application.';
+
+  @override
+  String get privacySection1Title => '1. Information We Collect';
+
+  @override
+  String get privacySection1Content =>
+      'We collect only the necessary information to operate application services and improve the experience, including:\n\nInformation provided voluntarily by the user:\n• Texts or ideas written by the user to create video or image\n• Images or files uploaded by the user within the app\n• Contact information (such as email) when contacting us for technical support\n\nTechnical information (automatically):\n• Device type, operating system, and app version\n• General usage data (number of uses, errors, session duration)\n\nWe do not collect any data that directly identifies the user without their permission.';
+
+  @override
+  String get privacySection2Title => '2. Use of Information';
+
+  @override
+  String get privacySection2Content =>
+      'We use the collected information to:\n• Create requested content (texts, videos, audio)\n• Improve app performance and user experience\n• Provide technical support and respond to inquiries\n• Send notifications or updates related to the app (when enabled by user)\n\nWe confirm that all data entered for video creation purposes is not used for marketing purposes or external sharing.';
+
+  @override
+  String get privacySection3Title => '3. Data Sharing';
+
+  @override
+  String get privacySection3Content =>
+      'We do not share any personal data with third parties.';
+
+  @override
+  String get privacySection4Title => '4. Data Storage and Security';
+
+  @override
+  String get privacySection4Content =>
+      '• Data is retained temporarily only during the video or image creation process\n• We do not store any user files or texts after the process is completed\n• We use security and encryption protocols to protect all data during transfer between the user and servers';
+
+  @override
+  String get privacySection5Title => '5. Payment Operations';
+
+  @override
+  String get privacySection5Content =>
+      '• All payment operations are processed through secure service providers such as Apple Pay, STC Pay, Visa, MasterCard, and Mada\n• We do not store any credit card information or financial data within the app\n• All transactions are subject to the security policies of payment providers';
+
+  @override
+  String get privacySection6Title => '6. User Rights';
+
+  @override
+  String get privacySection6Content =>
+      'The user has the right to:\n• Request deletion of their data or images and texts they sent\n• Stop using the app at any time without any obligation\n• Contact us for clarifications or complaints via email';
+
+  @override
+  String get privacySection7Title => '7. Privacy Policy Changes';
+
+  @override
+  String get privacySection7Content =>
+      'We may update this policy from time to time in accordance with technical or legal updates. Users will be notified of any significant changes through the app or email.';
+
+  @override
+  String get privacySection8Title => '8. Contact Us';
+
+  @override
+  String get privacySection8Content =>
+      'If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa';
 }

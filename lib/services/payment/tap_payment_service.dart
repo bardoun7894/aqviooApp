@@ -76,7 +76,8 @@ class TapPaymentService {
         number: cleanPhone,
         firstName: customerFirstName,
         middleName: '',
-        lastName: customerLastName.isEmpty ? customerFirstName : customerLastName,
+        lastName:
+            customerLastName.isEmpty ? customerFirstName : customerLastName,
         metaData: null,
       );
 
@@ -134,7 +135,12 @@ class TapPaymentService {
         cardHolderName: '$customerFirstName $customerLastName',
         paymentType: PaymentType.ALL,
         sdkMode: SDKMode.Production,
-        supportedPaymentMethods: ['VISA', 'MASTERCARD', 'MADA', 'AMERICAN_EXPRESS'],
+        supportedPaymentMethods: [
+          'VISA',
+          'MASTERCARD',
+          'MADA',
+          'AMERICAN_EXPRESS'
+        ],
       );
 
       // Start payment
@@ -142,7 +148,19 @@ class TapPaymentService {
 
       debugPrint('🔵 Tap Payment Result: $result');
 
-      return result ?? {};
+      // Convert Map<Object?, Object?> to Map<String, dynamic>
+      if (result == null) {
+        return <String, dynamic>{};
+      }
+
+      final Map<String, dynamic> typedResult = {};
+      result.forEach((key, value) {
+        if (key != null) {
+          typedResult[key.toString()] = value;
+        }
+      });
+
+      return typedResult;
     } catch (e, stackTrace) {
       debugPrint('❌ Tap Payment Error: $e');
       debugPrint('❌ Stack: $stackTrace');

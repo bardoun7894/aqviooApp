@@ -196,8 +196,8 @@ class FirebaseAuthRepository implements AuthRepository {
 
         // Initialize credits subcollection
         await userDoc.collection('data').doc('credits').set({
-          'credits': 10, // Initial free credits
-          'hasGeneratedFirstVideo': false,
+          'balance': 10.0, // Initial free balance in SAR
+          'hasGeneratedFirst': false,
           'lastUpdated': FieldValue.serverTimestamp(),
         });
 

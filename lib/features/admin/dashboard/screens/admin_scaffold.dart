@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../../generated/app_localizations.dart';
 import '../../auth/providers/admin_auth_provider.dart';
 
 /// Admin Scaffold - Reusable layout for all admin pages
@@ -42,7 +44,9 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      appBar: isMobile ? _buildMobileAppBar(isDark, adminUser?.displayName ?? 'Admin') : null,
+      appBar: isMobile
+          ? _buildMobileAppBar(isDark, adminUser?.displayName ?? 'Admin')
+          : null,
       body: Row(
         children: [
           // Sidebar - Only on desktop/tablet
@@ -73,7 +77,8 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
           ? Drawer(
               backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
               child: SafeArea(
-                child: _buildSidebarContent(isDark, adminUser?.displayName ?? 'Admin'),
+                child: _buildSidebarContent(
+                    isDark, adminUser?.displayName ?? 'Admin'),
               ),
             )
           : null,
@@ -115,35 +120,39 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
               children: [
                 _buildNavItem(
                   icon: Icons.dashboard_rounded,
-                  label: 'Dashboard',
+                  label: AppLocalizations.of(context)?.adminDashboard ??
+                      'Dashboard',
                   route: '/admin/dashboard',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/dashboard',
                 ),
                 _buildNavItem(
                   icon: Icons.people_rounded,
-                  label: 'Users',
+                  label: AppLocalizations.of(context)?.adminUsers ?? 'Users',
                   route: '/admin/users',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/users',
                 ),
                 _buildNavItem(
                   icon: Icons.video_library_rounded,
-                  label: 'Content',
+                  label:
+                      AppLocalizations.of(context)?.adminContent ?? 'Content',
                   route: '/admin/content',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/content',
                 ),
                 _buildNavItem(
                   icon: Icons.payment_rounded,
-                  label: 'Payments',
+                  label:
+                      AppLocalizations.of(context)?.adminPayments ?? 'Payments',
                   route: '/admin/payments',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/payments',
                 ),
                 _buildNavItem(
                   icon: Icons.settings_rounded,
-                  label: 'Settings',
+                  label:
+                      AppLocalizations.of(context)?.adminSettings ?? 'Settings',
                   route: '/admin/settings',
                   isDark: isDark,
                   isActive: widget.currentRoute == '/admin/settings',
@@ -152,7 +161,8 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                 // Switch to Home App
                 _buildNavItem(
                   icon: Icons.home_rounded,
-                  label: 'Switch to App',
+                  label: AppLocalizations.of(context)?.switchToApp ??
+                      'Switch to App',
                   route: '/home',
                   isDark: isDark,
                   isActive: false,
@@ -206,7 +216,9 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                     'Admin',
                     style: GoogleFonts.outfit(
                       fontSize: 11,
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -253,7 +265,9 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                         size: 22,
                         color: isActive
                             ? Colors.white
-                            : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
+                            : (isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -261,10 +275,13 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                           label,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight:
+                                isActive ? FontWeight.w700 : FontWeight.w600,
                             color: isActive
                                 ? Colors.white
-                                : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
+                                : (isDark
+                                    ? AppColors.mediumGray
+                                    : AppColors.textSecondary),
                           ),
                         ),
                       ),
@@ -276,7 +293,9 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                       size: 22,
                       color: isActive
                           ? Colors.white
-                          : (isDark ? AppColors.mediumGray : AppColors.textSecondary),
+                          : (isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary),
                     ),
                   ),
           ),
@@ -327,16 +346,21 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                           style: GoogleFonts.outfit(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? AppColors.white : AppColors.textPrimary,
+                            color: isDark
+                                ? AppColors.white
+                                : AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          'Administrator',
+                          AppLocalizations.of(context)?.administrator ??
+                              'Administrator',
                           style: GoogleFonts.outfit(
                             fontSize: 11,
-                            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -375,15 +399,20 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                           Icon(
                             Icons.logout_rounded,
                             size: 18,
-                            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Logout',
+                            AppLocalizations.of(context)?.adminLogout ??
+                                'Logout',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                              color: isDark
+                                  ? AppColors.mediumGray
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -392,7 +421,9 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                         child: Icon(
                           Icons.logout_rounded,
                           size: 18,
-                          color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
                         ),
                       ),
               ),
@@ -443,6 +474,32 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
         ],
       ),
       actions: [
+        // Language Switcher (Mobile)
+        Consumer(
+          builder: (context, ref, child) {
+            final locale = ref.watch(localeProvider);
+            final isArabic = locale.languageCode == 'ar';
+            return IconButton(
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.language_rounded, size: 20),
+                  const SizedBox(width: 2),
+                  Text(
+                    isArabic ? 'EN' : 'ع',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.white : AppColors.primaryPurple,
+                    ),
+                  ),
+                ],
+              ),
+              color: isDark ? AppColors.white : AppColors.primaryPurple,
+              onPressed: () => ref.read(localeProvider.notifier).toggleLocale(),
+            );
+          },
+        ),
         IconButton(
           icon: Icon(
             Icons.notifications_outlined,
@@ -494,7 +551,8 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                 _sidebarExpanded ? Icons.menu_open : Icons.menu,
                 color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
               ),
-              onPressed: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
+              onPressed: () =>
+                  setState(() => _sidebarExpanded = !_sidebarExpanded),
             ),
 
           const Spacer(),
@@ -503,6 +561,65 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
           // _buildSearchBar(isDark),
 
           // const SizedBox(width: 16),
+
+          // Language Switcher
+          Consumer(
+            builder: (context, ref, child) {
+              final locale = ref.watch(localeProvider);
+              final isArabic = locale.languageCode == 'ar';
+              return Tooltip(
+                message: isArabic ? 'Switch to English' : 'التبديل إلى العربية',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () =>
+                        ref.read(localeProvider.notifier).toggleLocale(),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.2)
+                              : AppColors.primaryPurple.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.language_rounded,
+                            size: 18,
+                            color: isDark
+                                ? AppColors.white
+                                : AppColors.primaryPurple,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isArabic ? 'EN' : 'ع',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? AppColors.white
+                                  : AppColors.primaryPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(width: 12),
 
           // Notifications
           IconButton(
@@ -552,7 +669,8 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
                   Icon(
                     Icons.keyboard_arrow_down,
                     size: 18,
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
                 ],
               ),

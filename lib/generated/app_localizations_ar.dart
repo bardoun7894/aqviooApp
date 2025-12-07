@@ -852,7 +852,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get enhancingIdea => 'جاري تحسين فكرتك...';
 
   @override
+  String get enhancingVideoIdea => 'جاري تحسين فكرة الفيديو...';
+
+  @override
+  String get enhancingImageIdea => 'جاري تحسين فكرة الصورة...';
+
+  @override
   String get preparingPrompt => 'جاري تحضير الوصف...';
+
+  @override
+  String get preparingVideoPrompt => 'جاري تحضير وصف الفيديو...';
+
+  @override
+  String get preparingImagePrompt => 'جاري تحضير وصف الصورة...';
 
   @override
   String get bringingImageToLife => 'جاري تحويل صورتك إلى حياة...';
@@ -867,7 +879,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get creatingMasterpiece => 'جاري إنشاء تحفتك...';
 
   @override
+  String get creatingVideoMasterpiece => 'جاري إنشاء تحفة الفيديو...';
+
+  @override
+  String get creatingImageMasterpiece => 'جاري إنشاء تحفة الصورة...';
+
+  @override
   String get magicComplete => 'اكتمل السحر!';
+
+  @override
+  String get videoComplete => 'اكتمل الفيديو!';
+
+  @override
+  String get imageComplete => 'اكتملت الصورة!';
+
+  @override
+  String get generatingVideoTitle => 'جاري إنشاء الفيديو';
+
+  @override
+  String get generatingImageTitle => 'جاري إنشاء الصورة';
 
   @override
   String get library => 'المكتبة';
@@ -1141,6 +1171,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adminPermissions => 'الصلاحيات';
 
   @override
+  String get switchToApp => 'التبديل إلى التطبيق';
+
+  @override
+  String get administrator => 'مسؤول النظام';
+
+  @override
   String get areYouSure => 'هل أنت متأكد؟';
 
   @override
@@ -1298,4 +1334,240 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get gridView => 'شبكة';
+
+  @override
+  String get styleCinematic => 'سينمائي';
+
+  @override
+  String get styleAnimation => 'رسوم متحركة';
+
+  @override
+  String get styleMinimal => 'بسيط';
+
+  @override
+  String get styleModern => 'عصري';
+
+  @override
+  String get styleCorporate => 'احترافي';
+
+  @override
+  String get styleSocialMedia => 'سوشيال ميديا';
+
+  @override
+  String get styleVintage => 'كلاسيكي';
+
+  @override
+  String get styleFantasy => 'خيالي';
+
+  @override
+  String get styleDocumentary => 'وثائقي';
+
+  @override
+  String get styleHorror => 'رعب';
+
+  @override
+  String get styleComedy => 'كوميدي';
+
+  @override
+  String get styleSciFi => 'خيال علمي';
+
+  @override
+  String get styleNoir => 'نوار';
+
+  @override
+  String get styleDreamlike => 'حالم';
+
+  @override
+  String get styleRetro => 'ريترو';
+
+  @override
+  String get styleTealFrame => 'إطار أزرق مخضر';
+
+  @override
+  String get styleNavyExecutive => 'كحلي تنفيذي';
+
+  @override
+  String get styleForestGreen => 'أخضر طبيعي';
+
+  @override
+  String get styleRoyalPurple => 'بنفسجي ملكي';
+
+  @override
+  String get styleSunsetOrange => 'برتقالي غروب';
+
+  @override
+  String get stylePromptCinematic =>
+      'بأسلوب سينمائي مع إضاءة درامية وتكوين احترافي';
+
+  @override
+  String get stylePromptAnimation =>
+      'بأسلوب رسوم متحركة مع ألوان نابضة بالحياة وحركة سلسة';
+
+  @override
+  String get stylePromptMinimal => 'بأسلوب بسيط ونظيف مع تكوينات مبسطة';
+
+  @override
+  String get stylePromptModern => 'بأسلوب عصري ومعاصر';
+
+  @override
+  String get stylePromptCorporate => 'بأسلوب احترافي للشركات';
+
+  @override
+  String get stylePromptSocialMedia =>
+      'بأسلوب جذاب لوسائل التواصل الاجتماعي مع طاقة ديناميكية';
+
+  @override
+  String get stylePromptVintage =>
+      'بأسلوب كلاسيكي مع جماليات قديمة ومظهر فيلم عتيق';
+
+  @override
+  String get stylePromptFantasy => 'بأسلوب خيالي مع عناصر سحرية وأجواء أسطورية';
+
+  @override
+  String get stylePromptDocumentary => 'بأسلوب وثائقي مع نهج واقعي ورصدي';
+
+  @override
+  String get stylePromptHorror => 'بأسلوب رعب مع أجواء مظلمة ومزاج مشوق';
+
+  @override
+  String get stylePromptComedy => 'بأسلوب كوميدي مع طاقة مرحة وخفيفة';
+
+  @override
+  String get stylePromptSciFi =>
+      'بأسلوب خيال علمي مع تقنية مستقبلية وجماليات متقدمة';
+
+  @override
+  String get stylePromptNoir => 'بأسلوب فيلم نوار مع تباين عالي وظلال درامية';
+
+  @override
+  String get stylePromptDreamlike => 'بأسلوب حالم مع أجواء سريالية وأثيرية';
+
+  @override
+  String get stylePromptRetro => 'بأسلوب ريترو من الثمانينات والتسعينات';
+
+  @override
+  String get stylePromptTealFrame =>
+      'بإطار أزرق مخضر احترافي مع تخطيط بطاقات نظيف وزوايا مستديرة وظلال ناعمة على خلفية فاتحة';
+
+  @override
+  String get stylePromptNavyExecutive =>
+      'بأسلوب كحلي تنفيذي مع لمسات ذهبية وتكوين رسمي وأناقة مؤسسية';
+
+  @override
+  String get stylePromptForestGreen =>
+      'بلوحة ألوان خضراء مستوحاة من الطبيعة مع أشكال عضوية ونغمات ترابية وأجواء هادئة';
+
+  @override
+  String get stylePromptRoyalPurple =>
+      'بأسلوب بنفسجي ملكي أنيق مع تدرجات فاخرة وطباعة راقية وإحساس فاخر';
+
+  @override
+  String get stylePromptSunsetOrange =>
+      'بتدرج برتقالي غروب دافئ مع طاقة نابضة بالحياة وإضاءة الساعة الذهبية ومزاج ملهم';
+
+  @override
+  String get supportTitle => 'المساعدة والدعم';
+
+  @override
+  String get supportSubtitle =>
+      'نحن هنا للمساعدة! تواصل معنا لأي استفسارات أو مشاكل.';
+
+  @override
+  String get emailUs => 'راسلنا عبر البريد الإلكتروني';
+
+  @override
+  String get responseTime => 'وقت الاستجابة';
+
+  @override
+  String get responseTimeValue => 'خلال 24-48 ساعة';
+
+  @override
+  String get faqTitle => 'الأسئلة الشائعة';
+
+  @override
+  String get faqQuestion1 => 'كيف أنشئ فيديو؟';
+
+  @override
+  String get faqAnswer1 =>
+      'ببساطة أدخل فكرتك في حقل النص، اختر الأسلوب والإعدادات المفضلة لديك، ثم اضغط على \'إنشاء\'. سيقوم الذكاء الاصطناعي بإنشاء الفيديو الخاص بك تلقائياً.';
+
+  @override
+  String get faqQuestion2 => 'كيف يعمل نظام الرصيد؟';
+
+  @override
+  String get faqAnswer2 =>
+      'يُستخدم الرصيد لإنشاء الفيديوهات والصور. كل عملية إنشاء تكلف مبلغاً معيناً من الرصيد بناءً على نوع المخرجات والإعدادات.';
+
+  @override
+  String get faqQuestion3 => 'هل يمكنني استرداد أموالي؟';
+
+  @override
+  String get faqAnswer3 =>
+      'يرجى التواصل مع فريق الدعم لطلبات الاسترداد. نقوم بمراجعة كل حالة على حدة.';
+
+  @override
+  String get privacyPolicyTitle => 'سياسة الخصوصية';
+
+  @override
+  String get privacyIntro => 'مقدمة';
+
+  @override
+  String get privacyIntroContent =>
+      'نحن في Aqvioo نحترم خصوصية مستخدمينا ونسعى لحماية بياناتهم الشخصية. تهدف هذه السياسة إلى توضيح كيفية جمع المعلومات واستخدامها وحمايتها عند استخدامك لتطبيقنا.';
+
+  @override
+  String get privacySection1Title => '١. المعلومات التي نجمعها';
+
+  @override
+  String get privacySection1Content =>
+      'نجمع بعض المعلومات الضرورية فقط لتشغيل خدمات التطبيق وتحسين التجربة، وتشمل:\n\nالمعلومات التي يقدمها المستخدم طوعًا:\n• النصوص أو الأفكار التي يكتبها المستخدم لإنشاء الفيديو أو الصورة\n• الصور أو الملفات التي يرفعها المستخدم داخل التطبيق\n• معلومات الاتصال (مثل البريد الإلكتروني) عند التواصل معنا للدعم الفني\n\nالمعلومات التقنية (تلقائيًا):\n• نوع الجهاز ونظام التشغيل وإصدار التطبيق\n• بيانات الاستخدام العامة (عدد مرات الاستخدام، الأخطاء، مدة الجلسة)\n\nلا نجمع أي بيانات تحدد هوية المستخدم بشكل مباشر بدون إذنه.';
+
+  @override
+  String get privacySection2Title => '٢. استخدام المعلومات';
+
+  @override
+  String get privacySection2Content =>
+      'نستخدم المعلومات التي يتم جمعها من أجل:\n• إنشاء المحتوى المطلوب (النصوص، الفيديوهات، الصوتيات)\n• تحسين أداء التطبيق وتجربة المستخدم\n• تقديم الدعم الفني والرد على الاستفسارات\n• إرسال إشعارات أو تحديثات متعلقة بالتطبيق (عند تفعيلها من المستخدم)\n\nنؤكد أن جميع البيانات التي يتم إدخالها لغرض إنشاء الفيديو لا تُستخدم لأغراض تسويقية أو مشاركة خارجية.';
+
+  @override
+  String get privacySection3Title => '٣. مشاركة البيانات';
+
+  @override
+  String get privacySection3Content =>
+      'نحن لا نشارك أي بيانات شخصية مع أطراف ثالثة.';
+
+  @override
+  String get privacySection4Title => '٤. حفظ البيانات وأمنها';
+
+  @override
+  String get privacySection4Content =>
+      '• يتم الاحتفاظ بالبيانات مؤقتًا فقط أثناء عملية إنشاء الفيديو أو الصورة\n• لا نقوم بتخزين أي ملفات أو نصوص للمستخدم بعد الانتهاء من العملية\n• نستخدم بروتوكولات أمان وتشفير لحماية جميع البيانات أثناء النقل بين المستخدم والخوادم';
+
+  @override
+  String get privacySection5Title => '٥. عمليات الدفع';
+
+  @override
+  String get privacySection5Content =>
+      '• تتم جميع عمليات الدفع من خلال مزودي خدمات آمنة مثل Apple Pay، STC Pay، Visa، MasterCard، Mada\n• نحن لا نخزن أي معلومات بطاقات ائتمان أو بيانات مالية داخل التطبيق\n• جميع المعاملات تخضع لسياسات الأمان الخاصة بمزودي الدفع';
+
+  @override
+  String get privacySection6Title => '٦. حقوق المستخدم';
+
+  @override
+  String get privacySection6Content =>
+      'للمستخدم الحق في:\n• طلب حذف بياناته أو الصور والنصوص التي أرسلها\n• إيقاف استخدام التطبيق في أي وقت دون أي التزام\n• التواصل معنا لطلب توضيحات أو شكاوى عبر البريد الإلكتروني';
+
+  @override
+  String get privacySection7Title => '٧. التعديلات على سياسة الخصوصية';
+
+  @override
+  String get privacySection7Content =>
+      'قد نقوم بتحديث هذه السياسة من وقت لآخر بما يتناسب مع التحديثات التقنية أو القانونية. سيتم إشعار المستخدمين بأي تغييرات جوهرية من خلال التطبيق أو البريد الإلكتروني.';
+
+  @override
+  String get privacySection8Title => '٨. الاتصال بنا';
+
+  @override
+  String get privacySection8Content =>
+      'إذا كان لديك أي استفسار أو ملاحظة حول سياسة الخصوصية، يمكنك التواصل معنا عبر:\nAqvioo@outlook.sa';
 }

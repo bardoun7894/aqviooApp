@@ -11,6 +11,8 @@ import '../../features/creation/presentation/screens/magic_loading_screen.dart';
 import '../../features/preview/presentation/screens/preview_screen.dart';
 import '../../features/creation/presentation/screens/my_creations_screen.dart';
 import '../../features/auth/presentation/screens/account_settings_screen.dart';
+import '../../features/auth/presentation/screens/support_screen.dart';
+import '../../features/auth/presentation/screens/privacy_policy_screen.dart';
 import '../../features/payment/presentation/screens/payment_screen.dart';
 import '../../features/admin/auth/screens/admin_login_screen.dart';
 import '../../features/admin/auth/providers/admin_auth_provider.dart';
@@ -157,6 +159,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/account-settings',
         builder: (context, state) => const AccountSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        builder: (context, state) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
         path: '/payment',

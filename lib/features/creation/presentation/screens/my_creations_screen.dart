@@ -675,74 +675,89 @@ class _CreationCardState extends State<CreationCard>
 
       if (!mounted) return;
 
-      if (widget.item.type == CreationType.video) {
-        context.push(
-          '/preview',
-          extra: {
-            'videoUrl': widget.item.url,
-            'thumbnailUrl': widget.item.thumbnailUrl,
-            'prompt': widget.item.prompt,
-          },
-        );
-      } else {
-        // Show image in fullscreen dialog
-        showDialog(
-          context: context,
-          builder: (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                InteractiveViewer(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      widget.item.url!,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: Colors.white,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
+      // Navigate to full preview screen for both video and image
+      context.push(
+        '/preview',
+        extra: {
+          'videoUrl': widget.item.url,
+          'thumbnailUrl': widget.item.thumbnailUrl,
+          'prompt': widget.item.prompt,
+          'isImage': widget.item.type == CreationType.image,
+        },
+      );
     }
+  }
+
+  void _showOptionsMenu() {
+    if (widget.onDelete == null) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+                subtitle: Text(
+                  l10n.deleteCreationMsg,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onDelete?.call();
+                },
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  l10n.cancel,
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -754,6 +769,7 @@ class _CreationCardState extends State<CreationCard>
 
     return GestureDetector(
       onTap: _handleTap,
+      onLongPress: _showOptionsMenu,
       onTapDown: (_) => _animationController.forward(),
       onTapUp: (_) => _animationController.reverse(),
       onTapCancel: () => _animationController.reverse(),
@@ -1062,20 +1078,21 @@ class _CreationCardState extends State<CreationCard>
                                   color: AppColors.textHint,
                                 ),
                               ),
+                              // More options icon (long press to see options)
                               if (widget.onDelete != null) ...[
                                 const SizedBox(width: 8),
                                 GestureDetector(
-                                  onTap: widget.onDelete,
+                                  onTap: _showOptionsMenu,
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
+                                      color: AppColors.textSecondary.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(
-                                      Icons.delete_outline_rounded,
+                                    child: Icon(
+                                      Icons.more_horiz_rounded,
                                       size: 18,
-                                      color: Colors.red,
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -1201,74 +1218,89 @@ class _GridCreationCardState extends State<GridCreationCard> {
   void _handleTap() {
     if (widget.item.status == CreationStatus.success &&
         widget.item.url != null) {
-      if (widget.item.type == CreationType.video) {
-        context.push(
-          '/preview',
-          extra: {
-            'videoUrl': widget.item.url,
-            'thumbnailUrl': widget.item.thumbnailUrl,
-            'prompt': widget.item.prompt,
-          },
-        );
-      } else {
-        // Show image in fullscreen dialog
-        showDialog(
-          context: context,
-          builder: (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                InteractiveViewer(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      widget.item.url!,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: Colors.white,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
+      // Navigate to full preview screen for both video and image
+      context.push(
+        '/preview',
+        extra: {
+          'videoUrl': widget.item.url,
+          'thumbnailUrl': widget.item.thumbnailUrl,
+          'prompt': widget.item.prompt,
+          'isImage': widget.item.type == CreationType.image,
+        },
+      );
     }
+  }
+
+  void _showOptionsMenu() {
+    if (widget.onDelete == null) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                ),
+                title: Text(
+                  l10n.delete,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+                subtitle: Text(
+                  l10n.deleteCreationMsg,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onDelete?.call();
+                },
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  l10n.cancel,
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1280,6 +1312,7 @@ class _GridCreationCardState extends State<GridCreationCard> {
 
     return GestureDetector(
       onTap: _handleTap,
+      onLongPress: _showOptionsMenu,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -1450,18 +1483,18 @@ class _GridCreationCardState extends State<GridCreationCard> {
                           ),
                         ),
 
-                      // Delete button
+                      // More options button (tap for menu)
                       if (widget.onDelete != null)
                         Positioned(
                           top: 8,
                           left: 8,
                           child: GestureDetector(
-                            onTap: widget.onDelete,
+                            onTap: _showOptionsMenu,
                             child: Container(
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.8),
+                                color: Colors.black.withOpacity(0.4),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: Colors.white.withOpacity(0.3),
@@ -1469,8 +1502,8 @@ class _GridCreationCardState extends State<GridCreationCard> {
                                 ),
                               ),
                               child: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 14,
+                                Icons.more_horiz_rounded,
+                                size: 16,
                                 color: Colors.white,
                               ),
                             ),

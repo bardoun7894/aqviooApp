@@ -15,6 +15,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/style_utils.dart';
 
 import '../../../creation/presentation/providers/creation_provider.dart';
 import '../../../creation/domain/models/creation_item.dart';
@@ -1509,7 +1510,7 @@ class _AdvancedSettingsSheetState
                             return _buildChoiceChip(
                               context,
                               ref,
-                              style.displayName,
+                              StyleUtils.getLocalizedStyleName(context, style),
                               isSelected,
                               () => ref
                                   .read(creationControllerProvider.notifier)

@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 import 'services/payment/tap_payment_service.dart';
+import 'core/services/cache_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,12 @@ void main() async {
     } else {
       // Use the existing app (auto-initialized by native SDK)
       Firebase.app();
+    }
+
+    // Initialize cache manager
+    await CacheManager.init();
+    if (kDebugMode) {
+      print('✅ CacheManager initialized');
     }
 
     // Initialize Tap Payments SDK (only on mobile platforms, not web)

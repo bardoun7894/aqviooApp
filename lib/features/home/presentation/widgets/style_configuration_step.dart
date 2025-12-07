@@ -6,6 +6,7 @@ import '../../../../../generated/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/glass_container.dart';
 import '../../../../../core/widgets/neumorphic_container.dart';
+import '../../../../../core/utils/style_utils.dart';
 import 'package:akvioo/features/creation/domain/models/creation_config.dart';
 import 'package:akvioo/features/creation/presentation/providers/creation_provider.dart';
 
@@ -253,7 +254,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionHeader(l10n.durationHeader, subtitle: l10n.selectVideoLength),
+              _buildSectionHeader(l10n.durationHeader,
+                  subtitle: l10n.selectVideoLength),
               const SizedBox(height: 16),
               _buildDurationSelector(
                   config.videoDurationSeconds ?? 10, controller, l10n),
@@ -315,7 +317,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
         const SizedBox(height: 32),
         _buildSectionHeader(l10n.sizeHeader),
         const SizedBox(height: 16),
-        _buildImageSizeSelector(config.imageSize ?? '1024x1024', controller, l10n),
+        _buildImageSizeSelector(
+            config.imageSize ?? '1024x1024', controller, l10n),
       ],
     );
   }
@@ -359,7 +362,7 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Center(
               child: Text(
-                style.displayName,
+                StyleUtils.getLocalizedStyleName(context, style),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
@@ -375,8 +378,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
     );
   }
 
-  Widget _buildDurationSelector(
-      int currentDuration, CreationController controller, AppLocalizations l10n) {
+  Widget _buildDurationSelector(int currentDuration,
+      CreationController controller, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -686,8 +689,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
     );
   }
 
-  Widget _buildDialectDropdown(
-      String currentDialect, CreationController controller, AppLocalizations l10n) {
+  Widget _buildDialectDropdown(String currentDialect,
+      CreationController controller, AppLocalizations l10n) {
     final dialects = {
       'ar-SA': '🇸🇦 ${l10n.dialectSaudi}',
       'ar-EG': '🇪🇬 ${l10n.dialectEgyptian}',
@@ -776,8 +779,8 @@ class _StyleConfigurationStepState extends ConsumerState<StyleConfigurationStep>
     );
   }
 
-  Widget _buildImageSizeSelector(
-      String currentSize, CreationController controller, AppLocalizations l10n) {
+  Widget _buildImageSizeSelector(String currentSize,
+      CreationController controller, AppLocalizations l10n) {
     final sizes = {
       '1024x1024': l10n.square,
       '1920x1080': l10n.landscape,

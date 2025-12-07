@@ -1718,11 +1718,35 @@ abstract class AppLocalizations {
   /// **'Enhancing your idea...'**
   String get enhancingIdea;
 
+  /// No description provided for @enhancingVideoIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhancing your video idea...'**
+  String get enhancingVideoIdea;
+
+  /// No description provided for @enhancingImageIdea.
+  ///
+  /// In en, this message translates to:
+  /// **'Enhancing your image idea...'**
+  String get enhancingImageIdea;
+
   /// No description provided for @preparingPrompt.
   ///
   /// In en, this message translates to:
   /// **'Preparing your prompt...'**
   String get preparingPrompt;
+
+  /// No description provided for @preparingVideoPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your video prompt...'**
+  String get preparingVideoPrompt;
+
+  /// No description provided for @preparingImagePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your image prompt...'**
+  String get preparingImagePrompt;
 
   /// No description provided for @bringingImageToLife.
   ///
@@ -1748,11 +1772,47 @@ abstract class AppLocalizations {
   /// **'Creating your masterpiece...'**
   String get creatingMasterpiece;
 
+  /// No description provided for @creatingVideoMasterpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your video masterpiece...'**
+  String get creatingVideoMasterpiece;
+
+  /// No description provided for @creatingImageMasterpiece.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your image masterpiece...'**
+  String get creatingImageMasterpiece;
+
   /// No description provided for @magicComplete.
   ///
   /// In en, this message translates to:
   /// **'Magic Complete!'**
   String get magicComplete;
+
+  /// No description provided for @videoComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Complete!'**
+  String get videoComplete;
+
+  /// No description provided for @imageComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Complete!'**
+  String get imageComplete;
+
+  /// No description provided for @generatingVideoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating Video'**
+  String get generatingVideoTitle;
+
+  /// No description provided for @generatingImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating Image'**
+  String get generatingImageTitle;
 
   /// No description provided for @library.
   ///
@@ -2282,6 +2342,18 @@ abstract class AppLocalizations {
   /// **'Permissions'**
   String get adminPermissions;
 
+  /// No description provided for @switchToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to App'**
+  String get switchToApp;
+
+  /// No description provided for @administrator.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator'**
+  String get administrator;
+
   /// No description provided for @areYouSure.
   ///
   /// In en, this message translates to:
@@ -2593,6 +2665,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grid'**
   String get gridView;
+
+  /// No description provided for @styleCinematic.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinematic'**
+  String get styleCinematic;
+
+  /// No description provided for @styleAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'Animation'**
+  String get styleAnimation;
+
+  /// No description provided for @styleMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get styleMinimal;
+
+  /// No description provided for @styleModern.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern'**
+  String get styleModern;
+
+  /// No description provided for @styleCorporate.
+  ///
+  /// In en, this message translates to:
+  /// **'Corporate'**
+  String get styleCorporate;
+
+  /// No description provided for @styleSocialMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Media'**
+  String get styleSocialMedia;
+
+  /// No description provided for @styleVintage.
+  ///
+  /// In en, this message translates to:
+  /// **'Vintage'**
+  String get styleVintage;
+
+  /// No description provided for @styleFantasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Fantasy'**
+  String get styleFantasy;
+
+  /// No description provided for @styleDocumentary.
+  ///
+  /// In en, this message translates to:
+  /// **'Documentary'**
+  String get styleDocumentary;
+
+  /// No description provided for @styleHorror.
+  ///
+  /// In en, this message translates to:
+  /// **'Horror'**
+  String get styleHorror;
+
+  /// No description provided for @styleComedy.
+  ///
+  /// In en, this message translates to:
+  /// **'Comedy'**
+  String get styleComedy;
+
+  /// No description provided for @styleSciFi.
+  ///
+  /// In en, this message translates to:
+  /// **'Sci-Fi'**
+  String get styleSciFi;
+
+  /// No description provided for @styleNoir.
+  ///
+  /// In en, this message translates to:
+  /// **'Noir'**
+  String get styleNoir;
+
+  /// No description provided for @styleDreamlike.
+  ///
+  /// In en, this message translates to:
+  /// **'Dreamlike'**
+  String get styleDreamlike;
+
+  /// No description provided for @styleRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'Retro'**
+  String get styleRetro;
+
+  /// No description provided for @styleTealFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal Frame'**
+  String get styleTealFrame;
+
+  /// No description provided for @styleNavyExecutive.
+  ///
+  /// In en, this message translates to:
+  /// **'Navy Executive'**
+  String get styleNavyExecutive;
+
+  /// No description provided for @styleForestGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest Green'**
+  String get styleForestGreen;
+
+  /// No description provided for @styleRoyalPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'Royal Purple'**
+  String get styleRoyalPurple;
+
+  /// No description provided for @styleSunsetOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset Orange'**
+  String get styleSunsetOrange;
+
+  /// No description provided for @stylePromptCinematic.
+  ///
+  /// In en, this message translates to:
+  /// **'cinematic style with dramatic lighting and composition'**
+  String get stylePromptCinematic;
+
+  /// No description provided for @stylePromptAnimation.
+  ///
+  /// In en, this message translates to:
+  /// **'animated style with vibrant colors and smooth motion'**
+  String get stylePromptAnimation;
+
+  /// No description provided for @stylePromptMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'minimal and clean aesthetic with simple compositions'**
+  String get stylePromptMinimal;
+
+  /// No description provided for @stylePromptModern.
+  ///
+  /// In en, this message translates to:
+  /// **'modern and contemporary style'**
+  String get stylePromptModern;
+
+  /// No description provided for @stylePromptCorporate.
+  ///
+  /// In en, this message translates to:
+  /// **'professional corporate style'**
+  String get stylePromptCorporate;
+
+  /// No description provided for @stylePromptSocialMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'engaging social media style with dynamic energy'**
+  String get stylePromptSocialMedia;
+
+  /// No description provided for @stylePromptVintage.
+  ///
+  /// In en, this message translates to:
+  /// **'vintage style with retro aesthetics and aged film look'**
+  String get stylePromptVintage;
+
+  /// No description provided for @stylePromptFantasy.
+  ///
+  /// In en, this message translates to:
+  /// **'fantasy style with magical and otherworldly elements'**
+  String get stylePromptFantasy;
+
+  /// No description provided for @stylePromptDocumentary.
+  ///
+  /// In en, this message translates to:
+  /// **'documentary style with realistic and observational approach'**
+  String get stylePromptDocumentary;
+
+  /// No description provided for @stylePromptHorror.
+  ///
+  /// In en, this message translates to:
+  /// **'horror style with dark atmosphere and suspenseful mood'**
+  String get stylePromptHorror;
+
+  /// No description provided for @stylePromptComedy.
+  ///
+  /// In en, this message translates to:
+  /// **'comedy style with lighthearted and playful energy'**
+  String get stylePromptComedy;
+
+  /// No description provided for @stylePromptSciFi.
+  ///
+  /// In en, this message translates to:
+  /// **'sci-fi style with futuristic technology and advanced aesthetics'**
+  String get stylePromptSciFi;
+
+  /// No description provided for @stylePromptNoir.
+  ///
+  /// In en, this message translates to:
+  /// **'film noir style with high contrast and moody shadows'**
+  String get stylePromptNoir;
+
+  /// No description provided for @stylePromptDreamlike.
+  ///
+  /// In en, this message translates to:
+  /// **'dreamlike style with surreal and ethereal atmosphere'**
+  String get stylePromptDreamlike;
+
+  /// No description provided for @stylePromptRetro.
+  ///
+  /// In en, this message translates to:
+  /// **'retro style with 80s and 90s aesthetic'**
+  String get stylePromptRetro;
+
+  /// No description provided for @stylePromptTealFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'professional teal frame with clean card layout, rounded corners, and soft shadows on light background'**
+  String get stylePromptTealFrame;
+
+  /// No description provided for @stylePromptNavyExecutive.
+  ///
+  /// In en, this message translates to:
+  /// **'executive navy blue style with gold accents, formal composition, and corporate elegance'**
+  String get stylePromptNavyExecutive;
+
+  /// No description provided for @stylePromptForestGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'nature-inspired forest green palette with organic shapes, earthy tones, and calming atmosphere'**
+  String get stylePromptForestGreen;
+
+  /// No description provided for @stylePromptRoyalPurple.
+  ///
+  /// In en, this message translates to:
+  /// **'royal purple elegant style with luxurious gradients, sophisticated typography, and premium feel'**
+  String get stylePromptRoyalPurple;
+
+  /// No description provided for @stylePromptSunsetOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'warm sunset orange gradient with vibrant energy, golden hour lighting, and inspiring mood'**
+  String get stylePromptSunsetOrange;
+
+  /// No description provided for @supportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help & Support'**
+  String get supportTitle;
+
+  /// No description provided for @supportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re here to help! Contact us for any questions or issues.'**
+  String get supportSubtitle;
+
+  /// No description provided for @emailUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Us'**
+  String get emailUs;
+
+  /// No description provided for @responseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Response Time'**
+  String get responseTime;
+
+  /// No description provided for @responseTimeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Within 24-48 hours'**
+  String get responseTimeValue;
+
+  /// No description provided for @faqTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
+  String get faqTitle;
+
+  /// No description provided for @faqQuestion1.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I create a video?'**
+  String get faqQuestion1;
+
+  /// No description provided for @faqAnswer1.
+  ///
+  /// In en, this message translates to:
+  /// **'Simply enter your idea in the text field, choose your preferred style and settings, then tap \'Generate\'. Our AI will create your video automatically.'**
+  String get faqAnswer1;
+
+  /// No description provided for @faqQuestion2.
+  ///
+  /// In en, this message translates to:
+  /// **'How do credits work?'**
+  String get faqQuestion2;
+
+  /// No description provided for @faqAnswer2.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits are used to generate videos and images. Each generation costs a certain amount of credits based on the output type and settings.'**
+  String get faqAnswer2;
+
+  /// No description provided for @faqQuestion3.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I get a refund?'**
+  String get faqQuestion3;
+
+  /// No description provided for @faqAnswer3.
+  ///
+  /// In en, this message translates to:
+  /// **'Please contact our support team for refund requests. We review each case individually.'**
+  String get faqAnswer3;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @privacyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Introduction'**
+  String get privacyIntro;
+
+  /// No description provided for @privacyIntroContent.
+  ///
+  /// In en, this message translates to:
+  /// **'At Aqvioo, we respect the privacy of our users and strive to protect their personal data. This policy aims to explain how we collect, use, and protect information when you use our application.'**
+  String get privacyIntroContent;
+
+  /// No description provided for @privacySection1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Information We Collect'**
+  String get privacySection1Title;
+
+  /// No description provided for @privacySection1Content.
+  ///
+  /// In en, this message translates to:
+  /// **'We collect only the necessary information to operate application services and improve the experience, including:\n\nInformation provided voluntarily by the user:\n• Texts or ideas written by the user to create video or image\n• Images or files uploaded by the user within the app\n• Contact information (such as email) when contacting us for technical support\n\nTechnical information (automatically):\n• Device type, operating system, and app version\n• General usage data (number of uses, errors, session duration)\n\nWe do not collect any data that directly identifies the user without their permission.'**
+  String get privacySection1Content;
+
+  /// No description provided for @privacySection2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Use of Information'**
+  String get privacySection2Title;
+
+  /// No description provided for @privacySection2Content.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the collected information to:\n• Create requested content (texts, videos, audio)\n• Improve app performance and user experience\n• Provide technical support and respond to inquiries\n• Send notifications or updates related to the app (when enabled by user)\n\nWe confirm that all data entered for video creation purposes is not used for marketing purposes or external sharing.'**
+  String get privacySection2Content;
+
+  /// No description provided for @privacySection3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Data Sharing'**
+  String get privacySection3Title;
+
+  /// No description provided for @privacySection3Content.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not share any personal data with third parties.'**
+  String get privacySection3Content;
+
+  /// No description provided for @privacySection4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Data Storage and Security'**
+  String get privacySection4Title;
+
+  /// No description provided for @privacySection4Content.
+  ///
+  /// In en, this message translates to:
+  /// **'• Data is retained temporarily only during the video or image creation process\n• We do not store any user files or texts after the process is completed\n• We use security and encryption protocols to protect all data during transfer between the user and servers'**
+  String get privacySection4Content;
+
+  /// No description provided for @privacySection5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Payment Operations'**
+  String get privacySection5Title;
+
+  /// No description provided for @privacySection5Content.
+  ///
+  /// In en, this message translates to:
+  /// **'• All payment operations are processed through secure service providers such as Apple Pay, STC Pay, Visa, MasterCard, and Mada\n• We do not store any credit card information or financial data within the app\n• All transactions are subject to the security policies of payment providers'**
+  String get privacySection5Content;
+
+  /// No description provided for @privacySection6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'6. User Rights'**
+  String get privacySection6Title;
+
+  /// No description provided for @privacySection6Content.
+  ///
+  /// In en, this message translates to:
+  /// **'The user has the right to:\n• Request deletion of their data or images and texts they sent\n• Stop using the app at any time without any obligation\n• Contact us for clarifications or complaints via email'**
+  String get privacySection6Content;
+
+  /// No description provided for @privacySection7Title.
+  ///
+  /// In en, this message translates to:
+  /// **'7. Privacy Policy Changes'**
+  String get privacySection7Title;
+
+  /// No description provided for @privacySection7Content.
+  ///
+  /// In en, this message translates to:
+  /// **'We may update this policy from time to time in accordance with technical or legal updates. Users will be notified of any significant changes through the app or email.'**
+  String get privacySection7Content;
+
+  /// No description provided for @privacySection8Title.
+  ///
+  /// In en, this message translates to:
+  /// **'8. Contact Us'**
+  String get privacySection8Title;
+
+  /// No description provided for @privacySection8Content.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa'**
+  String get privacySection8Content;
 }
 
 class _AppLocalizationsDelegate
