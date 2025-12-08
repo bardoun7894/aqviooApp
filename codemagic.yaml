@@ -1,9 +1,14 @@
 workflows:
-  ios-workflow:
-    name: iOS Build
+  ios-testflight:
+    name: iOS Build for TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.aqvioo.app
       vars:
         # API Keys - Set these in Codemagic UI under Environment variables
         KIE_API_KEY: $KIE_API_KEY
@@ -13,6 +18,7 @@ workflows:
         TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
         TAP_MERCHANT_ID: $TAP_MERCHANT_ID
         TAP_TEST_MODE: $TAP_TEST_MODE
+        APP_STORE_APPLE_ID: "1234567890"  # Replace with your app's Apple ID
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -32,19 +38,37 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Flutter build iOS (no codesign)
+      - name: Set up code signing settings on Xcode project
         script: |
-          flutter build ios --release --no-codesign
+          xcode-project use-profiles
+      - name: Increment build number
+        script: |
+          #!/bin/sh
+          cd $CM_BUILD_DIR
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      - name: Build IPA for App Store
+        script: |
+          xcode-project build-ipa \
+            --workspace "ios/Runner.xcworkspace" \
+            --scheme "Runner"
     artifacts:
-      - build/ios/iphoneos/*.app
+      - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       email:
         recipients:
-          - your-email@example.com  # Update with your email
+          - mbardouni44@gmail.com
         notify:
           success: true
           failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Internal Testers
 
   ios-development:
     name: iOS Development Build
@@ -98,7 +122,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com  # Update with your email
+          - mbardouni44@gmail.com
         notify:
           success: false
           failure: true
@@ -147,7 +171,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com  # Update with your email
+          - mbardouni44@gmail.com
         notify:
           success: true
           failure: true
