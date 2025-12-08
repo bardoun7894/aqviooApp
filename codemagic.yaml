@@ -123,6 +123,7 @@ workflows:
       email:
         recipients:
           - mbardouni44@gmail.com
+                    - Aseef2023@hotmail.com
         notify:
           success: false
           failure: true
