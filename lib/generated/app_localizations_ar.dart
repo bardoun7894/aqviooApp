@@ -78,6 +78,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get promptRequired => 'يرجى إدخال وصف للمتابعة';
 
   @override
+  String get alreadyGenerating =>
+      'جاري الإنشاء! يرجى الانتظار حتى اكتمال العملية الحالية.';
+
+  @override
   String errorMessage(String error) {
     return 'خطأ: $error';
   }
@@ -528,7 +532,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cost => '2.99';
 
   @override
-  String get currency => 'ر.س';
+  String get currency => '﷼';
 
   @override
   String get loginRequired => 'تسجيل الدخول مطلوب';
@@ -763,7 +767,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String purchaseCredits(int count, String price) {
-    return 'إضافة $count ر.س - $price ريال';
+    return 'إضافة $count ﷼ - $price ريال';
   }
 
   @override
@@ -1570,4 +1574,28 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get privacySection8Content =>
       'إذا كان لديك أي استفسار أو ملاحظة حول سياسة الخصوصية، يمكنك التواصل معنا عبر:\nAqvioo@outlook.sa';
+
+  @override
+  String get notificationVideoReadyTitle => 'الفيديو جاهز!';
+
+  @override
+  String get notificationVideoReadyBody => 'تم إنشاء الفيديو بنجاح.';
+
+  @override
+  String get notificationImageReadyTitle => 'الصورة جاهزة!';
+
+  @override
+  String get notificationImageReadyBody => 'تم إنشاء الصورة بنجاح.';
+
+  @override
+  String get notificationGenerationFailedTitle => 'فشل الإنشاء';
+
+  @override
+  String get notificationTimeoutTitle => 'انتهت مهلة الإنشاء';
+
+  @override
+  String get notificationTimeoutBody => 'يرجى المحاولة مرة أخرى لاحقًا.';
+
+  @override
+  String get saveChanges => 'حفظ التغييرات';
 }

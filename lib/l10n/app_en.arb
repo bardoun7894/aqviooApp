@@ -28,6 +28,7 @@
   "buttonBack": "Back",
   "buttonNext": "Next",
   "promptRequired": "Please enter a prompt to continue",
+  "alreadyGenerating": "Already generating! Please wait for current generation to complete.",
   "errorMessage": "Error: {error}",
   "@errorMessage": {
     "placeholders": {
@@ -190,7 +191,7 @@
   "size": "Size",
   "costSection": "💰 Cost",
   "cost": "2.99",
-  "currency": "ر.س",
+  "currency": "﷼",
   "loginRequired": "Login Required",
   "pleaseLoginToGenerate": "Please login to generate your video.",
   "generateMagic": "Generate Magic",
@@ -278,7 +279,7 @@
   "quickSuggestions": "Quick Suggestions",
   "buyCredits": "Add Balance",
   "currentBalance": "Current Balance",
-  "creditBalance": "{count} ر.س",
+  "creditBalance": "{count} ﷼",
   "@creditBalance": {
     "placeholders": {
       "count": {
@@ -286,7 +287,7 @@
       }
     }
   },
-  "purchaseCredits": "Add {count} ر.س - {price} SAR",
+  "purchaseCredits": "Add {count} ﷼ - {price} SAR",
   "@purchaseCredits": {
     "placeholders": {
       "count": {
@@ -605,5 +606,14 @@
   "privacySection7Title": "7. Privacy Policy Changes",
   "privacySection7Content": "We may update this policy from time to time in accordance with technical or legal updates. Users will be notified of any significant changes through the app or email.",
   "privacySection8Title": "8. Contact Us",
-  "privacySection8Content": "If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa"
+  "privacySection8Content": "If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa",
+
+  "notificationVideoReadyTitle": "Video Ready!",
+  "notificationVideoReadyBody": "Your video has been generated successfully.",
+  "notificationImageReadyTitle": "Image Ready!",
+  "notificationImageReadyBody": "Your image has been generated successfully.",
+  "notificationGenerationFailedTitle": "Generation Failed",
+  "notificationTimeoutTitle": "Generation Timed Out",
+  "notificationTimeoutBody": "Please try again later.",
+  "saveChanges": "Save Changes"
 }

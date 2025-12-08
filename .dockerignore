@@ -1,5 +1,5 @@
-# Build outputs (commented out build/ for simple Docker image)
-# build/
+# Build outputs
+build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies

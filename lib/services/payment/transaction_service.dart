@@ -6,7 +6,9 @@ import 'package:flutter/foundation.dart';
 enum TransactionStatus {
   pending,
   authorized,
-  completed,
+  captured, // Payment fully captured
+  completed, // Deprecated, use captured
+  cancelled, // User cancelled payment
   failed,
   refunded,
 }
@@ -81,7 +83,8 @@ class PaymentTransaction {
       'orderId': orderId,
       'tabbyPaymentId': tabbyPaymentId,
       'createdAt': Timestamp.fromDate(createdAt),
-      'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
+      'completedAt':
+          completedAt != null ? Timestamp.fromDate(completedAt!) : null,
       'metadata': metadata,
     };
   }
@@ -151,7 +154,10 @@ class TransactionService {
         updates['completedAt'] = FieldValue.serverTimestamp();
       }
 
-      await _firestore.collection(_collection).doc(transactionId).update(updates);
+      await _firestore
+          .collection(_collection)
+          .doc(transactionId)
+          .update(updates);
       debugPrint('Transaction $transactionId updated to ${status.name}');
     } catch (e) {
       debugPrint('Error updating transaction: $e');
@@ -208,13 +214,11 @@ class TransactionService {
   /// Get total revenue from completed transactions
   Future<double> getTotalRevenue() async {
     try {
-      final snapshot = await _firestore
-          .collection(_collection)
-          .where('status', whereIn: [
-            TransactionStatus.completed.name,
-            TransactionStatus.authorized.name,
-          ])
-          .get();
+      final snapshot =
+          await _firestore.collection(_collection).where('status', whereIn: [
+        TransactionStatus.completed.name,
+        TransactionStatus.authorized.name,
+      ]).get();
 
       double total = 0.0;
       for (var doc in snapshot.docs) {
@@ -255,7 +259,8 @@ class TransactionService {
       query = query.limit(limit);
     }
 
-    return query.snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => PaymentTransaction.fromFirestore(doc)).toList());
+    return query.snapshots().map((snapshot) => snapshot.docs
+        .map((doc) => PaymentTransaction.fromFirestore(doc))
+        .toList());
   }
 }

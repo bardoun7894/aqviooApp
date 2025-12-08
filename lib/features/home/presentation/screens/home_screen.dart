@@ -16,6 +16,7 @@ import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/style_utils.dart';
+import '../../../../core/widgets/generating_skeleton_card.dart';
 
 import '../../../creation/presentation/providers/creation_provider.dart';
 import '../../../creation/domain/models/creation_item.dart';
@@ -256,6 +257,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _handleGenerate() async {
+    // SAFEGUARD: Check if already generating to prevent accidental duplicates
+    final currentStatus = ref.read(creationControllerProvider).status;
+    if (currentStatus == CreationWizardStatus.generatingScript ||
+        currentStatus == CreationWizardStatus.generatingAudio ||
+        currentStatus == CreationWizardStatus.generatingVideo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.alreadyGenerating),
+          backgroundColor: AppColors.primaryPurple,
+        ),
+      );
+      // Navigate to loading screen to show progress
+      context.push('/magic-loading');
+      return;
+    }
+
     final prompt = _promptController.text.trim();
     if (prompt.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -284,7 +301,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           : AppLocalizations.of(context)!.image;
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (context) {
+           final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+           
+           if (isAnonymous) {
+             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                AppLocalizations.of(context)!.insufficientCredits,
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'You have used your free guest credits.',
+                    style: GoogleFonts.outfit(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign up to get more free credits and continue creating!',
+                    style: GoogleFonts.outfit(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/signup');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.signUp,
+                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+             );
+           }
+           
+           
+           return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -342,8 +410,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
           ],
-        ),
-      );
+        );
+      },
+    );
       return;
     }
 
@@ -1197,10 +1266,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildRecentProjects() {
     final creationState = ref.watch(creationControllerProvider);
-    final recentCreations = creationState.creations
-        .where((item) => item.status == CreationStatus.success)
-        .take(6)
+
+    // Get processing items first (show at top)
+    final processingCreations = creationState.creations
+        .where((item) => item.status == CreationStatus.processing)
         .toList();
+
+    // Get successful items
+    final successCreations = creationState.creations
+        .where((item) => item.status == CreationStatus.success)
+        .toList();
+
+    // Combine: processing first, then success, limit to 6 total
+    final recentCreations = [
+      ...processingCreations,
+      ...successCreations,
+    ].take(6).toList();
 
     if (recentCreations.isEmpty) {
       return const SizedBox.shrink();
@@ -1255,7 +1336,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             itemCount: recentCreations.length,
             itemBuilder: (context, index) {
-              return HomeProjectCard(item: recentCreations[index]);
+              final item = recentCreations[index];
+              // Show skeleton card for processing items
+              if (item.status == CreationStatus.processing) {
+                return GeneratingSkeletonCard(
+                  isVideo: item.type == CreationType.video,
+                  isCompact: true,
+                  prompt: item.prompt,
+                );
+              }
+              return HomeProjectCard(item: item);
             },
           ),
         ],

@@ -397,15 +397,16 @@ class MagicLoadingScreen extends ConsumerWidget {
 
                             const SizedBox(height: 28),
 
-                            // Minimize Button
+                            // Minimize Button - redirect to my-creations
                             TextButton.icon(
                               onPressed: () {
                                 ref
                                     .read(creationControllerProvider.notifier)
                                     .minimizeTask();
-                                Navigator.of(context).pop();
+                                // Navigate to my-creations to see the generating card
+                                context.go('/my-creations');
                               },
-                              icon: const Icon(Icons.arrow_back_rounded,
+                              icon: const Icon(Icons.video_library_rounded,
                                   color: Colors.white, size: 20),
                               label: Text(
                                 AppLocalizations.of(context)!

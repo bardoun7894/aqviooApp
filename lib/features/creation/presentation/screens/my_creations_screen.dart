@@ -9,6 +9,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../../core/widgets/generating_skeleton_card.dart';
 import '../../domain/models/creation_item.dart';
 import '../providers/creation_provider.dart';
 import '../../../../generated/app_localizations.dart';
@@ -506,6 +507,14 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
   }
 
   Widget _buildGridCard(CreationItem item) {
+    // Show skeleton card for processing items
+    if (item.status == CreationStatus.processing) {
+      return GeneratingSkeletonCard(
+        isVideo: item.type == CreationType.video,
+        isCompact: true,
+        prompt: item.prompt,
+      );
+    }
     return GridCreationCard(
       item: item,
       onDelete: () => _showDeleteDialog(item),
@@ -513,6 +522,13 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
   }
 
   Widget _buildCreationCard(CreationItem item) {
+    // Show skeleton card for processing items (list view)
+    if (item.status == CreationStatus.processing) {
+      return GeneratingSkeletonListCard(
+        isVideo: item.type == CreationType.video,
+        prompt: item.prompt,
+      );
+    }
     return CreationCard(
       item: item,
       onDelete: () => _showDeleteDialog(item),

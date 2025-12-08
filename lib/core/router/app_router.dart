@@ -27,7 +27,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final adminAuthState = ref.watch(adminAuthControllerProvider);
 
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: kIsWeb ? '/admin/login' : '/splash',
     refreshListenable: GoRouterRefreshStream(
       ref.watch(authRepositoryProvider).authStateChanges,
     ),

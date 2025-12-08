@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../dashboard/screens/admin_scaffold.dart';
 import '../../auth/providers/admin_auth_provider.dart';
+import '../../auth/models/admin_user.dart';
 
 /// User Detail Screen - View and manage individual user
 class UserDetailScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   int _userCredits = 0;
   List<Map<String, dynamic>> _creations = [];
   bool _isLoading = true;
+  AdminRole? _targetAdminRole;
 
   @override
   void initState() {
@@ -38,10 +40,11 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
 
     try {
       // Get user data - don't require document to exist (phantom users)
-      final userDoc = await _firestore.collection('users').doc(widget.userId).get();
+      final userDoc =
+          await _firestore.collection('users').doc(widget.userId).get();
       _userData = userDoc.exists ? userDoc.data() : <String, dynamic>{};
 
-      // Get credits
+      // Get credits - read balance field first (mobile uses this), fallback to credits
       final creditsDoc = await _firestore
           .collection('users')
           .doc(widget.userId)
@@ -49,9 +52,32 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           .doc('credits')
           .get();
 
-      _userCredits = creditsDoc.exists
-          ? (creditsDoc.data()?['credits'] as int? ?? 0)
-          : 0;
+      if (creditsDoc.exists) {
+        final data = creditsDoc.data();
+        // Prefer balance field (double), fallback to credits (int)
+        // Prefer max of balance/credits to handle sync issues (same as mobile app)
+        double balanceVal = (data?['balance'] as num?)?.toDouble() ?? 0.0;
+        double creditsVal = (data?['credits'] as num?)?.toDouble() ?? 0.0;
+        _userCredits =
+            (balanceVal > creditsVal ? balanceVal : creditsVal).floor();
+      } else {
+        _userCredits = 0;
+      }
+
+      // Check if user is an admin
+      final adminDoc =
+          await _firestore.collection('admins').doc(widget.userId).get();
+      if (adminDoc.exists) {
+        final adminData = adminDoc.data();
+        if (adminData != null && adminData['role'] != null) {
+          _targetAdminRole = AdminRole.values.firstWhere(
+            (r) => r.name == adminData['role'],
+            orElse: () => AdminRole.admin,
+          );
+        }
+      } else {
+        _targetAdminRole = null;
+      }
 
       // Get creations - don't use orderBy since createdAt may be string
       final creationsSnapshot = await _firestore
@@ -133,14 +159,17 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?\d*'))],
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^-?\d*'))
+                ],
                 style: GoogleFonts.outfit(
                   color: isDark ? AppColors.white : AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   labelText: 'Amount (+ to add, - to subtract)',
                   labelStyle: GoogleFonts.outfit(
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
                   hintText: 'e.g., +10 or -5',
                   border: OutlineInputBorder(
@@ -159,7 +188,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 decoration: InputDecoration(
                   labelText: 'Reason',
                   labelStyle: GoogleFonts.outfit(
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -168,7 +198,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 items: const [
                   DropdownMenuItem(value: 'bonus', child: Text('Bonus')),
                   DropdownMenuItem(value: 'refund', child: Text('Refund')),
-                  DropdownMenuItem(value: 'correction', child: Text('Correction')),
+                  DropdownMenuItem(
+                      value: 'correction', child: Text('Correction')),
                   DropdownMenuItem(value: 'other', child: Text('Other')),
                 ],
               ),
@@ -182,7 +213,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 decoration: InputDecoration(
                   labelText: 'Notes (optional)',
                   labelStyle: GoogleFonts.outfit(
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -240,13 +272,14 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
         return;
       }
 
-      // Update credits
+      // Update credits - write both fields for mobile/web compatibility
       await _firestore
           .collection('users')
           .doc(widget.userId)
           .collection('data')
           .doc('credits')
           .update({
+        'balance': newCredits.toDouble(),
         'credits': newCredits,
         'lastUpdated': FieldValue.serverTimestamp(),
       });
@@ -310,6 +343,10 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                   _buildUserInfoCard(isDark),
                   const SizedBox(height: 24),
 
+                  // Admin Role Card
+                  _buildAdminRoleCard(isDark),
+                  const SizedBox(height: 24),
+
                   // Ban Status Card
                   _buildBanStatusCard(isDark),
                   const SizedBox(height: 24),
@@ -323,6 +360,115 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildAdminRoleCard(bool isDark) {
+    // Only show for Super Admins (or those with canManageAdmins permission)
+    final currentUser = ref.watch(adminAuthControllerProvider).adminUser;
+    if (currentUser == null || !currentUser.permissions.canManageAdmins) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkGray : AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.neuShadowDark.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: AppColors.primaryPurple.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.admin_panel_settings_rounded,
+                color: AppColors.primaryPurple,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Admin Access',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.white : AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Manage this user administrative privileges.',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isDark ? AppColors.mediumGray : AppColors.neuShadowDark,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<AdminRole?>(
+                value: _targetAdminRole,
+                isExpanded: true,
+                dropdownColor: isDark ? AppColors.darkGray : AppColors.white,
+                hint: Text(
+                  'Select Role (None)',
+                  style: GoogleFonts.outfit(
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  ),
+                ),
+                items: [
+                  DropdownMenuItem<AdminRole?>(
+                    value: null,
+                    child: Text(
+                      'None (Regular User)',
+                      style: GoogleFonts.outfit(
+                        color: isDark ? AppColors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  ...AdminRole.values.map(
+                    (role) => DropdownMenuItem<AdminRole?>(
+                      value: role,
+                      child: Text(
+                        role.name.toUpperCase(),
+                        style: GoogleFonts.outfit(
+                          color:
+                              isDark ? AppColors.white : AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: _updateAdminRole,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -397,14 +543,17 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          _buildInfoRow('Email', _userData?['email'] ?? 'N/A', Icons.email_outlined, isDark),
+          _buildInfoRow('Email', _userData?['email'] ?? 'N/A',
+              Icons.email_outlined, isDark),
           const SizedBox(height: 12),
-          _buildInfoRow('Phone', _userData?['phoneNumber'] ?? 'N/A', Icons.phone_outlined, isDark),
+          _buildInfoRow('Phone', _userData?['phoneNumber'] ?? 'N/A',
+              Icons.phone_outlined, isDark),
           const SizedBox(height: 12),
           _buildInfoRow(
             'Joined',
             _userData?['createdAt'] != null
-                ? DateFormat('MMM d, y').format((_userData!['createdAt'] as Timestamp).toDate())
+                ? DateFormat('MMM d, y')
+                    .format((_userData!['createdAt'] as Timestamp).toDate())
                 : 'N/A',
             Icons.calendar_today_outlined,
             isDark,
@@ -549,7 +698,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 child: Text(
                   'No creations yet',
                   style: GoogleFonts.outfit(
-                    color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -605,10 +755,13 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                createdAt != null ? DateFormat('MMM d, y • h:mm a').format(createdAt) : 'Unknown date',
+                createdAt != null
+                    ? DateFormat('MMM d, y • h:mm a').format(createdAt)
+                    : 'Unknown date',
                 style: GoogleFonts.outfit(
                   fontSize: 12,
-                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  color:
+                      isDark ? AppColors.mediumGray : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -659,7 +812,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
         color: isDark ? AppColors.darkGray : AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: isBanned
-            ? Border.all(color: const Color(0xFFDC2626).withOpacity(0.5), width: 2)
+            ? Border.all(
+                color: const Color(0xFFDC2626).withOpacity(0.5), width: 2)
             : null,
         boxShadow: [
           BoxShadow(
@@ -680,8 +834,12 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               Row(
                 children: [
                   Icon(
-                    isBanned ? Icons.block_rounded : Icons.verified_user_rounded,
-                    color: isBanned ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                    isBanned
+                        ? Icons.block_rounded
+                        : Icons.verified_user_rounded,
+                    color: isBanned
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF059669),
                     size: 24,
                   ),
                   const SizedBox(width: 12),
@@ -696,7 +854,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: isBanned
                       ? const Color(0xFFDC2626).withOpacity(0.1)
@@ -708,7 +867,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isBanned ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                    color: isBanned
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF059669),
                   ),
                 ),
               ),
@@ -731,14 +892,18 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                         Icon(
                           Icons.calendar_today_outlined,
                           size: 16,
-                          color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Banned on: ${DateFormat('MMM d, y • h:mm a').format(bannedAt.toDate())}',
                           style: GoogleFonts.outfit(
                             fontSize: 13,
-                            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -752,7 +917,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                         Icon(
                           Icons.info_outline,
                           size: 16,
-                          color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -760,7 +927,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                             'Reason: $bannedReason',
                             style: GoogleFonts.outfit(
                               fontSize: 13,
-                              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                              color: isDark
+                                  ? AppColors.mediumGray
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ),
@@ -773,7 +942,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           ],
           const SizedBox(height: 20),
           ElevatedButton.icon(
-            onPressed: () => isBanned ? _showUnbanDialog(isDark) : _showBanDialog(isDark),
+            onPressed: () =>
+                isBanned ? _showUnbanDialog(isDark) : _showBanDialog(isDark),
             icon: Icon(
               isBanned ? Icons.check_circle_outline : Icons.block_rounded,
               size: 18,
@@ -783,7 +953,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isBanned ? const Color(0xFF059669) : const Color(0xFFDC2626),
+              backgroundColor:
+                  isBanned ? const Color(0xFF059669) : const Color(0xFFDC2626),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -838,11 +1009,14 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               decoration: InputDecoration(
                 labelText: 'Reason for ban',
                 labelStyle: GoogleFonts.outfit(
-                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  color:
+                      isDark ? AppColors.mediumGray : AppColors.textSecondary,
                 ),
                 hintText: 'e.g., Violation of terms of service',
                 hintStyle: GoogleFonts.outfit(
-                  color: isDark ? AppColors.mediumGray.withOpacity(0.5) : AppColors.textHint,
+                  color: isDark
+                      ? AppColors.mediumGray.withOpacity(0.5)
+                      : AppColors.textHint,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -873,7 +1047,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Text('Ban User', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+            child: Text('Ban User',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -928,7 +1103,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Text('Unban User', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+            child: Text('Unban User',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -975,6 +1151,69 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           SnackBar(content: Text('Error banning user: $e')),
         );
       }
+    }
+  }
+
+  Future<void> _updateAdminRole(AdminRole? newRole) async {
+    setState(() => _isLoading = true);
+    try {
+      if (newRole == null) {
+        // Remove admin access
+        await _firestore.collection('admins').doc(widget.userId).delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Admin access removed')),
+          );
+        }
+      } else {
+        // Grant/Update admin access
+        final adminData = AdminUser(
+          id: widget.userId,
+          email: _userData?['email'] ?? '',
+          displayName: _userData?['displayName'] ?? 'Admin',
+          role: newRole,
+          permissions: _getPermissionsForRole(newRole),
+          createdAt: DateTime.now(),
+        ).toMap();
+
+        // Use set with merge true to preserve fields if exists, but we want to overwrite role/permissions
+        await _firestore.collection('admins').doc(widget.userId).set(
+              adminData,
+              SetOptions(merge: true),
+            );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Role updated to ${newRole.name}')),
+          );
+        }
+      }
+
+      setState(() => _targetAdminRole = newRole);
+    } catch (e) {
+      debugPrint('Error updating admin role: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating role: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  AdminPermissions _getPermissionsForRole(AdminRole role) {
+    switch (role) {
+      case AdminRole.superAdmin:
+        return AdminPermissions.superAdmin();
+      case AdminRole.admin:
+        return AdminPermissions.admin();
+      case AdminRole.moderator:
+        return AdminPermissions.moderator();
+      case AdminRole.support:
+        return AdminPermissions.support();
     }
   }
 

@@ -12,12 +12,12 @@ import '../../../../services/payment/transaction_service.dart';
 
 // Balance packages in SAR
 class BalancePackage {
-  final double amount;  // SAR to add to balance
-  final double price;   // Price in SAR
+  final double amount; // SAR to add to balance
+  final double price; // Price in SAR
   final String? badge;
   final bool isPopular;
-  final int videosCount;  // How many videos this can generate
-  final int imagesCount;  // How many images this can generate
+  final int videosCount; // How many videos this can generate
+  final int imagesCount; // How many images this can generate
 
   const BalancePackage({
     required this.amount,
@@ -32,8 +32,19 @@ class BalancePackage {
 // Video: 2.99 SAR, Image: 1.99 SAR
 const List<BalancePackage> balancePackages = [
   BalancePackage(amount: 15, price: 15.0, videosCount: 5, imagesCount: 7),
-  BalancePackage(amount: 30, price: 30.0, isPopular: true, badge: 'Popular', videosCount: 10, imagesCount: 15),
-  BalancePackage(amount: 50, price: 50.0, badge: 'Best Value', videosCount: 16, imagesCount: 25),
+  BalancePackage(
+      amount: 30,
+      price: 30.0,
+      isPopular: true,
+      badge: 'Popular',
+      videosCount: 10,
+      imagesCount: 15),
+  BalancePackage(
+      amount: 50,
+      price: 50.0,
+      badge: 'Best Value',
+      videosCount: 16,
+      imagesCount: 25),
   BalancePackage(amount: 100, price: 100.0, videosCount: 33, imagesCount: 50),
 ];
 
@@ -305,7 +316,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     child: ElevatedButton(
                       onPressed: _isProcessing ? null : _handlePurchase,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2ACE82), // Tap green color
+                        backgroundColor:
+                            const Color(0xFF2ACE82), // Tap green color
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -521,40 +533,49 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       // Get user information
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('User not authenticated');
+        if (!mounted) return;
+        _showErrorSnackBar(l10n.paymentFailedMessage);
+        return;
       }
 
       final orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+      String? transactionId;
 
-      // Create transaction record in Firestore (pending status)
-      final transactionId = await TransactionService().createTransaction(
-        userId: user.uid,
-        userName: user.displayName ?? 'User',
-        userEmail: user.email ?? 'N/A',
-        amount: package.price,
-        currency: 'SAR',
-        credits: package.amount.toInt(),  // Store balance amount as credits for compatibility
-        orderId: orderId,
-        paymentMethod: 'Tap',
-        metadata: {
-          'balanceAmount': package.amount,
-          'packagePrice': package.price,
-          'videosCount': package.videosCount,
-          'imagesCount': package.imagesCount,
-        },
-      );
+      try {
+        // Create transaction record in Firestore (pending status)
+        transactionId = await TransactionService().createTransaction(
+          userId: user.uid,
+          userName: user.displayName ?? 'User',
+          userEmail: user.email ?? 'N/A',
+          amount: package.price,
+          currency: 'SAR',
+          credits: package.amount.toInt(),
+          orderId: orderId,
+          paymentMethod: 'Tap',
+          metadata: {
+            'balanceAmount': package.amount,
+            'packagePrice': package.price,
+            'videosCount': package.videosCount,
+            'imagesCount': package.imagesCount,
+          },
+        );
+      } catch (e) {
+        debugPrint('❌ Failed to create transaction record: $e');
+        // Continue with payment even if record creation fails
+      }
 
       // Get user name parts
       final nameParts = (user.displayName ?? 'User').split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : 'User';
-      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      final lastName =
+          nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-      // Configure SDK with current language
+      // Determine language
       final lang = Localizations.localeOf(context).languageCode;
-      TapPaymentService().configureApp(lang: lang);
+      final isArabic = lang == 'ar';
 
-      // Start Tap Payment (Official SDK)
-      final result = await TapPaymentService().startPayment(
+      // Start Tap Payment (Checkout SDK) with complete configuration
+      final paymentResult = await TapPaymentService().startPayment(
         amount: package.price,
         currency: 'SAR',
         customerEmail: user.email ?? 'user@aqvioo.com',
@@ -562,73 +583,136 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         customerFirstName: firstName,
         customerLastName: lastName,
         orderId: orderId,
-        itemName: '${package.amount.toStringAsFixed(0)} SAR Balance',
-        itemDescription: 'Aqvioo AI Video/Image Generation Balance',
+        itemName:
+            '${package.amount.toStringAsFixed(0)} SAR ${isArabic ? "رصيد" : "Balance"}',
+        itemDescription: isArabic
+            ? 'رصيد أكفيو لإنشاء الفيديو والصور بالذكاء الاصطناعي'
+            : 'Aqvioo AI Video/Image Generation Balance',
+        lang: lang,
+        themeMode: TapThemeMode.light, // Match app's light theme
+        supportedPaymentMethods: null, // ALL payment methods
       );
-
-      // Parse result
-      final paymentResult = TapPaymentService().parseResult(result);
 
       if (!mounted) return;
 
-      if (paymentResult.success) {
-        // Update transaction status to completed
-        await TransactionService().updateTransactionStatus(
-          transactionId: transactionId,
-          status: TransactionStatus.authorized,
+      // Handle payment result
+      if (paymentResult.success && paymentResult.chargeId != null) {
+        // Verify transaction via API for additional security
+        final verification = await TapPaymentService().verifyTransaction(
+          paymentResult.chargeId!,
         );
 
-        // Add balance in SAR
-        await ref
-            .read(creditsControllerProvider.notifier)
-            .addBalance(package.amount);
+        if (!mounted) return;
+
+        if (verification.success &&
+            (verification.isCaptured || verification.isAuthorized)) {
+          // Payment verified - Update transaction status
+          if (transactionId != null) {
+            try {
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: verification.isCaptured
+                    ? TransactionStatus.captured
+                    : TransactionStatus.authorized,
+              );
+            } catch (e) {
+              debugPrint('❌ Failed to update transaction status: $e');
+            }
+          }
+
+          // Add balance in SAR
+          try {
+            await ref
+                .read(creditsControllerProvider.notifier)
+                .addBalance(package.amount);
+          } catch (e) {
+            debugPrint('❌ Failed to add balance: $e');
+            // Still show success as payment was captured
+          }
+
+          if (!mounted) return;
+          _showSuccessDialog(package);
+        } else {
+          // Verification failed
+          if (transactionId != null) {
+            try {
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: TransactionStatus.failed,
+              );
+            } catch (e) {
+              debugPrint('❌ Failed to update transaction status: $e');
+            }
+          }
+
+          if (!mounted) return;
+          _showErrorSnackBar(
+            isArabic
+                ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.'
+                : 'Payment verification failed. Please contact support if amount was deducted.',
+          );
+        }
+      } else if (paymentResult.success) {
+        // Success but no charge ID - still add balance (fallback)
+        if (transactionId != null) {
+          try {
+            await TransactionService().updateTransactionStatus(
+              transactionId: transactionId,
+              status: TransactionStatus.authorized,
+            );
+          } catch (e) {
+            debugPrint('❌ Failed to update transaction status: $e');
+          }
+        }
+
+        try {
+          await ref
+              .read(creditsControllerProvider.notifier)
+              .addBalance(package.amount);
+        } catch (e) {
+          debugPrint('❌ Failed to add balance: $e');
+        }
 
         if (!mounted) return;
         _showSuccessDialog(package);
       } else {
-        // Update transaction status to failed
-        await TransactionService().updateTransactionStatus(
-          transactionId: transactionId,
-          status: TransactionStatus.failed,
-        );
+        // Payment failed or cancelled
+        if (transactionId != null) {
+          try {
+            await TransactionService().updateTransactionStatus(
+              transactionId: transactionId,
+              status: paymentResult.isCancelled
+                  ? TransactionStatus.cancelled
+                  : TransactionStatus.failed,
+            );
+          } catch (e) {
+            debugPrint('❌ Failed to update transaction status: $e');
+          }
+        }
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(paymentResult.message),
-            backgroundColor: Colors.red,
-          ),
-        );
+
+        // Don't show error for user cancellation
+        if (!paymentResult.isCancelled) {
+          final errorMessage = TapPaymentService().getErrorMessage(
+            errorCode: paymentResult.errorCode,
+            isArabic: isArabic,
+          );
+          _showErrorSnackBar(errorMessage);
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ Tap Payment Error: $e');
+      debugPrint('❌ Stack: $stackTrace');
+
       if (!mounted) return;
 
-      // Show error dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            l10n.paymentFailedTitle,
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            l10n.paymentFailedMessage,
-            style: GoogleFonts.outfit(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'OK',
-                style: GoogleFonts.outfit(color: AppColors.primaryPurple),
-              ),
-            ),
-          ],
-        ),
+      final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+      _showErrorDialog(
+        title: l10n.paymentFailedTitle,
+        message: isArabic
+            ? 'حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.'
+            : 'An error occurred while processing payment. Please try again.',
       );
     } finally {
       if (mounted) {
@@ -637,6 +721,49 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         });
       }
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.outfit(),
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _showErrorDialog({required String title, required String message}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'OK',
+              style: GoogleFonts.outfit(color: AppColors.primaryPurple),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSuccessDialog(CreditPackage package) {

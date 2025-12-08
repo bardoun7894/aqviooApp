@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 
 import 'services/payment/tap_payment_service.dart';
 import 'core/services/cache_manager.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,25 +44,46 @@ void main() async {
       print('✅ CacheManager initialized');
     }
 
+    // Initialize notification service (only on mobile)
+    if (!kIsWeb) {
+      try {
+        await NotificationService().init();
+        await NotificationService().requestPermissions();
+        if (kDebugMode) {
+          print('✅ NotificationService initialized');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ NotificationService init failed: $e');
+        }
+      }
+    }
+
     // Initialize Tap Payments SDK (only on mobile platforms, not web)
     if (!kIsWeb) {
       final tapSecretKey = dotenv.env['TAP_SECRET_KEY'] ?? '';
-      // Bundle ID for iOS, package name for Android
-      const bundleId = 'com.aqvioo.akvioo';
+      final tapPublicKey = dotenv.env['TAP_PUBLIC_KEY'] ?? '';
+      final tapMerchantId = dotenv.env['TAP_MERCHANT_ID'] ?? '';
       if (kDebugMode) {
-        print('🔵 Tap SECRET_KEY from env: ${tapSecretKey.isNotEmpty ? "${tapSecretKey.substring(0, 10)}..." : "empty"}');
-        print('🔵 Tap Bundle ID: $bundleId');
+        print(
+            '🔵 Tap SECRET_KEY from env: ${tapSecretKey.isNotEmpty ? "${tapSecretKey.substring(0, 10)}..." : "empty"}');
+        print(
+            '🔵 Tap PUBLIC_KEY from env: ${tapPublicKey.isNotEmpty ? "${tapPublicKey.substring(0, 10)}..." : "empty"}');
+        print(
+            '🔵 Tap MERCHANT_ID from env: ${tapMerchantId.isNotEmpty ? tapMerchantId : "empty"}');
       }
-      if (tapSecretKey.isNotEmpty) {
+      if (tapSecretKey.isNotEmpty && tapPublicKey.isNotEmpty) {
         TapPaymentService().initialize(
           secretKey: tapSecretKey,
-          bundleId: bundleId,
+          publicKey: tapPublicKey,
+          merchantId: tapMerchantId,
+          isProduction: true,
         );
         if (kDebugMode) {
           print('🔵 Tap Payment initialized successfully');
         }
       } else {
-        print('❌ Tap Payment SECRET_KEY is empty!');
+        print('❌ Tap Payment keys are empty!');
       }
     }
 

@@ -1284,10 +1284,12 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     switch (status) {
       case TransactionStatus.completed:
       case TransactionStatus.authorized:
+      case TransactionStatus.captured:
         return const Color(0xFF059669);
       case TransactionStatus.pending:
         return const Color(0xFFF59E0B);
       case TransactionStatus.failed:
+      case TransactionStatus.cancelled:
         return const Color(0xFFDC2626);
       case TransactionStatus.refunded:
         return const Color(0xFF6366F1);
@@ -1298,10 +1300,12 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
     switch (status) {
       case TransactionStatus.completed:
       case TransactionStatus.authorized:
+      case TransactionStatus.captured:
         return Icons.check_circle_rounded;
       case TransactionStatus.pending:
         return Icons.pending_rounded;
       case TransactionStatus.failed:
+      case TransactionStatus.cancelled:
         return Icons.cancel_rounded;
       case TransactionStatus.refunded:
         return Icons.replay_rounded;

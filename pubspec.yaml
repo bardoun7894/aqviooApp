@@ -58,6 +58,9 @@ dependencies:
   
   # Animation Packages
   flutter_staggered_animations: ^1.1.1
+
+  # Local Notifications
+  flutter_local_notifications: ^17.2.3
   simple_animations: ^5.0.2
   supercharged: ^2.1.1
 
@@ -72,7 +75,8 @@ dependencies:
   permission_handler: ^11.3.1
 
   # Payments - Official Tap Payments Gateway
-  go_sell_sdk_flutter: ^2.4.27  # Official Tap Payments SDK from github.com/Tap-Payments
+  checkout_flutter: ^1.0.4  # Official Tap Checkout SDK from developers.tap.company
+  crypto: ^3.0.6  # For hash string generation required by Tap Checkout
   wakelock_plus: ^1.4.0
 
   # Admin Dashboard (Web)
@@ -92,6 +96,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

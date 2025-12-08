@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -7,6 +8,7 @@ import '../../../../services/ai/ai_service.dart';
 import '../../../../services/ai/composite_ai_service.dart';
 import '../../../../services/ai/kie_ai_service.dart';
 import '../../../../features/auth/data/auth_repository.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../domain/models/creation_config.dart';
 import '../../domain/models/creation_item.dart';
 import '../../data/repositories/creation_repository.dart';
@@ -205,11 +207,30 @@ class CreationController extends Notifier<CreationState> {
     }
   }
 
+  // Track if generation is in progress to prevent duplicates
+  bool _isGenerating = false;
+
   // Main generation method using NEW Kie AI Service
   Future<void> generateVideo({
     String? prompt,
     String? imagePath,
   }) async {
+    // SAFEGUARD 1: Prevent duplicate generation if already in progress
+    if (_isGenerating) {
+      debugPrint('⚠️ Generation already in progress, ignoring duplicate request');
+      return;
+    }
+
+    // SAFEGUARD 2: Check if already in generating state
+    if (state.status == CreationWizardStatus.generatingScript ||
+        state.status == CreationWizardStatus.generatingAudio ||
+        state.status == CreationWizardStatus.generatingVideo) {
+      debugPrint('⚠️ Already generating, ignoring duplicate request');
+      return;
+    }
+
+    _isGenerating = true;
+
     try {
       // Store the ORIGINAL user prompt (before enhancement)
       final originalPrompt = prompt ?? state.config.prompt;
@@ -318,79 +339,186 @@ class CreationController extends Notifier<CreationState> {
         );
       }
     } catch (e) {
+      debugPrint('❌ Generation error: $e');
       state = state.copyWith(
         status: CreationWizardStatus.error,
         errorMessage: e.toString(),
       );
+    } finally {
+      // Always reset the generating flag
+      _isGenerating = false;
     }
   }
 
   Future<void> _pollTask(CreationItem item) async {
     if (item.taskId == null) return;
 
+    final notificationService = NotificationService();
+    final isVideo = item.type == CreationType.video;
+    int consecutiveNetworkErrors = 0;
+    const maxConsecutiveNetworkErrors = 10; // Increased tolerance for background mode
+    int consecutiveTimeouts = 0;
+    const maxConsecutiveTimeouts = 3; // Track timeouts separately
+
     // Enable wake lock to keep polling alive even when screen is locked
     try {
       await WakelockPlus.enable();
     } catch (e) {
-      print('Failed to enable wake lock: $e');
+      debugPrint('Failed to enable wake lock: $e');
     }
 
     try {
-      // Poll for 5 minutes max
-      for (int i = 0; i < 60; i++) {
+      // Poll for 10 minutes max (120 iterations * 5 seconds = 10 minutes)
+      // Video generation can take 3-5 minutes
+      for (int i = 0; i < 120; i++) {
         await Future.delayed(const Duration(seconds: 5));
 
         try {
           final status = await _kieAI.checkTaskStatus(item.taskId!);
 
+          // Reset error counters on successful response
+          if (status['isNetworkError'] != true) {
+            consecutiveNetworkErrors = 0;
+            consecutiveTimeouts = 0;
+          }
+
           if (status['state'] == 'success') {
+            final url = status['videoUrl'] ?? status['imageUrl'];
             final updatedItem = item.copyWith(
               status: CreationStatus.success,
-              url: status['videoUrl'],
+              url: url,
             );
             await _updateItem(updatedItem);
+
+            // Show notification if app is in background (uses localized strings automatically)
+            try {
+              if (isVideo) {
+                await notificationService.showVideoCompleteNotification(
+                  payload: item.id,
+                );
+              } else {
+                await notificationService.showImageCompleteNotification(
+                  payload: item.id,
+                );
+              }
+            } catch (notifError) {
+              debugPrint('Failed to show notification: $notifError');
+            }
 
             // If this is the currently watched task, update wizard status
             if (state.currentTaskId == item.id) {
               state = state.copyWith(
                 status: CreationWizardStatus.success,
-                videoUrl: status['videoUrl'],
+                videoUrl: url,
                 currentStepMessage: "magicComplete",
               );
             }
             return;
           } else if (status['state'] == 'fail') {
+            final errorMessage = status['error'] ?? 'Generation failed';
             final updatedItem = item.copyWith(
               status: CreationStatus.failed,
-              errorMessage: status['error'],
+              errorMessage: errorMessage,
             );
             await _updateItem(updatedItem);
+
+            // Show error notification (uses localized strings automatically)
+            try {
+              await notificationService.showErrorNotification(
+                body: errorMessage,
+                payload: item.id,
+              );
+            } catch (notifError) {
+              debugPrint('Failed to show error notification: $notifError');
+            }
 
             if (state.currentTaskId == item.id) {
               state = state.copyWith(
                 status: CreationWizardStatus.error,
-                errorMessage: status['error'],
+                errorMessage: errorMessage,
               );
             }
             return;
+          } else if (status['isNetworkError'] == true) {
+            consecutiveNetworkErrors++;
+            debugPrint('Network error $consecutiveNetworkErrors/$maxConsecutiveNetworkErrors');
+
+            // If too many consecutive network errors, fail gracefully
+            if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
+              final updatedItem = item.copyWith(
+                status: CreationStatus.failed,
+                errorMessage: 'Network connection lost. Your content may still be generating - check My Creations later.',
+              );
+              await _updateItem(updatedItem);
+
+              if (state.currentTaskId == item.id) {
+                state = state.copyWith(
+                  status: CreationWizardStatus.error,
+                  errorMessage: 'Network connection lost. Check My Creations later.',
+                );
+              }
+              return;
+            }
           }
+          // Continue polling for 'waiting' state
+        } on TimeoutException catch (e) {
+          // Handle timeout specifically - common when app is backgrounded
+          consecutiveTimeouts++;
+          debugPrint('Polling timeout ${consecutiveTimeouts}/$maxConsecutiveTimeouts for ${item.id}: $e');
+
+          if (consecutiveTimeouts >= maxConsecutiveTimeouts) {
+            // After multiple timeouts, wait longer before next attempt
+            debugPrint('Multiple timeouts detected, waiting 30 seconds before retry...');
+            await Future.delayed(const Duration(seconds: 30));
+            consecutiveTimeouts = 0; // Reset and try again
+          }
+          // Continue polling - don't count as network error
         } catch (e) {
-          print('Polling error for ${item.id}: $e');
-          // Continue polling on network error
+          debugPrint('Polling error for ${item.id}: $e');
+
+          // Check if it's a timeout-related error message
+          if (e.toString().contains('TimeoutException') || e.toString().contains('timeout')) {
+            consecutiveTimeouts++;
+            if (consecutiveTimeouts >= maxConsecutiveTimeouts) {
+              debugPrint('Multiple timeouts detected, waiting 30 seconds before retry...');
+              await Future.delayed(const Duration(seconds: 30));
+              consecutiveTimeouts = 0;
+            }
+            continue; // Don't count as network error, just retry
+          }
+
+          consecutiveNetworkErrors++;
+
+          // If too many consecutive errors, fail gracefully but don't mark as failed
+          // since the task might still be processing on the server
+          if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
+            debugPrint('Too many polling errors, stopping polling but keeping as processing');
+            // Don't mark as failed - user can manually refresh later
+            return;
+          }
         }
       }
 
-      // Timeout
+      // Timeout after 10 minutes
       final timeoutItem = item.copyWith(
         status: CreationStatus.failed,
-        errorMessage: 'Generation timed out',
+        errorMessage: 'Generation timed out. This usually means high server load - please try again.',
       );
       await _updateItem(timeoutItem);
+
+      // Show timeout notification (uses localized strings automatically)
+      try {
+        await notificationService.showTimeoutNotification(
+          payload: item.id,
+        );
+      } catch (notifError) {
+        debugPrint('Failed to show timeout notification: $notifError');
+      }
 
       if (state.currentTaskId == item.id) {
         state = state.copyWith(
           status: CreationWizardStatus.error,
-          errorMessage: 'Generation timed out',
+          errorMessage: 'Generation timed out. Please try again.',
         );
       }
     } finally {
@@ -398,7 +526,7 @@ class CreationController extends Notifier<CreationState> {
       try {
         await WakelockPlus.disable();
       } catch (e) {
-        print('Failed to disable wake lock: $e');
+        debugPrint('Failed to disable wake lock: $e');
       }
     }
   }

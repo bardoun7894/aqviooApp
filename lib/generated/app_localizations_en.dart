@@ -78,6 +78,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promptRequired => 'Please enter a prompt to continue';
 
   @override
+  String get alreadyGenerating =>
+      'Already generating! Please wait for current generation to complete.';
+
+  @override
   String errorMessage(String error) {
     return 'Error: $error';
   }
@@ -528,7 +532,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cost => '2.99';
 
   @override
-  String get currency => 'ر.س';
+  String get currency => '﷼';
 
   @override
   String get loginRequired => 'Login Required';
@@ -762,7 +766,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String purchaseCredits(int count, String price) {
-    return 'Add $count ر.س - $price SAR';
+    return 'Add $count ﷼ - $price SAR';
   }
 
   @override
@@ -1583,4 +1587,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacySection8Content =>
       'If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa';
+
+  @override
+  String get notificationVideoReadyTitle => 'Video Ready!';
+
+  @override
+  String get notificationVideoReadyBody =>
+      'Your video has been generated successfully.';
+
+  @override
+  String get notificationImageReadyTitle => 'Image Ready!';
+
+  @override
+  String get notificationImageReadyBody =>
+      'Your image has been generated successfully.';
+
+  @override
+  String get notificationGenerationFailedTitle => 'Generation Failed';
+
+  @override
+  String get notificationTimeoutTitle => 'Generation Timed Out';
+
+  @override
+  String get notificationTimeoutBody => 'Please try again later.';
+
+  @override
+  String get saveChanges => 'Save Changes';
 }

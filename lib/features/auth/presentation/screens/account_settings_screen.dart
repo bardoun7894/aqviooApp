@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../admin/auth/providers/admin_auth_provider.dart';
 import '../../../../generated/app_localizations.dart';
@@ -487,6 +488,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     final adminAuthState = ref.watch(adminAuthControllerProvider);
     final isAdmin = adminAuthState.isAuthenticated;
     final l10n = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider);
+    final isArabic = locale.languageCode == 'ar';
 
     return Container(
       decoration: BoxDecoration(
@@ -518,9 +521,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           _buildSettingsTile(
             icon: Icons.language_rounded,
             title: l10n.language,
-            subtitle: l10n.english,
+            subtitle: isArabic ? l10n.arabic : l10n.english,
             iconColor: AppColors.primaryPurple,
-            onTap: () {},
+            onTap: () => _showLanguageDialog(context, ref, l10n, locale),
           ),
           _buildDivider(),
           _buildSettingsTile(
@@ -545,6 +548,120 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             onTap: () => context.push('/support'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(
+    BuildContext context, WidgetRef ref, AppLocalizations l10n, Locale currentLocale) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          l10n.selectLanguage,
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w700),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(
+              context: context,
+              ref: ref,
+              title: l10n.english,
+              subtitle: 'English',
+              languageCode: 'en',
+              isSelected: currentLocale.languageCode == 'en',
+            ),
+            const SizedBox(height: 12),
+            _buildLanguageOption(
+              context: context,
+              ref: ref,
+              title: l10n.arabic,
+              subtitle: 'العربية',
+              languageCode: 'ar',
+              isSelected: currentLocale.languageCode == 'ar',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.cancel,
+              style: GoogleFonts.outfit(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String title,
+    required String subtitle,
+    required String languageCode,
+    required bool isSelected,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          ref.read(localeProvider.notifier).setLocale(Locale(languageCode));
+          Navigator.pop(context);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primaryPurple.withOpacity(0.1)
+                : AppColors.lightGray.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border.all(color: AppColors.primaryPurple, width: 2)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppColors.primaryPurple
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.primaryPurple,
+                  size: 24,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -811,7 +928,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              'Save Changes',
+                              AppLocalizations.of(context)!.saveChanges,
                               style: GoogleFonts.outfit(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,

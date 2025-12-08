@@ -230,6 +230,12 @@ abstract class AppLocalizations {
   /// **'Please enter a prompt to continue'**
   String get promptRequired;
 
+  /// No description provided for @alreadyGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Already generating! Please wait for current generation to complete.'**
+  String get alreadyGenerating;
+
   /// No description provided for @errorMessage.
   ///
   /// In en, this message translates to:
@@ -1121,7 +1127,7 @@ abstract class AppLocalizations {
   /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'ر.س'**
+  /// **'﷼'**
   String get currency;
 
   /// No description provided for @loginRequired.
@@ -1571,7 +1577,7 @@ abstract class AppLocalizations {
   /// No description provided for @purchaseCredits.
   ///
   /// In en, this message translates to:
-  /// **'Add {count} ر.س - {price} SAR'**
+  /// **'Add {count} ﷼ - {price} SAR'**
   String purchaseCredits(int count, String price);
 
   /// No description provided for @videosOrImages.
@@ -3091,6 +3097,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If you have any questions or comments about the privacy policy, you can contact us at:\nAqvioo@outlook.sa'**
   String get privacySection8Content;
+
+  /// No description provided for @notificationVideoReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Video Ready!'**
+  String get notificationVideoReadyTitle;
+
+  /// No description provided for @notificationVideoReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your video has been generated successfully.'**
+  String get notificationVideoReadyBody;
+
+  /// No description provided for @notificationImageReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Ready!'**
+  String get notificationImageReadyTitle;
+
+  /// No description provided for @notificationImageReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your image has been generated successfully.'**
+  String get notificationImageReadyBody;
+
+  /// No description provided for @notificationGenerationFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Failed'**
+  String get notificationGenerationFailedTitle;
+
+  /// No description provided for @notificationTimeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation Timed Out'**
+  String get notificationTimeoutTitle;
+
+  /// No description provided for @notificationTimeoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again later.'**
+  String get notificationTimeoutBody;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
 }
 
 class _AppLocalizationsDelegate
