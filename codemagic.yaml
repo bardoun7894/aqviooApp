@@ -18,7 +18,8 @@ workflows:
         TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
         TAP_MERCHANT_ID: $TAP_MERCHANT_ID
         TAP_TEST_MODE: $TAP_TEST_MODE
-        APP_STORE_APPLE_ID: "6756280618"  # Aqvioo app Apple ID      flutter: stable
+        APP_STORE_APPLE_ID: "6756280618"  # Aqvioo app Apple ID
+      flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
@@ -123,7 +124,11 @@ workflows:
       email:
         recipients:
           - mbardouni44@gmail.com
+<<<<<<< HEAD
                     - Aseef2023@hotmail.com
+=======
+          - Aseef2023@hotmail.com
+>>>>>>> 1bf99b1 (feat: Refactor iOS workflow to `ios-testflight` with App Store Connect integration, code signing, build number increment, IPA build, and TestFlight publishing, plus updated email recipients.)
         notify:
           success: false
           failure: true
@@ -173,7 +178,11 @@ workflows:
       email:
         recipients:
           - mbardouni44@gmail.com
+<<<<<<< HEAD
                     - Aseef2023@hotmail.com
+=======
+          - Aseef2023@hotmail.com
+>>>>>>> 1bf99b1 (feat: Refactor iOS workflow to `ios-testflight` with App Store Connect integration, code signing, build number increment, IPA build, and TestFlight publishing, plus updated email recipients.)
         notify:
           success: true
           failure: true
