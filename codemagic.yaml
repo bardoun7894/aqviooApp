@@ -123,12 +123,8 @@ workflows:
     publishing:
       email:
         recipients:
-          - mbardouni44@gmail.com
-<<<<<<< HEAD
-                    - Aseef2023@hotmail.com
-=======
-          - Aseef2023@hotmail.com
->>>>>>> 1bf99b1 (feat: Refactor iOS workflow to `ios-testflight` with App Store Connect integration, code signing, build number increment, IPA build, and TestFlight publishing, plus updated email recipients.)
+          - "mbardouni44@gmail.com"
+          - "Aseef2023@hotmail.com"
         notify:
           success: false
           failure: true
