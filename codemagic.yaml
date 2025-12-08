@@ -59,8 +59,8 @@ workflows:
     publishing:
       email:
         recipients:
-          - mbardouni44@gmail.com
-                    - Aseef2023@hotmail.com
+          - "mbardouni44@gmail.com"                    - Aseef2023@hotmail.com
+                    - "Aseef2023@hotmail.com"
         notify:
           success: true
           failure: true
