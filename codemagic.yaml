@@ -9,8 +9,7 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.aqvioo.akvioo
-              provisioning_profile: Aqvioo App Store
-      vars:
+      provisioning_profile: "Aqvioo App Store"      vars:
         # API Keys - Set these in Codemagic UI under Environment variables
         KIE_API_KEY: $KIE_API_KEY
         OPENAI_API_KEY: $OPENAI_API_KEY
