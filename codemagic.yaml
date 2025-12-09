@@ -18,7 +18,7 @@ workflows:
         TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
         TAP_MERCHANT_ID: $TAP_MERCHANT_ID
         TAP_TEST_MODE: $TAP_TEST_MODE
-        APP_STORE_APPLE_ID: "6756280618"  # Aqvioo app Apple ID
+        APP_STORE_APPLE_ID: "1234567890"  # Replace with your app's Apple ID
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -60,8 +60,8 @@ workflows:
     publishing:
       email:
         recipients:
-          - "mbardouni44@gmail.com"
           - "Aseef2023@hotmail.com"
+          - "mbardouni44@gmail.com"
         notify:
           success: true
           failure: true
@@ -123,7 +123,6 @@ workflows:
     publishing:
       email:
         recipients:
-          - "mbardouni44@gmail.com"
           - "Aseef2023@hotmail.com"
         notify:
           success: false
@@ -173,7 +172,6 @@ workflows:
     publishing:
       email:
         recipients:
-          - "mbardouni44@gmail.com"
           - "Aseef2023@hotmail.com"
         notify:
           success: true
