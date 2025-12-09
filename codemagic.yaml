@@ -18,7 +18,7 @@ workflows:
         TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
         TAP_MERCHANT_ID: $TAP_MERCHANT_ID
         TAP_TEST_MODE: $TAP_TEST_MODE
-        APP_STORE_APPLE_ID: "1234567890"  # Replace with your app's Apple ID
+        APP_STORE_APPLE_ID: "6756293641"  # Aqvioo App (new App Store Connect record)
       flutter: stable
       xcode: latest
       cocoapods: default
