@@ -7,10 +7,9 @@ workflows:
       app_store_connect: codemagic
     environment:
       ios_signing:
-        provisioning_profiles:
-          - profile: "Aqvioo App Store"
-      vars:
-        KIE_API_KEY: $KIE_API_KEY
+    distribution_type: app_store
+      bundle_identifier: com.aqvioo.akvioo
+      KIE_API_KEY: $KIE_API_KEY
         OPENAI_API_KEY: $OPENAI_API_KEY
         ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
         TAP_SECRET_KEY: $TAP_SECRET_KEY
