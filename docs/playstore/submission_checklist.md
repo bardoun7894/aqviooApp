@@ -4,13 +4,7 @@
 ---
 
 ## Pre-Submission Checklist
-
-### 1. Google Play Console Setup
-- [ ] Create Google Play Developer account ($25 one-time fee)
-  - https://play.google.com/console/signup
-- [ ] Verify identity (may take 24-48 hours)
-- [ ] Set up payment profile for receiving payments
-
+ 
 ### 2. Create New App
 - [ ] Go to Google Play Console → Create app
 - [ ] Select: **App** (not Game)
@@ -19,14 +13,7 @@
 - [ ] Accept Developer Program Policies
 
 ---
-
-## App Content Section
-
-### 3. Privacy Policy
-- [ ] Host privacy policy online (use GitHub Pages, website, or Notion)
-- [ ] URL Example: `https://aqvioo.com/privacy-policy`
-- [ ] Enter URL in Play Console
-
+ 
 ### 4. App Access
 - [ ] Select: "All functionality is available without special access"
 - [ ] OR provide test credentials if login required
@@ -145,39 +132,19 @@ Version 1.0.0
 - [ ] Respond to user feedback
 
 ---
-
-## Release Tracks Explained
-
-| Track | Purpose | Review Time |
-|-------|---------|-------------|
-| **Internal Testing** | Up to 100 testers, fastest | Instant (no review) |
-| **Closed Testing** | Limited testers, by invite | 1-3 days |
-| **Open Testing** | Public beta, anyone can join | 1-3 days |
-| **Production** | Full public release | 1-7 days |
-
-**Recommendation**: Start with Internal Testing, then Closed, then Production.
-
----
+ 
 
 ## Quick Reference - Key Files
 
 | File | Location |
 |------|----------|
 | App Bundle | `build/app/outputs/bundle/release/app-release.aab` |
-| ProGuard Mapping | `build/app/outputs/mapping/release/mapping.txt` |
 | English Listing | `docs/playstore/en/store_listing.md` |
 | Arabic Listing | `docs/playstore/ar/store_listing.md` |
-| Privacy Policy | `docs/playstore/privacy_policy.md` |
-| Data Safety | `docs/playstore/data_safety.md` |
-| Content Rating | `docs/playstore/content_rating_answers.md` |
-| Screenshots Guide | `docs/playstore/screenshot_requirements.md` |
-
----
 
 ## العربية - ملخص سريع
 
-### الخطوات الرئيسية:
-1. إنشاء حساب مطور Google Play (25$ رسوم لمرة واحدة)
+### الخطوات الرئيسية: 
 2. إنشاء تطبيق جديد في Console
 3. إكمال قسم "محتوى التطبيق"
 4. إضافة قائمة المتجر (إنجليزي + عربي)
