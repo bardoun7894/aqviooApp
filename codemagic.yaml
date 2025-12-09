@@ -8,7 +8,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.aqvioo.app
+        bundle_identifier: com.aqvioo.akvioo
       vars:
         # API Keys - Set these in Codemagic UI under Environment variables
         KIE_API_KEY: $KIE_API_KEY
