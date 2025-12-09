@@ -10,8 +10,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.aqvioo.akvioo
       provisioning_profile: "Aqvioo App Store
-    vars:        # API Keys - Set these in Codemagic UI under Environment variables
-        KIE_API_KEY: $KIE_API_KEY
+    vars:        KIE_API_KEY: $KIE_API_KEY
         OPENAI_API_KEY: $OPENAI_API_KEY
         ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
         TAP_SECRET_KEY: $TAP_SECRET_KEY
