@@ -165,8 +165,8 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                                   },
                                 )
                               : ListView.builder(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
                                   physics: const BouncingScrollPhysics(),
                                   itemCount: filteredCreations.length,
                                   itemBuilder: (context, index) {
@@ -737,7 +737,8 @@ class _CreationCardState extends State<CreationCard>
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  child: const Icon(Icons.delete_outline_rounded,
+                      color: Colors.red),
                 ),
                 title: Text(
                   l10n.delete,
@@ -1094,21 +1095,21 @@ class _CreationCardState extends State<CreationCard>
                                   color: AppColors.textHint,
                                 ),
                               ),
-                              // More options icon (long press to see options)
+                              // Delete button
                               if (widget.onDelete != null) ...[
                                 const SizedBox(width: 8),
                                 GestureDetector(
-                                  onTap: _showOptionsMenu,
+                                  onTap: widget.onDelete,
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: AppColors.textSecondary.withOpacity(0.1),
+                                      color: Colors.red.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
-                                      Icons.more_horiz_rounded,
+                                      Icons.delete_outline_rounded,
                                       size: 18,
-                                      color: AppColors.textSecondary,
+                                      color: Colors.red,
                                     ),
                                   ),
                                 ),
@@ -1280,7 +1281,8 @@ class _GridCreationCardState extends State<GridCreationCard> {
                     color: Colors.red.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  child: const Icon(Icons.delete_outline_rounded,
+                      color: Colors.red),
                 ),
                 title: Text(
                   l10n.delete,
@@ -1499,26 +1501,33 @@ class _GridCreationCardState extends State<GridCreationCard> {
                           ),
                         ),
 
-                      // More options button (tap for menu)
+                      // Delete button (tap for delete confirmation)
                       if (widget.onDelete != null)
                         Positioned(
                           top: 8,
                           left: 8,
                           child: GestureDetector(
-                            onTap: _showOptionsMenu,
+                            onTap: widget.onDelete,
                             child: Container(
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.4),
+                                color: Colors.red.withOpacity(0.85),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: Colors.white.withOpacity(0.4),
                                   width: 1,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: const Icon(
-                                Icons.more_horiz_rounded,
+                                Icons.delete_outline_rounded,
                                 size: 16,
                                 color: Colors.white,
                               ),
