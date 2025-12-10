@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'dart:async';
 import 'dart:io'; // Added for File support
 
@@ -43,6 +42,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
   bool _areControlsVisible = true;
   Timer? _hideTimer;
   late AnimationController _controlsAnimationController;
+  // ignore: unused_field
   late Animation<double> _controlsOpacity;
   late AnimationController _titleAnimationController;
   // Animation<double>? _titleOpacity; // Removed as per instruction
@@ -84,6 +84,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     });
   }
 
+  // ignore: unused_element
   void _toggleControls() {
     setState(() {
       _areControlsVisible = !_areControlsVisible;
@@ -196,6 +197,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
 
   bool _isLooping = true;
 
+  // ignore: unused_element
   void _togglePlayPause() {
     setState(() {
       if (_isPlaying) {
@@ -290,6 +292,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     }
   }
 
+  // ignore: unused_element
   void _showPromptInspector() {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(

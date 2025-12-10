@@ -7,9 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/responsive_extensions.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/neumorphic_container.dart';
 import '../providers/auth_provider.dart';
 import '../../../../generated/app_localizations.dart';
 

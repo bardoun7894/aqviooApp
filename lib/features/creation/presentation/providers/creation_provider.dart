@@ -75,6 +75,7 @@ class CreationState {
 }
 
 class CreationController extends Notifier<CreationState> {
+  // ignore: unused_element
   AIService get _aiService => ref.read(aiServiceProvider);
   KieAIService get _kieAI => ref.read(kieAIServiceProvider);
   final CreationRepository _repository = CreationRepository();

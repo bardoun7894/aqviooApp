@@ -743,6 +743,7 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
   }
 
   Widget _buildUserListItem(Map<String, dynamic> user, bool isDark) {
+    // ignore: unused_local_variable
     final createdAt = (user['createdAt'] as Timestamp?)?.toDate();
     final status = user['status'] as String? ?? 'active';
     final isBanned = status == 'banned';

@@ -431,6 +431,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     final creationState = ref.watch(creationControllerProvider);
 
     // Listen for state changes
