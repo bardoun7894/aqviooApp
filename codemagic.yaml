@@ -10,11 +10,11 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.aqvioo.akvioo
       vars:
-          KIE_API_KEY: $KIE_API_KEY
-          OPENAI_API_KEY: $OPENAI_API_KEY
-          ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
-          TAP_SECRET_KEY: $TAP_SECRET_KEY
-          TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
+        KIE_API_KEY: $KIE_API_KEY
+        OPENAI_API_KEY: $OPENAI_API_KEY
+        ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
+        TAP_SECRET_KEY: $TAP_SECRET_KEY
+        TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
         TAP_MERCHANT_ID: $TAP_MERCHANT_ID
         TAP_TEST_MODE: $TAP_TEST_MODE
         APP_STORE_APPLE_ID: "6756293641"
