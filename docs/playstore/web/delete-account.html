@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Account - Aqvioo | حذف الحساب</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .lang-switch {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lang-switch button {
+            padding: 10px 25px;
+            margin: 0 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .lang-switch button:hover,
+        .lang-switch button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .section p,
+        .section li {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .section ul {
+            padding-left: 25px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .warning-box p {
+            color: #856404;
+            margin: 0;
+        }
+
+        .email-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .email-box p {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .email-box a {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .email-box a:hover {
+            transform: scale(1.05);
+        }
+
+        .timeline {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #888;
+        }
+
+        /* RTL for Arabic */
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .rtl .timeline-number {
+            margin-right: 0;
+            margin-left: 15px;
+        }
+
+        .rtl ul {
+            padding-left: 0;
+            padding-right: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .logo h1 {
+                font-size: 2rem;
+            }
+
+            .lang-switch button {
+                padding: 8px 20px;
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Aqvioo</h1>
+        </div>
+
+        <div class="lang-switch">
+            <button id="btn-en" class="active" onclick="showLang('en')">English</button>
+            <button id="btn-ar" onclick="showLang('ar')">العربية</button>
+        </div>
+
+        <!-- English Content -->
+        <div id="content-en" class="content active">
+            <h2>Delete Your Account</h2>
+
+            <div class="section">
+                <h3>How to Request Account Deletion</h3>
+                <p>If you wish to delete your Aqvioo account and all associated data, please follow these steps:</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-number">1</div>
+                        <div>Send an email to our support team with the subject line "Account Deletion Request"</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">2</div>
+                        <div>Include the phone number associated with your Aqvioo account</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">3</div>
+                        <div>We will verify your identity and process your request</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">4</div>
+                        <div>Your account and data will be deleted within 30 days</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="email-box">
+                <p>Send your deletion request to:</p>
+                <a href="mailto:aqvioo@outlook.sa?subject=Account%20Deletion%20Request">aqvioo@outlook.sa</a>
+            </div>
+
+            <div class="section">
+                <h3>What Data Will Be Deleted</h3>
+                <ul>
+                    <li><strong>Account Information:</strong> Your phone number and authentication data</li>
+                    <li><strong>User Content:</strong> All text prompts and uploaded images</li>
+                    <li><strong>Created Content:</strong> All AI-generated videos and images</li>
+                    <li><strong>Credit Balance:</strong> Any remaining credits in your account</li>
+                    <li><strong>Transaction History:</strong> Records of your purchases</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ Important Notice</h4>
+                <p>Account deletion is permanent and cannot be undone. All your data, including unused credits and
+                    created content, will be permanently removed. Please make sure to download any content you wish to
+                    keep before requesting deletion.</p>
+            </div>
+
+            <div class="section">
+                <h3>Data Retention After Deletion</h3>
+                <p>After your account is deleted:</p>
+                <ul>
+                    <li>Your personal data will be removed from our systems within 30 days</li>
+                    <li>Generated content stored on third-party AI services (Kie.ai) will expire within 60 days</li>
+                    <li>Anonymized analytics data may be retained for service improvement</li>
+                    <li>We may retain certain data as required by law for legal compliance</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h3>Questions?</h3>
+                <p>If you have any questions about the deletion process or your data, please contact us at <a
+                        href="mailto:aqvioo@outlook.sa">aqvioo@outlook.sa</a></p>
+            </div>
+        </div>
+
+        <!-- Arabic Content -->
+        <div id="content-ar" class="content rtl">
+            <h2>حذف حسابك</h2>
+
+            <div class="section">
+                <h3>كيفية طلب حذف الحساب</h3>
+                <p>إذا كنت ترغب في حذف حسابك في Aqvioo وجميع البيانات المرتبطة به، يرجى اتباع الخطوات التالية:</p>
+
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-number">1</div>
+                        <div>أرسل بريداً إلكترونياً لفريق الدعم بعنوان "طلب حذف الحساب"</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">2</div>
+                        <div>قم بتضمين رقم الهاتف المرتبط بحسابك في Aqvioo</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">3</div>
+                        <div>سنتحقق من هويتك ونعالج طلبك</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-number">4</div>
+                        <div>سيتم حذف حسابك وبياناتك خلال 30 يوماً</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="email-box">
+                <p>أرسل طلب الحذف إلى:</p>
+                <a href="mailto:aqvioo@outlook.sa?subject=طلب%20حذف%20الحساب">aqvioo@outlook.sa</a>
+            </div>
+
+            <div class="section">
+                <h3>البيانات التي سيتم حذفها</h3>
+                <ul>
+                    <li><strong>معلومات الحساب:</strong> رقم هاتفك وبيانات المصادقة</li>
+                    <li><strong>محتوى المستخدم:</strong> جميع الأوصاف النصية والصور المرفوعة</li>
+                    <li><strong>المحتوى المُنشأ:</strong> جميع الفيديوهات والصور المولدة بالذكاء الاصطناعي</li>
+                    <li><strong>رصيد الائتمان:</strong> أي رصيد متبقي في حسابك</li>
+                    <li><strong>سجل المعاملات:</strong> سجلات مشترياتك</li>
+                </ul>
+            </div>
+
+            <div class="warning-box">
+                <h4>⚠️ تنبيه مهم</h4>
+                <p>حذف الحساب نهائي ولا يمكن التراجع عنه. سيتم إزالة جميع بياناتك بشكل دائم، بما في ذلك الرصيد غير
+                    المستخدم والمحتوى المُنشأ. يرجى التأكد من تنزيل أي محتوى ترغب في الاحتفاظ به قبل طلب الحذف.</p>
+            </div>
+
+            <div class="section">
+                <h3>الاحتفاظ بالبيانات بعد الحذف</h3>
+                <p>بعد حذف حسابك:</p>
+                <ul>
+                    <li>سيتم إزالة بياناتك الشخصية من أنظمتنا خلال 30 يوماً</li>
+                    <li>المحتوى المُنشأ المخزن على خدمات الذكاء الاصطناعي سينتهي خلال 60 يوماً</li>
+                    <li>قد يتم الاحتفاظ ببيانات التحليلات المجهولة لتحسين الخدمة</li>
+                    <li>قد نحتفظ ببعض البيانات كما يقتضي القانون للامتثال القانوني</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h3>أسئلة؟</h3>
+                <p>إذا كانت لديك أي أسئلة حول عملية الحذف أو بياناتك، يرجى التواصل معنا على <a
+                        href="mailto:aqvioo@outlook.sa">aqvioo@outlook.sa</a></p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 Aqvioo. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        function showLang(lang) {
+            // Hide all content
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.lang-switch button').forEach(el => el.classList.remove('active'));
+
+            // Show selected content
+            document.getElementById('content-' + lang).classList.add('active');
+            document.getElementById('btn-' + lang).classList.add('active');
+        }
+
+        // Check URL parameter for language
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang');
+        if (lang === 'ar') {
+            showLang('ar');
+        }
+    </script>
+</body>
+
+</html>
