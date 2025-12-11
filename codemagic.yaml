@@ -47,10 +47,22 @@ workflows:
           agvtool new-version -all $NEW_BUILD_NUMBER
       - name: Build IPA for App Store
         script: |
-          xcode-project build-ipa \
-            --workspace "ios/Runner.xcworkspace" \
-            --scheme "Runner" \
-            --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=4LGGU2TT4V"
+          # Archive
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $CM_BUILD_DIR/build/ios/Runner.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM=4LGGU2TT4V \
+            CODE_SIGN_IDENTITY="Apple Distribution"
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath $CM_BUILD_DIR/build/ios/Runner.xcarchive \
+            -exportPath $CM_BUILD_DIR/build/ios/ipa \
+            -exportOptionsPlist $CM_BUILD_DIR/ios/ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
