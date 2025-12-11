@@ -53,16 +53,18 @@ workflows:
             -sdk iphoneos \
             -configuration Release \
             -archivePath $CM_BUILD_DIR/build/ios/Runner.xcarchive \
+            -destination "generic/platform=iOS" \
             archive \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=4LGGU2TT4V \
-            CODE_SIGN_IDENTITY="Apple Distribution"
+            -allowProvisioningUpdates
 
           # Export IPA
           xcodebuild -exportArchive \
             -archivePath $CM_BUILD_DIR/build/ios/Runner.xcarchive \
             -exportPath $CM_BUILD_DIR/build/ios/ipa \
-            -exportOptionsPlist $CM_BUILD_DIR/ios/ExportOptions.plist
+            -exportOptionsPlist $CM_BUILD_DIR/ios/ExportOptions.plist \
+            -allowProvisioningUpdates
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
