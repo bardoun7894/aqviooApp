@@ -45,6 +45,16 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Build outputs - APK, AAB, IPA
+*.apk
+*.aab
+*.ipa
+*.app
+build/
+/android/app/build/
+/ios/build/
+/ios/Runner.xcarchive/
+
 # Node.js
 node_modules/
 npm-debug.log*
