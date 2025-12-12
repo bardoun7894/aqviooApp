@@ -1,11 +1,11 @@
 workflows:
   ios-testflight:
-  name: iOS Build for TestFlight
-  max_build_duration: 120
-  instance_type: mac_mini_m2
-  integrations:
-    app_store_connect: Aqvioo API Key
-  environment:
+    name: iOS Build for TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Aqvioo API Key
+    environment:
     vars:
       KIE_API_KEY: $KIE_API_KEY
       OPENAI_API_KEY: $OPENAI_API_KEY
