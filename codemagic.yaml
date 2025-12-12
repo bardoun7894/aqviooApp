@@ -1,185 +1,82 @@
-workflows:
-  ios-testflight:
-    name: iOS Build for TestFlight
-    max_build_duration: 120
-    instance_type: mac_mini_m2
-    integrations:
-      app_store_connect: Aqvioo API Key
-    environment:
-      vars:
-        KIE_API_KEY: $KIE_API_KEY
-        OPENAI_API_KEY: $OPENAI_API_KEY
-        ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
-        TAP_SECRET_KEY: $TAP_SECRET_KEY
-        TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
-        TAP_MERCHANT_ID: $TAP_MERCHANT_ID
-        TAP_TEST_MODE: $TAP_TEST_MODE
-        APP_STORE_APPLE_ID: "6756293641"
-      flutter: stable
-      xcode: latest
-      cocoapods: default
-    scripts:
-      - name: Create .env file
-        script: |
-          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
-      - name: Get Flutter packages
-        script: flutter pub get
-      - name: Install CocoaPods dependencies
-        script: cd ios && pod install
-      - name: Initialize keychain
-        script: keychain initialize
-      - name: Fetch signing files
-        script: |
-          app-store-connect fetch-signing-files com.aqvioo.akvioo \
-            --type IOS_APP_STORE \
-            --create
-      - name: Add certificates to keychain
-        script: keychain add-certificates
-      - name: Set up code signing settings
-        script: xcode-project use-profiles
-      - name: Increment build number
-        script: |
-          cd $CM_BUILD_DIR/ios
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "0")
-          if [ -z "$LATEST_BUILD_NUMBER" ] || [ "$LATEST_BUILD_NUMBER" = "" ]; then
-            LATEST_BUILD_NUMBER=0
-          fi
-          NEW_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
-          echo "Setting build number to: $NEW_BUILD_NUMBER"
-          agvtool new-version -all $NEW_BUILD_NUMBER
-      - name: Build IPA for App Store
-        script: |
-          flutter build ipa --release \
-            --export-options-plist=$HOME/export_options.plist
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - $HOME/export_options.plist
-    publishing:
-      email:
-        recipients:
-          - "Aseef2023@hotmail.com"
-          - "mbardouni44@gmail.com"
-        notify:
-          success: true
-          failure: true
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        submit_to_app_store: true
-        release_type: MANUAL
-        beta_groups:
-          - Internal Testers
-
-  ios-development:
-    name: iOS Development Build
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-    environment:
-      vars:
-        KIE_API_KEY: $KIE_API_KEY
-        OPENAI_API_KEY: $OPENAI_API_KEY
-        ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
-        TAP_SECRET_KEY: $TAP_SECRET_KEY
-        TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
-        TAP_MERCHANT_ID: $TAP_MERCHANT_ID
-        TAP_TEST_MODE: $TAP_TEST_MODE
-      flutter: stable
-      xcode: latest
-      cocoapods: default
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: develop
-          include: true
-        - pattern: feature/*
-          include: true
-    scripts:
-      - name: Create .env file
-        script: |
-          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
-      - name: Get Flutter packages
-        script: flutter pub get
-      - name: Install CocoaPods dependencies
-        script: cd ios && pod install
-      - name: Flutter analyze
-        script: flutter analyze --no-fatal-infos
-      - name: Flutter build iOS (no codesign)
-        script: flutter build ios --release --no-codesign
-    artifacts:
-      - build/ios/iphoneos/*.app
-      - /tmp/xcodebuild_logs/*.log
-    publishing:
-      email:
-        recipients:
-          - "Aseef2023@hotmail.com"
-        notify:
-          success: false
-          failure: true
-
-  android-workflow:
-    name: Android Build
-    max_build_duration: 60
-    instance_type: mac_mini_m2
-    environment:
-      vars:
-        KIE_API_KEY: $KIE_API_KEY
-        OPENAI_API_KEY: $OPENAI_API_KEY
-        ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
-        TAP_SECRET_KEY: $TAP_SECRET_KEY
-        TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
-        TAP_MERCHANT_ID: $TAP_MERCHANT_ID
-        TAP_TEST_MODE: $TAP_TEST_MODE
-      flutter: stable
-      java: 17
-    scripts:
-      - name: Create .env file
-        script: |
-          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
-      - name: Get Flutter packages
-        script: flutter pub get
-      - name: Flutter analyze
-        script: flutter analyze --no-fatal-infos
-      - name: Flutter build APK
-        script: flutter build apk --release
-      - name: Flutter build App Bundle
-        script: flutter build appbundle --release
-    artifacts:
-      - build/**/outputs/**/*.apk
-      - build/**/outputs/**/*.aab
-      - build/**/outputs/**/mapping.txt
-    publishing:
-      email:
-        recipients:
-          - "Aseef2023@hotmail.com"
-          - "mbardouni44@gmail.com"
-        notify:
-          success: true
-          failure: true
-      app_store_connect:
-        auth: integration 
-        submit_to_testflight: true
-        submit_to_app_store: true
-        release_type: MANUAL
-        beta_groups:
-          - Internal Testers
-
+ios-testflight:
+  name: iOS Build for TestFlight
+  max_build_duration: 120
+  instance_type: mac_mini_m2
+  integrations:
+    app_store_connect: Aqvioo API Key
+  environment:
+    vars:
+      KIE_API_KEY: $KIE_API_KEY
+      OPENAI_API_KEY: $OPENAI_API_KEY
+      ELEVEN_LABS_API_KEY: $ELEVEN_LABS_API_KEY
+      TAP_SECRET_KEY: $TAP_SECRET_KEY
+      TAP_PUBLIC_KEY: $TAP_PUBLIC_KEY
+      TAP_MERCHANT_ID: $TAP_MERCHANT_ID
+      TAP_TEST_MODE: $TAP_TEST_MODE
+      APP_STORE_APPLE_ID: "6756293641"
+    flutter: stable
+    xcode: latest
+    cocoapods: default
+    ios_signing:                    # ← أضف هذا الجزء كاملاً
+      provisioning_profiles:
+        - certificate_reference: App Store
+          bundle_identifier: com.aqvioo.akvioo
+          app_id: com.aqvioo.akvioo
+  scripts:
+    - name: Create .env file
+      script: |
+        echo "KIE_API_KEY=$KIE_API_KEY" >> .env
+        echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+        echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
+        echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
+        echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
+        echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
+        echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
+    - name: Get Flutter packages
+      script: flutter pub get
+    - name: Install CocoaPods dependencies
+      script: cd ios && pod install
+    - name: Initialize keychain
+      script: keychain initialize
+    - name: Fetch signing files
+      script: |
+        app-store-connect fetch-signing-files com.aqvioo.akvioo \
+          --type IOS_APP_STORE \
+          --create
+    - name: Add certificates to keychain
+      script: keychain add-certificates
+    - name: Set up code signing settings
+      script: xcode-project use-profiles
+    - name: Increment build number
+      script: |
+        cd $CM_BUILD_DIR/ios
+        LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "0")
+        if [ -z "$LATEST_BUILD_NUMBER" ] || [ "$LATEST_BUILD_NUMBER" = "" ]; then
+          LATEST_BUILD_NUMBER=0
+        fi
+        NEW_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
+        echo "Setting build number to: $NEW_BUILD_NUMBER"
+        agvtool new-version -all $NEW_BUILD_NUMBER
+    - name: Build IPA for App Store
+      script: |
+        flutter build ipa --release \
+          --export-options-plist=$HOME/export_options.plist
+  artifacts:
+    - build/ios/ipa/*.ipa
+    - /tmp/xcodebuild_logs/*.log
+    - $HOME/export_options.plist
+  publishing:
+    email:
+      recipients:
+        - "Aseef2023@hotmail.com"
+        - "mbardouni44@gmail.com"
+      notify:
+        success: true
+        failure: true
+    app_store_connect:
+      auth: integration
+      submit_to_testflight: true
+      submit_to_app_store: true
+      release_type: MANUAL
+      beta_groups:
+        - Internal Testers
