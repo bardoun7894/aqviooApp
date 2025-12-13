@@ -4,16 +4,13 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: "code magic" # IMPORTANT: Update this to match the name in Codemagic UI > Teams/User > Integrations
+      app_store_connect: code magic
     environment:
-      # Removed 'app_store_connect' group as we are using the 'integrations' block above.
-      # Ensure these API Keys are set as environment variables in Codemagic UI:
-      # - KIE_API_KEY, OPENAI_API_KEY, ELEVEN_LABS_API_KEY
-      # - TAP_SECRET_KEY, TAP_PUBLIC_KEY, TAP_MERCHANT_ID, TAP_TEST_MODE
+      # Ensure these API Keys are set as environment variables in Codemagic UI
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
-        APP_ID: "com.aqvioo.akvioo" 
+        APP_ID: "com.aqvioo.akvioo"
       flutter: stable
       xcode: latest
       cocoapods: default
