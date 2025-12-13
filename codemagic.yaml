@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m1
     integrations:
-      app_store_connect: "Code Magic" # IMPORTANT: Update this to match the name in Codemagic UI > Teams/User > Integrations
+      app_store_connect: "code magic" # IMPORTANT: Update this to match the name in Codemagic UI > Teams/User > Integrations
     environment:
       # Removed 'app_store_connect' group as we are using the 'integrations' block above.
       # Ensure these API Keys are set as environment variables in Codemagic UI:
