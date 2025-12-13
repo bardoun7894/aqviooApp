@@ -31,11 +31,13 @@ workflows:
         script: cd ios && pod install
       - name: Build IPA
         script: |
-          flutter build ipa --release \
-            --build-number=$BUILD_NUMBER \
-            --export-options-plist=~/export_options.plist
+          flutter build ios --release --no-codesign
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
+      - "**/*.ipa"
     publishing:
       email:
         recipients:
