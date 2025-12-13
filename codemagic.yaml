@@ -60,7 +60,6 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - $HOME/export_options.plist
     publishing:
       email:
         recipients:
