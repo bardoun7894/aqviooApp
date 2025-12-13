@@ -3,12 +3,20 @@ workflows:
     name: iOS TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m1
+
     integrations:
-      app_store_connect: Aqvioo API Key
+      app_store_connect: Aqvioo API Key  # الاسم كما يظهر في Codemagic Developer Portal integration
+
     environment:
+      vars:
+        APP_ID: "com.aqvioo.akvioo"
+        XCODE_WORKSPACE: "Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
       flutter: stable
       xcode: latest
       cocoapods: default
+      java: 17
+
     scripts:
       - name: Create .env file
         script: |
@@ -19,24 +27,48 @@ workflows:
           echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
           echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
           echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
-      - name: Set up code signing
+
+      - name: Set up keychain and code signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE --create
+          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
-      - name: Get dependencies
-        script: flutter pub get
-      - name: Install pods
-        script: cd ios && pod install
+
+      - name: Flutter dependencies
+        script: |
+          flutter pub get
+
+      - name: CocoaPods install
+        script: |
+          cd ios
+          pod install
+
+      - name: Set BUILD_NUMBER from App Store
+        script: |
+          cd ios
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID" 2>/dev/null || echo "0")
+          NEW_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
+          echo "BUILD_NUMBER=$NEW_BUILD_NUMBER" >> $CM_ENV_FILE
+          echo "Using build number: $NEW_BUILD_NUMBER"
+
       - name: Build IPA
-        script: flutter build ipa --release --build-number=$BUILD_NUMBER
+        script: |
+          flutter build ipa --release --build-number=$BUILD_NUMBER
+
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+
     publishing:
       email:
         recipients:
-          - Aseef2023@hotmail.com
+          - "Aseef2023@hotmail.com"
+        notify:
+          success: true
+          failure: true
       app_store_connect:
-        auth: integration
+        auth: integration          # يستخدم تكامل Aqvioo API Key
         submit_to_testflight: true
+        submit_to_app_store: true # اختياري لو حابب ترفع مباشرة للـ App Store
