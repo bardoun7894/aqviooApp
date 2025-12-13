@@ -1,61 +1,12 @@
-workflows:
-  ios-testflight:
-    name: iOS TestFlight
-    max_build_duration: 120
-    instance_type: mac_mini_m1
+ workflows:
+  ios-release-no-shorebird:
+    name: iOS Release
     environment:
-      groups:
-        - app_store_connect
-      vars:
-        XCODE_WORKSPACE: "Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
-        APP_ID: "com.aqvioo.akvioo"
-        APP_STORE_CONNECT_ISSUER_ID: "0c31fe63-e8b1-4b25-adff-8ae358854e30"
-        APP_STORE_CONNECT_KEY_IDENTIFIER: "B286MRLYW7"
       flutter: stable
       xcode: latest
-      cocoapods: default
-      java: 17
     scripts:
-      - name: Create .env file
-        script: |
-          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
-      - name: Set up keychain and provision details
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files "$APP_ID" --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
-      - name: Flutter dependencies
-        script: |
-          flutter pub get
-      - name: CocoaPods Install
-        script: |
-          find . -name "Podfile" -exec dirname {} \; | xargs -I {} pod install --project-directory={}
-      - name: Flutter Build IPA
-        script: |
-          flutter build ipa --release \
-            --build-number=$BUILD_NUMBER \
-            --export-options-plist=/usr/local/share/codemagic/profiles/export_options.plist
+      - flutter build ios --simulator
+      - mkdir -p build/ios/ipa
+      - zip -r build/ios/ipa/Runner.app.zip build/ios/iphonesimulator/Runner.app
     artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
-    publishing:
-      email:
-        recipients:
-          - Aseef2023@hotmail.com
-        notify:
-          success: true
-          failure: true
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
+      - build/ios/ipa/Runner.app.zip 
