@@ -3,14 +3,15 @@ workflows:
     name: iOS TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: code magic
     environment:
-      # Ensure these API Keys are set as environment variables in Codemagic UI
+      groups:
+        - app_store_connect
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
         APP_ID: "com.aqvioo.akvioo"
+        APP_STORE_CONNECT_ISSUER_ID: "0c31fe63-e8b1-4b25-adff-8ae358854e30"
+        APP_STORE_CONNECT_KEY_IDENTIFIER: "B286MRLYW7"
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -54,5 +55,7 @@ workflows:
           success: true
           failure: true
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
