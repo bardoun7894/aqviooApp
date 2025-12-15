@@ -30,7 +30,7 @@ workflows:
       - name: Install pods
         script: cd ios && pod install
       - name: Build IPA
-        script: flutter build ipa --release --build-number=$BUILD_NUMBER
+        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
@@ -39,4 +39,4 @@ workflows:
           - Aseef2023@hotmail.com
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        submit_to_testflight: false
