@@ -11,11 +11,6 @@ workflows:
           - app store bew
         certificates:
           - cert mac
-      # --- MISSING SECTION ADDED BELOW ---
-      # ios_signing:
-      #   distribution_type: app_store
-      #   bundle_identifier: com.aqvioo.akvioo # <--- REPLACE THIS with your actual Bundle ID
-      # -----------------------------------
       flutter: stable
       xcode: latest
       cocoapods: default
