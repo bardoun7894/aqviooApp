@@ -35,7 +35,7 @@ workflows:
         script: find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
         # Using --export-method=app-store handles the plist automatically
-        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
+        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=ios/ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
