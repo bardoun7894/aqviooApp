@@ -6,6 +6,11 @@ workflows:
     integrations:
       app_store_connect: Aqvioo API Key
     environment:
+      # --- MISSING SECTION ADDED BELOW ---
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.aqvioo.akvioo # <--- REPLACE THIS with your actual Bundle ID
+      # -----------------------------------
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -27,8 +32,9 @@ workflows:
       - name: Get dependencies
         script: flutter pub get
       - name: Install pods
-        script: cd ios && pod install
+        script: find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
+        # Using --export-method=app-store handles the plist automatically
         script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
     artifacts:
       - build/ios/ipa/*.ipa
@@ -38,5 +44,5 @@ workflows:
           - Aseef2023@hotmail.com
       app_store_connect:
         auth: integration
-        submit_to_testflight: false
-        submit_to_app_store: true
+        submit_to_testflight: true # Usually you want this true to test before App Store
+        submit_to_app_store: false # Set to true only if submitting directly for review
