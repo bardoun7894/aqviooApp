@@ -3,8 +3,6 @@ workflows:
     name: iOS App Store
     max_build_duration: 120
     instance_type: mac_mini_m1
-    integrations:
-      app_store_connect: Aqvioo API Key
     environment:
       ios_signing:
         distribution_type: app_store
@@ -40,7 +38,3 @@ workflows:
       email:
         recipients:
           - Aseef2023@hotmail.com
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true # Usually you want this true to test before App Store
-        submit_to_app_store: false # Set to true only if submitting directly for review
