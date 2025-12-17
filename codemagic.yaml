@@ -7,10 +7,8 @@ workflows:
       app_store_connect: Aqvioo API Key
     environment:
       ios_signing:
-        provisioning_profiles:
-          - app store bew
-        certificates:
-          - cert mac
+        distribution_type: app_store
+        bundle_identifier: com.aqvioo.akvioo
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -27,6 +25,7 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
       - name: Get dependencies
@@ -34,8 +33,7 @@ workflows:
       - name: Install pods
         script: find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
-        # Using --export-method=app-store handles the plist automatically
-        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=ios/ExportOptions.plist
+        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
