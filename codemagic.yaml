@@ -1,6 +1,6 @@
 workflows:
-  ios-appstore:
-    name: iOS App Store
+  default:
+    name: Default Workflow - iOS App Store
     max_build_duration: 120
     instance_type: mac_mini_m1
     environment:
