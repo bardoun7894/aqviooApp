@@ -1,0 +1,49 @@
+workflows:
+  default:
+    name: Default Workflow - iOS App Store Only
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch:
+        include_patterns:
+          - main
+          - credit
+          - develop
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.aqvioo.akvioo
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Create .env file
+        script: |
+          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
+          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
+          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
+          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
+          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
+          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Get dependencies
+        script: flutter pub get
+      - name: Install pods
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Build IPA
+        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - Aseef2023@hotmail.com

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  aqvioo-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aqvioo-admin-dashboard
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "com.aqvioo.description=Aqvioo Admin Dashboard"
+      - "com.aqvioo.version=1.0.0"

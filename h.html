@@ -1,0 +1,319 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqvioo - AI Generative Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Glassmorphism & Blurs */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-nav {
+            background: rgba(9, 9, 11, 0.9);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Animations */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .animate-enter { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Shimmer Effect */
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .shimmer-bg {
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+        }
+    </style>
+<link id="all-fonts-link-font-geist" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist">.font-geist { font-family: 'Geist', sans-serif !important; }</style><link id="all-fonts-link-font-roboto" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-roboto">.font-roboto { font-family: 'Roboto', sans-serif !important; }</style><link id="all-fonts-link-font-montserrat" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-montserrat">.font-montserrat { font-family: 'Montserrat', sans-serif !important; }</style><link id="all-fonts-link-font-poppins" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-poppins">.font-poppins { font-family: 'Poppins', sans-serif !important; }</style><link id="all-fonts-link-font-playfair" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;900&amp;display=swap"><style id="all-fonts-style-font-playfair">.font-playfair { font-family: 'Playfair Display', serif !important; }</style><link id="all-fonts-link-font-instrument-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:wght@400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-instrument-serif">.font-instrument-serif { font-family: 'Instrument Serif', serif !important; }</style><link id="all-fonts-link-font-merriweather" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&amp;display=swap"><style id="all-fonts-style-font-merriweather">.font-merriweather { font-family: 'Merriweather', serif !important; }</style><link id="all-fonts-link-font-bricolage" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-bricolage">.font-bricolage { font-family: 'Bricolage Grotesque', sans-serif !important; }</style><link id="all-fonts-link-font-jakarta" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-jakarta">.font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif !important; }</style><link id="all-fonts-link-font-manrope" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-manrope">.font-manrope { font-family: 'Manrope', sans-serif !important; }</style><link id="all-fonts-link-font-space-grotesk" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-space-grotesk">.font-space-grotesk { font-family: 'Space Grotesk', sans-serif !important; }</style><link id="all-fonts-link-font-work-sans" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-work-sans">.font-work-sans { font-family: 'Work Sans', sans-serif !important; }</style><link id="all-fonts-link-font-pt-serif" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-pt-serif">.font-pt-serif { font-family: 'PT Serif', serif !important; }</style><link id="all-fonts-link-font-geist-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-geist-mono">.font-geist-mono { font-family: 'Geist Mono', monospace !important; }</style><link id="all-fonts-link-font-space-mono" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap"><style id="all-fonts-style-font-space-mono">.font-space-mono { font-family: 'Space Mono', monospace !important; }</style><link id="all-fonts-link-font-quicksand" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&amp;display=swap"><style id="all-fonts-style-font-quicksand">.font-quicksand { font-family: 'Quicksand', sans-serif !important; }</style><link id="all-fonts-link-font-nunito" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&amp;display=swap"><style id="all-fonts-style-font-nunito">.font-nunito { font-family: 'Nunito', sans-serif !important; }</style></head>
+<body class="bg-zinc-950 text-zinc-300 font-['Inter',_sans-serif] min-h-screen flex items-center justify-center p-0 md:p-8 antialiased selection:bg-indigo-500/30">
+
+
+
+
+    <!-- Mobile Device Simulator -->
+    <div class="relative w-full max-w-[400px] h-[100dvh] md:h-[850px] bg-black md:rounded-[3rem] overflow-hidden shadow-2xl border-x md:border-[8px] border-neutral-800 ring-1 ring-white/10 flex flex-col group/device">
+        
+        <!-- Background Ambient Glow -->
+        <div class="absolute top-[-10%] left-[-20%] w-[150%] h-[50%] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none opacity-50"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[80%] h-[40%] bg-blue-600/10 blur-[80px] rounded-full pointer-events-none opacity-30"></div>
+
+        <!-- Status Bar -->
+        <div class="absolute top-0 w-full h-12 z-50 flex justify-between items-center px-6 pt-2 select-none pointer-events-none mix-blend-plus-lighter">
+            <span class="text-xs font-semibold text-white tracking-widest">9:41</span>
+            <div class="flex gap-1.5 items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="signal" class="lucide lucide-signal w-3 h-3 text-white"><path d="M2 20h.01"></path><path d="M7 20v-4"></path><path d="M12 20v-8"></path><path d="M17 20V8"></path><path d="M22 4v16"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wifi" class="lucide lucide-wifi w-3 h-3 text-white"><path d="M12 20h.01"></path><path d="M2 8.82a15 15 0 0 1 20 0"></path><path d="M5 12.859a10 10 0 0 1 14 0"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="battery-medium" class="lucide lucide-battery-medium w-4 h-4 text-white"><path d="M10 14v-4"></path><path d="M22 14v-4"></path><path d="M6 14v-4"></path><rect x="2" y="6" width="16" height="12" rx="2"></rect></svg>
+            </div>
+        </div>
+
+        <!-- AUTH SCREEN (Hidden) -->
+        <div id="auth-screen" class="absolute inset-0 z-[60] bg-neutral-950 p-6 flex flex-col justify-end pb-12 hidden">
+            <!-- Content kept from previous version logic -->
+             <div class="flex-1 flex flex-col justify-center items-center gap-2">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" class="lucide lucide-sparkles text-white w-6 h-6"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
+                </div>
+                <h2 class="text-2xl font-semibold text-white tracking-tight text-center">aqvioo</h2>
+                <button onclick="navigateTo('home')" class="mt-8 bg-white text-black px-6 py-3 rounded-xl font-medium text-sm">Enter Demo</button>
+            </div>
+        </div>
+
+        <!-- MAIN APP CONTENT -->
+        <div id="app-content" class="flex flex-col h-full relative z-10">
+            
+            <!-- HEADER: Redesigned for depth and utility -->
+            <header class="pt-14 pb-2 px-6 flex justify-between items-center sticky top-0 z-30">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 p-[1px] ring-2 ring-black/50 overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&amp;w=200&amp;auto=format&amp;fit=crop" class="w-full h-full rounded-full object-cover opacity-90" alt="User" style="">
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-neutral-950 rounded-full flex items-center justify-center">
+                            <div class="w-2 h-2 bg-cyan-500 rounded-full border border-neutral-950"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] uppercase tracking-wider text-neutral-500 font-semibold">Creator</span>
+                        <h1 class="text-sm font-semibold text-white leading-tight">Abdulaziz</h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Credits Badge -->
+                    <button class="glass-panel pl-2 pr-3 py-1.5 rounded-full flex items-center gap-2 group active:scale-95 transition-transform">
+                        <div class="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="zap" class="lucide lucide-zap w-3 h-3 text-indigo-400 fill-indigo-400"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
+                        </div>
+                        <span class="text-xs font-semibold text-white tracking-tight">850</span>
+                    </button>
+                    <!-- Settings -->
+                    <button class="w-9 h-9 rounded-full bg-neutral-900/50 border border-white/5 flex items-center justify-center text-neutral-400 hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sliders-horizontal" class="lucide lucide-sliders-horizontal w-4 h-4"><path d="M10 5H3"></path><path d="M12 19H3"></path><path d="M14 3v4"></path><path d="M16 17v4"></path><path d="M21 12h-9"></path><path d="M21 19h-5"></path><path d="M21 5h-7"></path><path d="M8 10v4"></path><path d="M8 12H3"></path></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE AREA -->
+            <main class="flex-1 overflow-y-auto pb-24 space-y-8 scroll-smooth no-scrollbar relative" id="main-scroll">
+                
+                <!-- HERO: Prompt Interface -->
+                <section class="px-6 mt-4 animate-enter relative z-20">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h2 class="text-lg font-semibold text-white tracking-tight flex items-center gap-2">
+                            Create Magic
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="sparkles" class="lucide lucide-sparkles w-3.5 h-3.5 text-indigo-500 animate-pulse"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>
+                        </h2>
+                        <button class="text-[10px] font-medium text-neutral-500 hover:text-neutral-300 transition-colors flex items-center gap-1">
+                            Model v4.0 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-down" class="lucide lucide-chevron-down w-3 h-3"><path d="m6 9 6 6 6-6"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Main Input Card -->
+                    <div class="relative w-full bg-neutral-900/80 rounded-[1.5rem] p-1 ring-1 ring-white/10 shadow-2xl shadow-black/50 overflow-hidden group">
+                        <!-- Animated Gradient Border via pseudo element idea logic simplified -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-blue-500/10 opacity-100 transition-opacity"></div>
+                        
+                        <div class="relative bg-neutral-950/50 rounded-[1.25rem] p-4 backdrop-blur-sm">
+                            <textarea placeholder="Describe a video: 'Cinematic shot of Saudi coffee pouring in slow motion, 8k resolution...'" class="w-full bg-transparent text-sm text-neutral-200 placeholder-neutral-600 resize-none h-20 outline-none font-light leading-relaxed"></textarea>
+                            
+                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                                <div class="flex items-center gap-2">
+                                    <button class="p-2 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-neutral-300 transition-colors" title="Upload Image">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="image" class="lucide lucide-image w-4 h-4"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+                                    </button>
+                                    <button class="p-2 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-neutral-300 transition-colors" title="Voice Settings">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="mic" class="lucide lucide-mic w-4 h-4"><path d="M12 19v3"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><rect x="9" y="2" width="6" height="13" rx="3"></rect></svg>
+                                    </button>
+                                    <div class="h-4 w-[1px] bg-white/10 mx-1"></div>
+                                    <button class="px-2 py-1 rounded-md bg-indigo-500/10 text-[10px] font-medium text-indigo-400 border border-indigo-500/20">
+                                        16:9
+                                    </button>
+                                </div>
+                                <button onclick="toggleModal('payment-modal')" class="flex hover:bg-neutral-200 transition-colors shadow-white/5 text-xs font-semibold text-black bg-white rounded-xl pt-2 pr-2 pb-2 pl-4 shadow-lg gap-x-2 gap-y-2 items-center">
+                                    Generate
+                                    <div class="w-6 h-6 rounded-lg bg-black flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" class="lucide lucide-arrow-right w-3 h-3 text-white"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Suggestions -->
+                    <div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-2 mask-linear">
+                        <button class="flex-shrink-0 px-3 py-1.5 rounded-full border border-white/5 bg-neutral-900/50 text-[10px] font-medium text-neutral-400 whitespace-nowrap hover:bg-neutral-800 transition-colors flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shopping-bag" class="lucide lucide-shopping-bag w-3 h-3 text-orange-400"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg> Product Ad
+                        </button>
+                        <button class="flex-shrink-0 px-3 py-1.5 rounded-full border border-white/5 bg-neutral-900/50 text-[10px] font-medium text-neutral-400 whitespace-nowrap hover:bg-neutral-800 transition-colors flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="clapperboard" class="lucide lucide-clapperboard w-3 h-3 text-cyan-400"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"></path><path d="m6.2 5.3 3.1 3.9"></path><path d="m12.4 3.4 3.1 4"></path><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path></svg> Social Reel
+                        </button>
+                        <button class="flex-shrink-0 px-3 py-1.5 rounded-full border border-white/5 bg-neutral-900/50 text-[10px] font-medium text-neutral-400 whitespace-nowrap hover:bg-neutral-800 transition-colors flex items-center gap-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="box" class="lucide lucide-box w-3 h-3 text-indigo-400"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg> 3D Render
+                        </button>
+                        <button class="flex-shrink-0 px-3 py-1.5 rounded-full border border-white/5 bg-neutral-900/50 text-[10px] font-medium text-neutral-400 whitespace-nowrap hover:bg-neutral-800 transition-colors">
+                            Avatar
+                        </button>
+                    </div>
+                </section>
+
+                <!-- RECENT GENERATIONS -->
+                <section class="animate-enter delay-100 px-6">
+                    <div class="flex justify-between items-end mb-4">
+                        <h3 class="text-sm font-semibold text-neutral-200 tracking-tight">Recent Projects</h3>
+                        <button class="text-[10px] font-medium text-neutral-500 hover:text-white transition-colors">View Library</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Active Processing Card -->
+                        <div class="relative aspect-[4/5] rounded-2xl bg-neutral-900 border border-white/5 overflow-hidden group">
+                            <!-- Loading State Background -->
+                            <div class="absolute inset-0 bg-neutral-800/50 shimmer-bg z-0"></div>
+                            
+                            <div class="absolute inset-0 flex flex-col items-center justify-center z-10 p-4 text-center">
+                                <div class="w-10 h-10 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin mb-3"></div>
+                                <p class="text-xs font-medium text-white">Generating...</p>
+                                <p class="text-[10px] text-neutral-500 mt-1">Founding Day Promo</p>
+                            </div>
+                        </div>
+
+                        <!-- Finished Card -->
+                        <div class="relative aspect-[4/5] rounded-2xl bg-neutral-900 border border-white/5 overflow-hidden group cursor-pointer">
+                            <img src="https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&amp;w=400&amp;auto=format&amp;fit=crop" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" alt="Perfume">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                            
+                            <div class="absolute top-2 right-2">
+                                <div class="w-6 h-6 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="play" class="lucide lucide-play w-3 h-3 text-white fill-white ml-0.5"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path></svg>
+                                </div>
+                            </div>
+
+                            <div class="absolute bottom-3 left-3 right-3">
+                                <p class="text-xs font-medium text-white leading-tight">Oud Luxury Scent</p>
+                                <div class="flex items-center gap-2 mt-1.5">
+                                    <span class="text-[9px] text-neutral-400 font-medium">00:15s</span>
+                                    <span class="w-0.5 h-0.5 rounded-full bg-neutral-500"></span>
+                                    <span class="text-[9px] text-neutral-400 font-medium">4k</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Featured Tools -->
+                <section class="animate-enter delay-200 px-6">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-900/20 to-neutral-900 border border-indigo-500/10 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wand-2" class="lucide lucide-wand-2 w-5 h-5 text-white"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-white">Magic Edit</h4>
+                                <p class="text-[10px] text-neutral-400 mt-0.5">Modify objects with AI</p>
+                            </div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="chevron-right" class="lucide lucide-chevron-right w-4 h-4 text-neutral-300"><path d="m9 18 6-6-6-6"></path></svg>
+                        </button>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Bottom Navigation -->
+            <nav class="absolute bottom-0 w-full glass-nav pb-8 pt-4 px-6 flex justify-between items-center z-40 rounded-b-[2.5rem]">
+                <button class="flex flex-col items-center gap-1.5 p-1 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="layout-grid" class="lucide lucide-layout-grid w-5 h-5 text-white group-hover:scale-110 transition-transform"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+                </button>
+                <button class="flex flex-col items-center gap-1.5 p-1 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="folder-heart" class="lucide lucide-folder-heart w-5 h-5 text-neutral-600 group-hover:text-neutral-300 transition-colors"><path d="M10.638 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v3.417"></path><path d="M14.62 18.8A2.25 2.25 0 1 1 18 15.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z"></path></svg>
+                </button>
+                <div class="w-10"></div> <!-- Spacer for FLOATING ACTION BUTTON -->
+                <button class="flex flex-col items-center gap-1.5 p-1 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="wallet-cards" class="lucide lucide-wallet-cards w-5 h-5 text-neutral-600 group-hover:text-neutral-300 transition-colors"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"></path><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"></path></svg>
+                </button>
+                <button class="flex flex-col items-center gap-1.5 p-1 group">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user-circle" class="lucide lucide-user-circle w-5 h-5 text-neutral-600 group-hover:text-neutral-300 transition-colors"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3"></circle><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path></svg>
+                </button>
+
+                <!-- Floating Main Action -->
+                <button class="absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-95 transition-transform border-4 border-neutral-950">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="plus" class="lucide lucide-plus w-6 h-6 text-black"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+                </button>
+            </nav>
+
+            <!-- PAYMENT MODAL -->
+            <div id="payment-modal" class="absolute inset-0 z-50 bg-neutral-950/60 backdrop-blur-md flex items-end opacity-0 pointer-events-none transition-all duration-300">
+                <div class="w-full bg-[#0F0F11] rounded-t-[2rem] p-6 pb-10 border-t border-white/10 transform translate-y-full transition-transform duration-300 shadow-2xl" id="payment-sheet">
+                    <div class="w-10 h-1 bg-neutral-800 rounded-full mx-auto mb-8"></div>
+                    
+                    <div class="text-center mb-8">
+                        <div class="w-14 h-14 bg-gradient-to-tr from-indigo-500 to-blue-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg shadow-indigo-500/25">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="crown" class="lucide lucide-crown w-7 h-7 text-white"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white tracking-tight">Upgrade to Pro</h3>
+                        <p class="text-xs text-neutral-400 mt-2 max-w-[200px] mx-auto">Generate unlimited 4K videos and access the Kie v4 model.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <button class="w-full bg-white text-black h-12 rounded-xl font-semibold text-sm hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2">
+                            Pay SAR 29.99
+                        </button>
+                        <button onclick="toggleModal('payment-modal')" class="w-full h-12 rounded-xl font-medium text-xs text-neutral-500 hover:text-white hover:bg-white/5 transition-colors">
+                            Maybe Later
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function navigateTo(screen) {
+            if(screen === 'home') {
+                document.getElementById('auth-screen').classList.add('hidden');
+            }
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            const sheet = document.getElementById('payment-sheet');
+            
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                setTimeout(() => sheet.classList.remove('translate-y-full'), 10);
+            } else {
+                sheet.classList.add('translate-y-full');
+                setTimeout(() => {
+                    modal.classList.add('opacity-0', 'pointer-events-none');
+                }, 300);
+            }
+        }
+    </script>
+
+</body></html>

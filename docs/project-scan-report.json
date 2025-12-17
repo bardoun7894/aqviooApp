@@ -1,0 +1,78 @@
+{
+          "workflow_version": "1.2.0",
+          "timestamps": {
+                    "started": "2025-11-28T16:57:51+01:00",
+                    "last_updated": "2025-11-28T17:15:00+01:00"
+          },
+          "mode": "initial_scan",
+          "scan_level": "deep",
+          "project_root": "/Users/mac/aqvioo",
+          "output_folder": "/Users/mac/aqvioo/docs",
+          "completed_steps": [
+                    {
+                              "step": "step_1",
+                              "status": "completed",
+                              "timestamp": "2025-11-28T17:00:00+01:00",
+                              "summary": "Classified as monolith with 1 parts (mobile)"
+                    },
+                    {
+                              "step": "step_2",
+                              "status": "completed",
+                              "timestamp": "2025-11-28T17:05:00+01:00",
+                              "summary": "Found 30 existing docs including README, brief, and architecture specs"
+                    },
+                    {
+                              "step": "step_3",
+                              "status": "completed",
+                              "timestamp": "2025-11-28T17:10:00+01:00",
+                              "summary": "Tech stack: Flutter on Dart"
+                    },
+                    {
+                              "step": "step_4",
+                              "status": "completed",
+                              "timestamp": "2025-11-28T17:12:00+01:00",
+                              "summary": "Deep scan complete. Generated API contracts, data models, and inventories."
+                    },
+                    {
+                              "step": "step_10",
+                              "status": "completed",
+                              "timestamp": "2025-11-28T17:15:00+01:00",
+                              "summary": "Master index generated"
+                    }
+          ],
+          "current_step": "complete",
+          "findings": {
+                    "project_classification": "Monolithic Flutter Mobile Application",
+                    "project_types": [
+                              {
+                                        "part_id": "root",
+                                        "project_type_id": "mobile",
+                                        "display_name": "Mobile App"
+                              }
+                    ],
+                    "existing_docs_count": 30,
+                    "user_context": "AI Video Generation App (Aqvioo) using Flutter, Firebase, and Kie AI.",
+                    "technology_stack": {
+                              "root": {
+                                        "framework": "Flutter",
+                                        "language": "Dart",
+                                        "state_management": "Riverpod",
+                                        "navigation": "GoRouter",
+                                        "backend": "Firebase",
+                                        "architecture": "Feature-First"
+                              }
+                    }
+          },
+          "outputs_generated": [
+                    "project-scan-report.json",
+                    "api-contracts-root.md",
+                    "data-models-root.md",
+                    "ui-component-inventory-root.md",
+                    "asset-inventory-root.md",
+                    "source-tree-analysis.md",
+                    "project-overview.md",
+                    "development-guide.md",
+                    "bmm-index.md"
+          ],
+          "resume_instructions": "Workflow complete"
+}

@@ -213,7 +213,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'We sent a code to',
+                              l10n.weSentCodeTo,
                               style: GoogleFonts.outfit(
                                 fontSize: 16,
                                 color: AppColors.textSecondary,
@@ -387,7 +387,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                               TextButton(
                                 onPressed: () => context.pop(),
                                 child: Text(
-                                  'Back to login',
+                                  l10n.backToLogin,
                                   style: GoogleFonts.outfit(
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w600,
@@ -410,7 +410,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Didn't receive the code? ",
+                            l10n.didNotReceiveCode,
                             style: GoogleFonts.outfit(
                               color: AppColors.textSecondary,
                               fontSize: 14,

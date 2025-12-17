@@ -1,16 +1,106 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../features/creation/domain/models/creation_config.dart';
 
+/// Custom exception for Kie AI errors with user-friendly messages
+class KieAIException implements Exception {
+  final String message;
+  final String? technicalDetails;
+  final bool isRetryable;
+
+  KieAIException(this.message, {this.technicalDetails, this.isRetryable = false});
+
+  @override
+  String toString() => message;
+}
+
 class KieAIService {
   final String _apiKey;
   final String _baseUrl = 'https://api.kie.ai';
 
+  // Retry configuration
+  static const int _maxRetries = 3;
+  static const Duration _initialRetryDelay = Duration(seconds: 2);
+  static const Duration _requestTimeout = Duration(seconds: 30);
+  static const Duration _pollingTimeout = Duration(seconds: 60); // Longer timeout for polling when app may be backgrounded
+
   KieAIService({required String apiKey}) : _apiKey = apiKey;
+
+  // ==================== RETRY HELPER ====================
+
+  /// Execute an HTTP request with automatic retry on transient failures
+  Future<http.Response> _executeWithRetry(
+    Future<http.Response> Function() request, {
+    int maxRetries = _maxRetries,
+    Duration? timeout,
+  }) async {
+    int attempt = 0;
+    Exception? lastException;
+    final effectiveTimeout = timeout ?? _requestTimeout;
+
+    while (attempt < maxRetries) {
+      try {
+        final response = await request().timeout(effectiveTimeout);
+        return response;
+      } on SocketException catch (e) {
+        lastException = e;
+        debugPrint('Network error (attempt ${attempt + 1}/$maxRetries): $e');
+      } on TimeoutException catch (e) {
+        lastException = e as Exception;
+        debugPrint('Timeout (attempt ${attempt + 1}/$maxRetries): $e');
+      } on http.ClientException catch (e) {
+        lastException = e;
+        debugPrint('Client error (attempt ${attempt + 1}/$maxRetries): $e');
+      } catch (e) {
+        // Non-retryable error, throw immediately
+        rethrow;
+      }
+
+      attempt++;
+      if (attempt < maxRetries) {
+        // Exponential backoff
+        final delay = _initialRetryDelay * (1 << (attempt - 1));
+        debugPrint('Retrying in ${delay.inSeconds} seconds...');
+        await Future.delayed(delay);
+      }
+    }
+
+    // All retries exhausted
+    throw KieAIException(
+      'Connection failed. Please check your internet and try again.',
+      technicalDetails: lastException?.toString(),
+      isRetryable: true,
+    );
+  }
+
+  /// Check internet connectivity
+  Future<void> _checkConnectivity() async {
+    try {
+      final result = await InternetAddress.lookup('api.kie.ai')
+          .timeout(const Duration(seconds: 5));
+      if (result.isEmpty || result[0].rawAddress.isEmpty) {
+        throw KieAIException(
+          'No internet connection. Please check your Wi-Fi or mobile data.',
+          isRetryable: true,
+        );
+      }
+    } on SocketException catch (_) {
+      throw KieAIException(
+        'No internet connection. Please check your Wi-Fi or mobile data.',
+        isRetryable: true,
+      );
+    } on TimeoutException catch (_) {
+      throw KieAIException(
+        'Network is slow. Please try again.',
+        isRetryable: true,
+      );
+    }
+  }
 
   // ==================== TEXT GENERATION (GPT for prompt enhancement) ====================
 
@@ -43,7 +133,10 @@ class KieAIService {
     bool removeWatermark = true,
   }) async {
     try {
-      final response = await http.post(
+      // Check connectivity first
+      await _checkConnectivity();
+
+      final response = await _executeWithRetry(() => http.post(
         Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
         headers: {
           'Authorization': 'Bearer $_apiKey',
@@ -58,22 +151,43 @@ class KieAIService {
             'remove_watermark': removeWatermark,
           },
         }),
-      );
+      ));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 200) {
           return data['data']['taskId'];
         } else {
-          throw Exception('Sora 2 API error: ${data['msg']}');
+          throw KieAIException(
+            _getUserFriendlyError(data['msg'] ?? 'Unknown error'),
+            technicalDetails: 'Sora 2 API: ${data['msg']}',
+          );
         }
+      } else if (response.statusCode == 401) {
+        throw KieAIException('Invalid API key. Please contact support.');
+      } else if (response.statusCode == 402) {
+        throw KieAIException('Insufficient credits. Please top up your account.');
+      } else if (response.statusCode == 429) {
+        throw KieAIException(
+          'Too many requests. Please wait a moment and try again.',
+          isRetryable: true,
+        );
       } else {
-        throw Exception(
-            'Sora 2 HTTP error: ${response.statusCode} - ${response.body}');
+        throw KieAIException(
+          'Server error. Please try again later.',
+          technicalDetails: 'HTTP ${response.statusCode}: ${response.body}',
+          isRetryable: response.statusCode >= 500,
+        );
       }
+    } on KieAIException {
+      rethrow;
     } catch (e) {
       debugPrint('Error generating video with Sora 2: $e');
-      rethrow;
+      throw KieAIException(
+        _getUserFriendlyError(e.toString()),
+        technicalDetails: e.toString(),
+        isRetryable: true,
+      );
     }
   }
 
@@ -140,14 +254,18 @@ class KieAIService {
 
   // ==================== TASK STATUS POLLING ====================
 
-  /// Check the status of a Sora 2 task
+  /// Check the status of a Sora 2 task with retry logic
   Future<Map<String, dynamic>> checkSora2TaskStatus(String taskId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/jobs/recordInfo?taskId=$taskId'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-        },
+      final response = await _executeWithRetry(
+        () => http.get(
+          Uri.parse('$_baseUrl/api/v1/jobs/recordInfo?taskId=$taskId'),
+          headers: {
+            'Authorization': 'Bearer $_apiKey',
+          },
+        ),
+        maxRetries: 2, // Fewer retries for status checks
+        timeout: _pollingTimeout, // Longer timeout for background polling
       );
 
       if (response.statusCode == 200) {
@@ -157,15 +275,32 @@ class KieAIService {
           final state = taskData['state']; // waiting, success, fail
 
           if (state == 'success') {
-            final resultJson = jsonDecode(taskData['resultJson']);
-            return {
-              'state': 'success',
-              'videoUrl': resultJson['resultUrls'][0],
-            };
+            // Safely parse resultJson
+            try {
+              final resultJson = jsonDecode(taskData['resultJson']);
+              final resultUrls = resultJson['resultUrls'];
+              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+                return {
+                  'state': 'success',
+                  'videoUrl': resultUrls[0],
+                };
+              } else {
+                return {
+                  'state': 'fail',
+                  'error': 'Video URL not found in response',
+                };
+              }
+            } catch (parseError) {
+              debugPrint('Error parsing result JSON: $parseError');
+              return {
+                'state': 'fail',
+                'error': 'Failed to parse video result',
+              };
+            }
           } else if (state == 'fail') {
             return {
               'state': 'fail',
-              'error': taskData['failMsg'],
+              'error': taskData['failMsg'] ?? 'Generation failed',
             };
           } else {
             return {
@@ -173,14 +308,29 @@ class KieAIService {
             };
           }
         } else {
-          throw Exception('Status check error: ${data['msg']}');
+          throw KieAIException(
+            'Failed to check status',
+            technicalDetails: 'API error: ${data['msg']}',
+            isRetryable: true,
+          );
         }
       } else {
-        throw Exception('Status check HTTP error: ${response.statusCode}');
+        throw KieAIException(
+          'Failed to check status',
+          technicalDetails: 'HTTP ${response.statusCode}',
+          isRetryable: response.statusCode >= 500,
+        );
       }
+    } on KieAIException {
+      rethrow;
     } catch (e) {
       debugPrint('Error checking Sora 2 task status: $e');
-      rethrow;
+      // Return waiting state on network errors to keep polling
+      return {
+        'state': 'waiting',
+        'error': e.toString(),
+        'isNetworkError': true,
+      };
     }
   }
 
@@ -228,42 +378,155 @@ class KieAIService {
     }
   }
 
+  /// Check the status of a Nano Banana Pro image generation task with retry logic
+  Future<Map<String, dynamic>> checkImageTaskStatus(String taskId) async {
+    try {
+      final response = await _executeWithRetry(
+        () => http.get(
+          Uri.parse('$_baseUrl/api/v1/jobs/recordInfo?taskId=$taskId'),
+          headers: {
+            'Authorization': 'Bearer $_apiKey',
+          },
+        ),
+        maxRetries: 2,
+        timeout: _pollingTimeout, // Longer timeout for background polling
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['code'] == 200) {
+          final taskData = data['data'];
+          final state = taskData['state'];
+
+          if (state == 'success') {
+            try {
+              final resultJson = jsonDecode(taskData['resultJson']);
+              final resultUrls = resultJson['resultUrls'];
+              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+                return {
+                  'state': 'success',
+                  'imageUrl': resultUrls[0],
+                  'videoUrl': resultUrls[0], // Also provide as videoUrl for unified handling
+                };
+              } else {
+                return {
+                  'state': 'fail',
+                  'error': 'Image URL not found in response',
+                };
+              }
+            } catch (parseError) {
+              debugPrint('Error parsing result JSON: $parseError');
+              return {
+                'state': 'fail',
+                'error': 'Failed to parse image result',
+              };
+            }
+          } else if (state == 'fail') {
+            return {
+              'state': 'fail',
+              'error': taskData['failMsg'] ?? 'Generation failed',
+            };
+          } else {
+            return {
+              'state': 'waiting',
+            };
+          }
+        } else {
+          throw KieAIException(
+            'Failed to check status',
+            technicalDetails: 'API error: ${data['msg']}',
+            isRetryable: true,
+          );
+        }
+      } else {
+        throw KieAIException(
+          'Failed to check status',
+          technicalDetails: 'HTTP ${response.statusCode}',
+          isRetryable: response.statusCode >= 500,
+        );
+      }
+    } on KieAIException {
+      rethrow;
+    } catch (e) {
+      debugPrint('Error checking image task status: $e');
+      // Return waiting state on network errors to keep polling
+      return {
+        'state': 'waiting',
+        'error': e.toString(),
+        'isNetworkError': true,
+      };
+    }
+  }
+
   // ==================== IMAGE GENERATION (Nano Banana Pro) ====================
 
-  /// Generate image using Nano Banana Pro
+  /// Generate image using Nano Banana Pro with retry logic
+  /// Returns a taskId that needs to be polled for results
   Future<String> generateImage({
     required String prompt,
-    String style = 'realistic', // realistic, cartoon, artistic
-    String size = '1024x1024', // 1024x1024, 1920x1080, 1080x1920
+    List<String>? imageInput, // Optional: up to 8 input images (URLs)
+    String aspectRatio =
+        '1:1', // 1:1, 2:3, 3:2, 3:4, 4:3, 4:5, 5:4, 9:16, 16:9, 21:9
+    String resolution = '1K', // 1K, 2K, 4K
+    String outputFormat = 'png', // png, jpg
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/nano-banana/generate'),
+      // Check connectivity first
+      await _checkConnectivity();
+
+      final response = await _executeWithRetry(() => http.post(
+        Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
         headers: {
           'Authorization': 'Bearer $_apiKey',
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'prompt': prompt,
-          'style': style,
-          'size': size,
-          'format': 'jpg',
+          'model': 'nano-banana-pro',
+          'input': {
+            'prompt': prompt,
+            'image_input': imageInput ?? [],
+            'aspect_ratio': aspectRatio,
+            'resolution': resolution,
+            'output_format': outputFormat,
+          },
         }),
-      );
+      ));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return data['data']['imageUrl'];
+        if (data['code'] == 200) {
+          return data['data']['taskId'];
         } else {
-          throw Exception('Nano Banana error: ${data['message']}');
+          throw KieAIException(
+            _getUserFriendlyError(data['msg'] ?? 'Unknown error'),
+            technicalDetails: 'Nano Banana API: ${data['msg']}',
+          );
         }
+      } else if (response.statusCode == 401) {
+        throw KieAIException('Invalid API key. Please contact support.');
+      } else if (response.statusCode == 402) {
+        throw KieAIException('Insufficient credits. Please top up your account.');
+      } else if (response.statusCode == 429) {
+        throw KieAIException(
+          'Too many requests. Please wait a moment and try again.',
+          isRetryable: true,
+        );
       } else {
-        throw Exception('Nano Banana HTTP error: ${response.statusCode}');
+        throw KieAIException(
+          'Server error. Please try again later.',
+          technicalDetails: 'HTTP ${response.statusCode}: ${response.body}',
+          isRetryable: response.statusCode >= 500,
+        );
       }
+    } on KieAIException {
+      rethrow;
     } catch (e) {
       debugPrint('Error generating image: $e');
-      rethrow;
+      throw KieAIException(
+        _getUserFriendlyError(e.toString()),
+        technicalDetails: e.toString(),
+        isRetryable: true,
+      );
     }
   }
 
@@ -391,22 +654,58 @@ class KieAIService {
     CreationConfig config,
     String enhancedPrompt,
   ) async {
-    final imageUrl = await generateImage(
+    // Convert size string (e.g., "1024x1024") to aspect ratio and resolution
+    String aspectRatio = '1:1';
+    String resolution = '1K';
+
+    if (config.imageSize != null) {
+      // Map common sizes to aspect ratios
+      if (config.imageSize == '1920x1080' || config.imageSize == '16:9') {
+        aspectRatio = '16:9';
+        resolution = '2K';
+      } else if (config.imageSize == '1080x1920' ||
+          config.imageSize == '9:16') {
+        aspectRatio = '9:16';
+        resolution = '2K';
+      } else {
+        aspectRatio = '1:1';
+        resolution = '1K';
+      }
+    }
+
+    final taskId = await generateImage(
       prompt: enhancedPrompt,
-      style: config.imageStyle?.name ?? 'realistic',
-      size: config.imageSize ?? '1024x1024',
+      aspectRatio: aspectRatio,
+      resolution: resolution,
+      outputFormat: 'png',
     );
 
+    // Return taskId immediately for persistence (similar to video)
     return {
-      'type': 'image',
-      'url': imageUrl,
+      'type': 'image_task',
+      'taskId': taskId,
+      'status': 'processing',
     };
   }
 
-  /// Public method to check status of a task
+  /// Public method to check status of a task (works for both video and image)
+  /// Attempts to check status using both video and image endpoints
   Future<Map<String, dynamic>> checkTaskStatus(String taskId) async {
-    // Currently only supporting Sora 2 for MVP
-    return await checkSora2TaskStatus(taskId);
+    try {
+      // Try checking as a video task first (Sora 2)
+      final result = await checkSora2TaskStatus(taskId);
+      return result;
+    } catch (e) {
+      // If it fails, try checking as an image task (Nano Banana)
+      try {
+        final result = await checkImageTaskStatus(taskId);
+        return result;
+      } catch (imageError) {
+        // If both fail, rethrow the original error
+        debugPrint('Error checking task status: $e');
+        rethrow;
+      }
+    }
   }
 }
 

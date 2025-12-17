@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/widgets/glass_container.dart';
+import '../../../../../core/utils/style_utils.dart';
 
 import 'package:akvioo/features/creation/domain/models/creation_config.dart';
 import 'package:akvioo/features/creation/presentation/providers/creation_provider.dart';
@@ -401,6 +402,16 @@ class _ReviewFinalizeStepState extends ConsumerState<ReviewFinalizeStep>
           // Navigation to magic loading will be handled by listener in home_screen
           final controller = ref.read(creationControllerProvider.notifier);
           final config = ref.read(creationControllerProvider).config;
+
+          // Add style enhancement based on prompt language
+          if (config.videoStyle != null && config.outputType == OutputType.video) {
+            final stylePrompt = StyleUtils.getStylePromptForLanguage(
+              context,
+              config.videoStyle!,
+              config.prompt,
+            );
+            controller.setStyleEnhancement(stylePrompt);
+          }
 
           controller.generateVideo(
             prompt: config.prompt,

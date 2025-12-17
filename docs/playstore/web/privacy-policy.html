@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Aqvioo | سياسة الخصوصية</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .lang-switch {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lang-switch button {
+            padding: 10px 25px;
+            margin: 0 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .lang-switch button:hover,
+        .lang-switch button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            display: none;
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        h2 {
+            color: #667eea;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            font-size: 1.4rem;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        h3 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 1.1rem;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+
+        .highlight-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .highlight-box.rtl-box {
+            border-left: none;
+            border-right: 4px solid #667eea;
+            border-radius: 10px 0 0 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .contact-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .contact-box p {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .contact-box a {
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #888;
+        }
+
+        /* RTL for Arabic */
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .rtl ul {
+            padding-left: 0;
+            padding-right: 25px;
+        }
+
+        .rtl th, .rtl td {
+            text-align: right;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .logo h1 {
+                font-size: 2rem;
+            }
+
+            .lang-switch button {
+                padding: 8px 20px;
+                margin: 5px;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Aqvioo</h1>
+        </div>
+
+        <div class="lang-switch">
+            <button id="btn-en" class="active" onclick="showLang('en')">English</button>
+            <button id="btn-ar" onclick="showLang('ar')">العربية</button>
+        </div>
+
+        <!-- English Content -->
+        <div id="content-en" class="content active">
+            <p class="last-updated">Last Updated: December 2024</p>
+
+            <h2>Privacy Policy</h2>
+
+            <p>Aqvioo ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.</p>
+
+            <h2>Information We Collect</h2>
+
+            <h3>Personal Information</h3>
+            <p>When you use Aqvioo, we may collect:</p>
+            <ul>
+                <li><strong>Phone Number:</strong> Used for account authentication via OTP (One-Time Password)</li>
+                <li><strong>User-Generated Content:</strong> Text prompts, images you upload, and videos/images you create</li>
+                <li><strong>Payment Information:</strong> Transaction details processed through our payment provider (Tap Payments)</li>
+            </ul>
+
+            <h3>Automatically Collected Information</h3>
+            <ul>
+                <li>Device information (model, operating system)</li>
+                <li>App usage data and analytics</li>
+                <li>IP address and general location (country/region)</li>
+            </ul>
+
+            <h2>How We Use Your Information</h2>
+            <p>We use the information we collect to:</p>
+            <ul>
+                <li>Provide and maintain our AI video and image generation services</li>
+                <li>Process your account authentication</li>
+                <li>Process payments and manage your credit balance</li>
+                <li>Improve our services and user experience</li>
+                <li>Communicate with you about your account or transactions</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+
+            <h2>Third-Party Services</h2>
+            <p>We use the following third-party services:</p>
+
+            <table>
+                <tr>
+                    <th>Service</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>Firebase (Google)</td>
+                    <td>Authentication, database, and analytics</td>
+                </tr>
+                <tr>
+                    <td>Kie.ai</td>
+                    <td>AI video and image generation</td>
+                </tr>
+                <tr>
+                    <td>OpenAI</td>
+                    <td>Text processing and prompt enhancement</td>
+                </tr>
+                <tr>
+                    <td>Eleven Labs</td>
+                    <td>AI voice generation</td>
+                </tr>
+                <tr>
+                    <td>Tap Payments</td>
+                    <td>Payment processing</td>
+                </tr>
+            </table>
+
+            <p>Each third-party service has its own privacy policy governing their use of your data.</p>
+
+            <h2>Data Storage and Security</h2>
+            <ul>
+                <li>Your data is stored securely using Firebase Cloud Firestore</li>
+                <li>Generated content (videos/images) is stored temporarily on Kie.ai servers for up to 60 days</li>
+                <li>We implement industry-standard security measures to protect your information</li>
+                <li>Payment data is processed securely by Tap Payments and is not stored on our servers</li>
+            </ul>
+
+            <h2>Data Retention</h2>
+            <ul>
+                <li>Account information is retained while your account is active</li>
+                <li>Generated content URLs remain accessible for up to 60 days</li>
+                <li>You may request deletion of your account and associated data at any time</li>
+            </ul>
+
+            <div class="highlight-box">
+                <h3>Your Rights</h3>
+                <p>You have the right to:</p>
+                <ul>
+                    <li>Access your personal information</li>
+                    <li>Request correction of inaccurate data</li>
+                    <li>Request deletion of your account and data</li>
+                    <li>Opt-out of marketing communications</li>
+                </ul>
+                <p>To delete your account, visit: <a href="delete-account.html">Account Deletion Page</a></p>
+            </div>
+
+            <h2>Children's Privacy</h2>
+            <p>Aqvioo is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.</p>
+
+            <h2>Changes to This Policy</h2>
+            <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last Updated" date.</p>
+
+            <div class="contact-box">
+                <p>Questions about this Privacy Policy?</p>
+                <a href="mailto:support@aqvioo.com">support@aqvioo.com</a>
+            </div>
+        </div>
+
+        <!-- Arabic Content -->
+        <div id="content-ar" class="content rtl">
+            <p class="last-updated">آخر تحديث: ديسمبر 2024</p>
+
+            <h2>سياسة الخصوصية</h2>
+
+            <p>تلتزم Aqvioo ("نحن" أو "لنا") بحماية خصوصيتك. توضح سياسة الخصوصية هذه كيفية جمع معلوماتك واستخدامها والإفصاح عنها وحمايتها عند استخدام تطبيقنا.</p>
+
+            <h2>المعلومات التي نجمعها</h2>
+
+            <h3>المعلومات الشخصية</h3>
+            <p>عند استخدام Aqvioo، قد نجمع:</p>
+            <ul>
+                <li><strong>رقم الهاتف:</strong> يُستخدم للتحقق من الحساب عبر رمز التحقق (OTP)</li>
+                <li><strong>المحتوى الذي ينشئه المستخدم:</strong> الأوصاف النصية، الصور التي ترفعها، والفيديوهات/الصور التي تنشئها</li>
+                <li><strong>معلومات الدفع:</strong> تفاصيل المعاملات المعالجة عبر مزود الدفع (Tap Payments)</li>
+            </ul>
+
+            <h3>المعلومات المجمعة تلقائياً</h3>
+            <ul>
+                <li>معلومات الجهاز (الطراز، نظام التشغيل)</li>
+                <li>بيانات استخدام التطبيق والتحليلات</li>
+                <li>عنوان IP والموقع العام (الدولة/المنطقة)</li>
+            </ul>
+
+            <h2>كيف نستخدم معلوماتك</h2>
+            <p>نستخدم المعلومات التي نجمعها من أجل:</p>
+            <ul>
+                <li>تقديم وصيانة خدمات إنشاء الفيديو والصور بالذكاء الاصطناعي</li>
+                <li>معالجة التحقق من حسابك</li>
+                <li>معالجة المدفوعات وإدارة رصيدك</li>
+                <li>تحسين خدماتنا وتجربة المستخدم</li>
+                <li>التواصل معك بشأن حسابك أو معاملاتك</li>
+                <li>الامتثال للالتزامات القانونية</li>
+            </ul>
+
+            <h2>خدمات الطرف الثالث</h2>
+            <p>نستخدم خدمات الطرف الثالث التالية:</p>
+
+            <table>
+                <tr>
+                    <th>الخدمة</th>
+                    <th>الغرض</th>
+                </tr>
+                <tr>
+                    <td>Firebase (Google)</td>
+                    <td>المصادقة وقاعدة البيانات والتحليلات</td>
+                </tr>
+                <tr>
+                    <td>Kie.ai</td>
+                    <td>إنشاء الفيديو والصور بالذكاء الاصطناعي</td>
+                </tr>
+                <tr>
+                    <td>OpenAI</td>
+                    <td>معالجة النص وتحسين الأوصاف</td>
+                </tr>
+                <tr>
+                    <td>Eleven Labs</td>
+                    <td>إنشاء الصوت بالذكاء الاصطناعي</td>
+                </tr>
+                <tr>
+                    <td>Tap Payments</td>
+                    <td>معالجة المدفوعات</td>
+                </tr>
+            </table>
+
+            <p>لكل خدمة طرف ثالث سياسة خصوصية خاصة بها تحكم استخدامها لبياناتك.</p>
+
+            <h2>تخزين البيانات والأمان</h2>
+            <ul>
+                <li>تُخزن بياناتك بشكل آمن باستخدام Firebase Cloud Firestore</li>
+                <li>يُخزن المحتوى المُنشأ (الفيديوهات/الصور) مؤقتاً على خوادم Kie.ai لمدة تصل إلى 60 يوماً</li>
+                <li>نطبق إجراءات أمان قياسية في الصناعة لحماية معلوماتك</li>
+                <li>تُعالج بيانات الدفع بشكل آمن بواسطة Tap Payments ولا تُخزن على خوادمنا</li>
+            </ul>
+
+            <h2>الاحتفاظ بالبيانات</h2>
+            <ul>
+                <li>تُحتفظ بمعلومات الحساب طالما كان حسابك نشطاً</li>
+                <li>تظل روابط المحتوى المُنشأ متاحة لمدة تصل إلى 60 يوماً</li>
+                <li>يمكنك طلب حذف حسابك والبيانات المرتبطة به في أي وقت</li>
+            </ul>
+
+            <div class="highlight-box rtl-box">
+                <h3>حقوقك</h3>
+                <p>لديك الحق في:</p>
+                <ul>
+                    <li>الوصول إلى معلوماتك الشخصية</li>
+                    <li>طلب تصحيح البيانات غير الدقيقة</li>
+                    <li>طلب حذف حسابك وبياناتك</li>
+                    <li>إلغاء الاشتراك في الاتصالات التسويقية</li>
+                </ul>
+                <p>لحذف حسابك، قم بزيارة: <a href="delete-account.html?lang=ar">صفحة حذف الحساب</a></p>
+            </div>
+
+            <h2>خصوصية الأطفال</h2>
+            <p>تطبيق Aqvioo غير مخصص للأطفال دون سن 13 عاماً. نحن لا نجمع معلومات شخصية من الأطفال دون 13 عاماً عن علم.</p>
+
+            <h2>التغييرات على هذه السياسة</h2>
+            <p>قد نحدث سياسة الخصوصية هذه من وقت لآخر. سنخطرك بأي تغييرات عن طريق نشر السياسة الجديدة على هذه الصفحة وتحديث تاريخ "آخر تحديث".</p>
+
+            <div class="contact-box">
+                <p>أسئلة حول سياسة الخصوصية؟</p>
+                <a href="mailto:support@aqvioo.com">support@aqvioo.com</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 Aqvioo. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        function showLang(lang) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.lang-switch button').forEach(el => el.classList.remove('active'));
+            document.getElementById('content-' + lang).classList.add('active');
+            document.getElementById('btn-' + lang).classList.add('active');
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang');
+        if (lang === 'ar') {
+            showLang('ar');
+        }
+    </script>
+</body>
+</html>

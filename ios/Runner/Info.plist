@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture photos for video creation</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access for voice input</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app needs speech recognition for voice-to-text input</string>
 </dict>
 </plist>

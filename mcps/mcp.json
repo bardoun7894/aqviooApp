@@ -1,22 +1,48 @@
 {
-    "mcpServers": {
-      "context7": {
-        "command": "npx",
-        "args": ["-y", "@upstash/context7-mcp"]
-      },
-      "perplexity": {
-        "command": "npx",
-        "args": ["-y", "@perplexity-ai/mcp-server"],
-        "env": {
-          "PERPLEXITY_API_KEY": "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"
-        }
-      },
-      "firecrawl": {
-        "command": "npx",
-        "args": ["-y", "firecrawl-mcp"],
-        "env": {
-          "FIRECRAWL_API_KEY": "fc-f3a171d66a3048ae94ef194d968b9760"
-        }
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "dart": {
+      "command": "dart",
+      "args": [
+        "mcp-server",
+        "--force-roots-fallback"
+      ]
+    },
+    "perplexity": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@perplexity-ai/mcp-server"
+      ],
+      "env": {
+        "PERPLEXITY_API_KEY": "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"
+      }
+    },
+    "firecrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "fc-f3a171d66a3048ae94ef194d968b9760"
+      }
+    },
+    "flutter": {
+      "command": "/Users/mac/.gemini/flutter-mcp/.venv310/bin/python",
+      "args": [
+        "-m",
+        "flutter_mcp"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/mac/.gemini/flutter-mcp/src"
       }
     }
   }
+}

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAPm59HesfNtYYt88NjDW46XOjFvWMwHU4</string>
+	<key>GCM_SENDER_ID</key>
+	<string>651649539964</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.aqvioo.akvioo</string>
+	<key>PROJECT_ID</key>
+	<string>beldify-b445b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>beldify-b445b.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:651649539964:ios:60a0c21c677f49f626cef9</string>
+</dict>
+</plist>

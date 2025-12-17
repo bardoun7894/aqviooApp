@@ -1,0 +1,683 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../../generated/app_localizations.dart';
+import '../../auth/providers/admin_auth_provider.dart';
+
+/// Admin Scaffold - Reusable layout for all admin pages
+class AdminScaffold extends ConsumerStatefulWidget {
+  final Widget child;
+  final String currentRoute;
+
+  const AdminScaffold({
+    super.key,
+    required this.child,
+    required this.currentRoute,
+  });
+
+  @override
+  ConsumerState<AdminScaffold> createState() => _AdminScaffoldState();
+}
+
+class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
+  bool _sidebarExpanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = MediaQuery.of(context).platformBrightness;
+    final isDark = brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+    final adminState = ref.watch(adminAuthControllerProvider);
+    final adminUser = adminState.adminUser;
+
+    // Auto-collapse sidebar on mobile/tablet
+    if (isMobile || isTablet) {
+      _sidebarExpanded = false;
+    }
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      appBar: isMobile
+          ? _buildMobileAppBar(isDark, adminUser?.displayName ?? 'Admin')
+          : null,
+      body: Row(
+        children: [
+          // Sidebar - Only on desktop/tablet
+          if (!isMobile)
+            _buildSidebar(isDark, adminUser?.displayName ?? 'Admin'),
+
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                // Top App Bar - Only on desktop/tablet
+                if (!isMobile)
+                  _buildTopBar(isDark, adminUser?.displayName ?? 'Admin'),
+
+                // Main Content Area
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(isMobile ? 16 : 24),
+                    child: widget.child,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      drawer: isMobile
+          ? Drawer(
+              backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+              child: SafeArea(
+                child: _buildSidebarContent(
+                    isDark, adminUser?.displayName ?? 'Admin'),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildSidebar(bool isDark, String adminName) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: _sidebarExpanded ? 260 : 80,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkGray : AppColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : AppColors.neuShadowDark.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(2, 0),
+          ),
+        ],
+      ),
+      child: _buildSidebarContent(isDark, adminName),
+    );
+  }
+
+  Widget _buildSidebarContent(bool isDark, String adminName) {
+    return Column(
+      children: [
+        // Logo/Header
+        _buildSidebarHeader(isDark),
+
+        const SizedBox(height: 24),
+
+        // Navigation Items
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildNavItem(
+                  icon: Icons.dashboard_rounded,
+                  label: AppLocalizations.of(context)?.adminDashboard ??
+                      'Dashboard',
+                  route: '/admin/dashboard',
+                  isDark: isDark,
+                  isActive: widget.currentRoute == '/admin/dashboard',
+                ),
+                _buildNavItem(
+                  icon: Icons.people_rounded,
+                  label: AppLocalizations.of(context)?.adminUsers ?? 'Users',
+                  route: '/admin/users',
+                  isDark: isDark,
+                  isActive: widget.currentRoute == '/admin/users',
+                ),
+                _buildNavItem(
+                  icon: Icons.video_library_rounded,
+                  label:
+                      AppLocalizations.of(context)?.adminContent ?? 'Content',
+                  route: '/admin/content',
+                  isDark: isDark,
+                  isActive: widget.currentRoute == '/admin/content',
+                ),
+                _buildNavItem(
+                  icon: Icons.payment_rounded,
+                  label:
+                      AppLocalizations.of(context)?.adminPayments ?? 'Payments',
+                  route: '/admin/payments',
+                  isDark: isDark,
+                  isActive: widget.currentRoute == '/admin/payments',
+                ),
+                _buildNavItem(
+                  icon: Icons.settings_rounded,
+                  label:
+                      AppLocalizations.of(context)?.adminSettings ?? 'Settings',
+                  route: '/admin/settings',
+                  isDark: isDark,
+                  isActive: widget.currentRoute == '/admin/settings',
+                ),
+                const SizedBox(height: 16),
+                // Switch to Home App
+                _buildNavItem(
+                  icon: Icons.home_rounded,
+                  label: AppLocalizations.of(context)?.switchToApp ??
+                      'Switch to App',
+                  route: '/home',
+                  isDark: isDark,
+                  isActive: false,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // User Profile / Logout
+        _buildSidebarFooter(isDark, adminName),
+      ],
+    );
+  }
+
+  Widget _buildSidebarHeader(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          // Logo
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              size: 24,
+              color: Colors.white,
+            ),
+          ),
+
+          if (_sidebarExpanded) ...[
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Aqvioo',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? AppColors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Admin',
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required String route,
+    required bool isDark,
+    required bool isActive,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go(route),
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(
+              horizontal: _sidebarExpanded ? 16 : 0,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              gradient: isActive ? AppColors.primaryGradient : null,
+              color: isActive
+                  ? null
+                  : (isDark ? Colors.transparent : Colors.transparent),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _sidebarExpanded
+                ? Row(
+                    children: [
+                      Icon(
+                        icon,
+                        size: 22,
+                        color: isActive
+                            ? Colors.white
+                            : (isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight:
+                                isActive ? FontWeight.w700 : FontWeight.w600,
+                            color: isActive
+                                ? Colors.white
+                                : (isDark
+                                    ? AppColors.mediumGray
+                                    : AppColors.textSecondary),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: isActive
+                          ? Colors.white
+                          : (isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSidebarFooter(bool isDark, String adminName) {
+    return Container(
+      padding: EdgeInsets.all(_sidebarExpanded ? 16 : 8),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withOpacity(0.1)
+                : AppColors.neuShadowDark.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Admin Profile
+          if (_sidebarExpanded)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
+                    child: Text(
+                      adminName[0].toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          adminName,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.white
+                                : AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          AppLocalizations.of(context)?.administrator ??
+                              'Administrator',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Logout Button
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                ref.read(adminAuthControllerProvider.notifier).signOut();
+                context.go('/admin/login');
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: _sidebarExpanded ? 12 : 8,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.2)
+                        : AppColors.neuShadowDark.withOpacity(0.3),
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: _sidebarExpanded
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.logout_rounded,
+                            size: 18,
+                            color: isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            AppLocalizations.of(context)?.adminLogout ??
+                                'Logout',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppColors.mediumGray
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.logout_rounded,
+                          size: 18,
+                          color: isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildMobileAppBar(bool isDark, String adminName) {
+    return AppBar(
+      backgroundColor: isDark ? AppColors.darkGray : AppColors.white,
+      elevation: 0,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(
+            Icons.menu_rounded,
+            color: isDark ? AppColors.white : AppColors.textPrimary,
+          ),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Aqvioo Admin',
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.white : AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        // Language Switcher (Mobile)
+        Consumer(
+          builder: (context, ref, child) {
+            final locale = ref.watch(localeProvider);
+            final isArabic = locale.languageCode == 'ar';
+            return IconButton(
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.language_rounded, size: 20),
+                  const SizedBox(width: 2),
+                  Text(
+                    isArabic ? 'EN' : 'ع',
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.white : AppColors.primaryPurple,
+                    ),
+                  ),
+                ],
+              ),
+              color: isDark ? AppColors.white : AppColors.primaryPurple,
+              onPressed: () => ref.read(localeProvider.notifier).toggleLocale(),
+            );
+          },
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.notifications_outlined,
+            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+          ),
+          onPressed: () {},
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: CircleAvatar(
+            radius: 16,
+            backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
+            child: Text(
+              adminName[0].toUpperCase(),
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryPurple,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTopBar(bool isDark, String adminName) {
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkGray : AppColors.white,
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.neuShadowDark.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Toggle Sidebar (Desktop only)
+          if (MediaQuery.of(context).size.width >= 768)
+            IconButton(
+              icon: Icon(
+                _sidebarExpanded ? Icons.menu_open : Icons.menu,
+                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              ),
+              onPressed: () =>
+                  setState(() => _sidebarExpanded = !_sidebarExpanded),
+            ),
+
+          const Spacer(),
+
+          // Search Bar (Optional - for future)
+          // _buildSearchBar(isDark),
+
+          // const SizedBox(width: 16),
+
+          // Language Switcher
+          Consumer(
+            builder: (context, ref, child) {
+              final locale = ref.watch(localeProvider);
+              final isArabic = locale.languageCode == 'ar';
+              return Tooltip(
+                message: isArabic ? 'Switch to English' : 'التبديل إلى العربية',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () =>
+                        ref.read(localeProvider.notifier).toggleLocale(),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : AppColors.primaryPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.2)
+                              : AppColors.primaryPurple.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.language_rounded,
+                            size: 18,
+                            color: isDark
+                                ? AppColors.white
+                                : AppColors.primaryPurple,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isArabic ? 'EN' : 'ع',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? AppColors.white
+                                  : AppColors.primaryPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(width: 12),
+
+          // Notifications
+          IconButton(
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+            ),
+            onPressed: () {
+              // TODO: Show notifications
+            },
+          ),
+
+          const SizedBox(width: 12),
+
+          // Admin Profile
+          InkWell(
+            onTap: () {
+              // TODO: Show profile menu
+            },
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primaryPurple.withOpacity(0.2),
+                    child: Text(
+                      adminName[0].toUpperCase(),
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryPurple,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    adminName,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppColors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 18,
+                    color:
+                        isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
