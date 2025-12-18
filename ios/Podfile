@@ -35,6 +35,11 @@ target 'Runner' do
   use_frameworks!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # Force gRPC 1.65.2+ to fix BoringSSL-GRPC -G flag incompatibility with Xcode 16
+  # This was causing: "unsupported option '-G' for target 'arm64-apple-ios14.0'"
+  pod 'gRPC', '~> 1.65.2'
+
   target 'RunnerTests' do
     inherit! :search_paths
   end
