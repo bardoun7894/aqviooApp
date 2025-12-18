@@ -4,6 +4,9 @@ platform :ios, '16.6'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# Disable CocoaPods new generator to avoid "-G" option incompatibility
+ENV['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'true'
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -40,12 +43,21 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
-    # Fix CocoaPods "-G" option incompatibility with old iOS targets
-    # Some pods may have iOS 10.0 target; ensure minimum iOS 14.0
+    # Fix CocoaPods "-G" option incompatibility
+    # Remove the -G flag from OTHER_LDFLAGS which causes issues with some targets
     target.build_configurations.each do |config|
+      # Ensure minimum iOS deployment target
       deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
       if deployment_target && deployment_target.to_f < 14.0
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      end
+
+      # Remove problematic -G flag from OTHER_LDFLAGS
+      ldflags = config.build_settings['OTHER_LDFLAGS']
+      if ldflags.is_a?(String) && ldflags.include?('-G')
+        config.build_settings['OTHER_LDFLAGS'] = ldflags.gsub(/-G\s+/, '').strip
+      elsif ldflags.is_a?(Array)
+        config.build_settings['OTHER_LDFLAGS'] = ldflags.reject { |flag| flag.start_with?('-G') }
       end
     end
   end
