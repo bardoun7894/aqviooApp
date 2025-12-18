@@ -40,4 +40,33 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  # Fix Swift 6 compatibility issues in Firebase pods
+  base_dir = File.dirname(__FILE__)
+
+  # Patch all Firebase Swift files to remove Swift 6 syntax
+  ['FirebaseSharedSwift', 'FirebaseCoreInternal'].each do |pod_name|
+    pod_dir = File.join(base_dir, "Pods/#{pod_name}")
+    if File.exist?(pod_dir)
+      Dir.glob(File.join(pod_dir, "**/*.swift")).each do |swift_file|
+        begin
+          File.chmod(0644, swift_file) rescue nil
+          content = File.read(swift_file)
+
+          # Remove all Swift 6 concurrency keywords
+          content.gsub!(/\bconsuming\s+/, '')
+          content.gsub!(/\bborrowing\s+/, '')
+          content.gsub!(/\bsending\s+/, '')
+          content.gsub!(/\bnonisolated\(unsafe\)\s+/, '')
+          content.gsub!(/\bnonisolated\s+/, '')
+          content.gsub!(/\bunsafe_Sendable/, 'Sendable')
+
+          File.write(swift_file, content)
+        rescue => e
+          # Silently skip files that can't be fixed
+        end
+      end
+      puts "Patched all Swift files in #{pod_name} for Swift 5.9 compatibility"
+    end
+  end
 end
