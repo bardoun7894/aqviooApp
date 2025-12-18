@@ -44,7 +44,7 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
 
     # Fix CocoaPods "-G" option incompatibility
-    # Remove the -G flag from OTHER_LDFLAGS which causes issues with some targets
+    # This error occurs when a target's deployment target doesn't support the -G flag
     target.build_configurations.each do |config|
       # Ensure minimum iOS deployment target
       deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
@@ -52,14 +52,23 @@ post_install do |installer|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       end
 
-      # Remove problematic -G flag from OTHER_LDFLAGS
-      ldflags = config.build_settings['OTHER_LDFLAGS']
-      if ldflags.is_a?(String) && ldflags.include?('-G')
-        config.build_settings['OTHER_LDFLAGS'] = ldflags.gsub(/-G\s+/, '').strip
-      elsif ldflags.is_a?(Array)
-        config.build_settings['OTHER_LDFLAGS'] = ldflags.reject { |flag| flag.start_with?('-G') }
+      # Remove problematic -G flag from all build settings
+      ['OTHER_LDFLAGS', 'LD_RUNPATH_SEARCH_PATHS'].each do |key|
+        value = config.build_settings[key]
+        if value
+          if value.is_a?(String)
+            config.build_settings[key] = value.gsub(/-G\s+\S*/, '').gsub(/\s+/, ' ').strip
+          elsif value.is_a?(Array)
+            config.build_settings[key] = value.reject { |v| v.to_s.start_with?('-G') }
+          end
+        end
       end
     end
+  end
+
+  # Also patch the Pods project to remove -G from scheme build settings
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= '$(inherited)'
   end
 
   # Fix Swift 6 compatibility issues in Firebase pods

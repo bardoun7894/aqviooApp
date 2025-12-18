@@ -36,6 +36,10 @@ workflows:
           xcode-project use-profiles
       - name: Get dependencies
         script: flutter pub get
+      - name: Clean pods cache
+        script: |
+          rm -rf ios/Pods
+          rm -f ios/Podfile.lock
       - name: Install pods
         script: find . -name "Podfile" -execdir pod install \;
       - name: Build IPA
