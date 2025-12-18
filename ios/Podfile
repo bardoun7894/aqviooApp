@@ -52,16 +52,19 @@ post_install do |installer|
         begin
           File.chmod(0644, swift_file) rescue nil
           content = File.read(swift_file)
+          original_content = content.dup
 
-          # Remove all Swift 6 concurrency keywords
-          content.gsub!(/\bconsuming\s+/, '')
-          content.gsub!(/\bborrowing\s+/, '')
-          content.gsub!(/\bsending\s+/, '')
-          content.gsub!(/\bnonisolated\(unsafe\)\s+/, '')
-          content.gsub!(/\bnonisolated\s+/, '')
+          # Remove all Swift 6 concurrency keywords (but not from import statements)
+          # Match keywords only when NOT part of "import" statements
+          content.gsub!(/(?<!import\s)\bconsuming\s+/, '')
+          content.gsub!(/(?<!import\s)\bborrowing\s+/, '')
+          content.gsub!(/(?<!import\s)\bsending\s+/, '')
+          content.gsub!(/(?<!import\s)\bnonisolated\(unsafe\)\s+/, '')
+          content.gsub!(/(?<!import\s)\bnonisolated\s+/, '')
           content.gsub!(/\bunsafe_Sendable/, 'Sendable')
 
-          File.write(swift_file, content)
+          # Only write if content changed
+          File.write(swift_file, content) if content != original_content
         rescue => e
           # Silently skip files that can't be fixed
         end
