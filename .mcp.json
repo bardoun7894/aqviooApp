@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "app-store-connect": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "appstore-connect-mcp-server"
+      ],
+      "env": {
+        "APP_STORE_CONNECT_KEY_ID": "5N2P5VNV84",
+        "APP_STORE_CONNECT_ISSUER_ID": "0c31fe63-e8b1-4b25-adff-8ae358854e30",
+        "APP_STORE_CONNECT_P8_PATH": "/Users/mac/aqvioo/AuthKey_5N2P5VNV84.p8",
+        "APP_STORE_CONNECT_VENDOR_NUMBER": "92969208"
+      }
+    },
+    "codemagic": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli]",
+        "--with",
+        "requests",
+        "mcp",
+        "run",
+        "/tmp/codemagic-mcp/codemagic_mcp/server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/tmp/codemagic-mcp/",
+        "CODEMAGIC_API_KEY": "OoezjE5Da9MSfnJr6IDmfhT3KRRBeNvCa0tkb02Sfb0"
+      }
+    }
+  }
+}

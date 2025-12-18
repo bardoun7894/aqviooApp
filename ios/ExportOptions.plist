@@ -6,13 +6,8 @@
     <string>app-store</string>
     <key>teamID</key>
     <string>4LGGU2TT4V</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.aqvioo.akvioo</key>
-        <string>app store bew</string>
-    </dict>
     <key>signingStyle</key>
-    <string>manual</string>
+    <string>automatic</string>
     <key>stripSwiftSymbols</key>
     <true/>
     <key>uploadBitcode</key>
