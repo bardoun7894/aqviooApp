@@ -36,20 +36,25 @@ target 'Runner' do
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Force gRPC 1.65.2+ to fix BoringSSL-GRPC -G flag incompatibility with Xcode 16
-  # This was causing: "unsupported option '-G' for target 'arm64-apple-ios14.0'"
-  pod 'gRPC', '~> 1.65.2'
-
   target 'RunnerTests' do
     inherit! :search_paths
   end
 end
 
 post_install do |installer|
-  # Disable the new Xcode build system generator to avoid -G flag issues
-  installer.pods_project.build_configurations.each do |config|
-    # Disable deterministic UUIDs which is what causes the -G flag
-    config.build_settings['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'YES'
+  # Fix BoringSSL-GRPC -G flag issue (Xcode 16 compatibility)
+  # The -GCC_WARN_INHIBIT_ALL_WARNINGS flag is misread as -G by Xcode 16's clang
+  # This removes the problematic flag from BoringSSL-GRPC source files
+  installer.pods_project.targets.each do |target|
+    if target.name == 'BoringSSL-GRPC'
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
+    end
   end
 
   installer.pods_project.targets.each do |target|
