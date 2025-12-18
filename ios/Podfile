@@ -4,7 +4,8 @@ platform :ios, '16.6'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-# Disable CocoaPods new generator to avoid "-G" option incompatibility
+# Disable the new CocoaPods Xcode integration that causes -G flag issues
+# This flag was introduced in CocoaPods 1.13+ and causes linker errors
 ENV['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'true'
 
 project 'Runner', {
@@ -40,35 +41,40 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  # Disable the new Xcode build system generator to avoid -G flag issues
+  installer.pods_project.build_configurations.each do |config|
+    # Disable deterministic UUIDs which is what causes the -G flag
+    config.build_settings['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'YES'
+  end
+
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
 
     # Fix CocoaPods "-G" option incompatibility
     # This error occurs when a target's deployment target doesn't support the -G flag
     target.build_configurations.each do |config|
+      # Disable -G flag generation
+      config.build_settings['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'YES'
+
       # Ensure minimum iOS deployment target
       deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
       if deployment_target && deployment_target.to_f < 14.0
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       end
 
-      # Remove problematic -G flag from all build settings
-      ['OTHER_LDFLAGS', 'LD_RUNPATH_SEARCH_PATHS'].each do |key|
+      # Force strip -G from build settings if it appears
+      %w[OTHER_LDFLAGS GCC_PREPROCESSOR_DEFINITIONS].each do |key|
         value = config.build_settings[key]
-        if value
-          if value.is_a?(String)
-            config.build_settings[key] = value.gsub(/-G\s+\S*/, '').gsub(/\s+/, ' ').strip
-          elsif value.is_a?(Array)
-            config.build_settings[key] = value.reject { |v| v.to_s.start_with?('-G') }
-          end
+        next unless value
+
+        if value.is_a?(String)
+          # Remove -G flag and arguments
+          config.build_settings[key] = value.gsub(/-G\s+\S*/, '').gsub(/\s+/, ' ').strip
+        elsif value.is_a?(Array)
+          config.build_settings[key] = value.reject { |v| v.to_s.start_with?('-G') }
         end
       end
     end
-  end
-
-  # Also patch the Pods project to remove -G from scheme build settings
-  installer.pods_project.build_configurations.each do |config|
-    config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= '$(inherited)'
   end
 
   # Fix Swift 6 compatibility issues in Firebase pods

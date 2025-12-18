@@ -41,7 +41,9 @@ workflows:
           rm -rf ios/Pods
           rm -f ios/Podfile.lock
       - name: Install pods
-        script: find . -name "Podfile" -execdir pod install \;
+        script: |
+          export COCOAPODS_DISABLE_STATS=true
+          cd ios && pod install --repo-update && cd ..
       - name: Build IPA
         script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
     artifacts:
