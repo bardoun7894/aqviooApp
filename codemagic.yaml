@@ -7,11 +7,10 @@ workflows:
       events:
         - push
         - pull_request
-      branch:
-        include_patterns:
-          - main
-          - credit
-          - develop
+      branch_patterns:
+        - pattern: 'main'
+        - pattern: 'credit'
+        - pattern: 'develop'
     environment:
       ios_signing:
         distribution_type: app_store
