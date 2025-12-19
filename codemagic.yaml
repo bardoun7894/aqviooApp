@@ -57,7 +57,9 @@ workflows:
             find ios/Pods -name "basic_seq.h" 2>/dev/null || echo "No basic_seq.h found"
           fi
       - name: Build IPA
-        script: flutter build ipa --release --build-number=$BUILD_NUMBER --export-method=app-store
+        script: |
+          xcode-project use-profiles
+          flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
