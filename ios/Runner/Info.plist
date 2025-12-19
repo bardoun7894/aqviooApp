@@ -51,5 +51,7 @@
 	<string>This app needs microphone access for voice input</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>This app needs speech recognition for voice-to-text input</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select images for video creation</string>
 </dict>
 </plist>
