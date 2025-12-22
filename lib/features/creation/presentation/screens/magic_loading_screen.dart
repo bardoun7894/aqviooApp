@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:simple_animations/simple_animations.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../core/utils/responsive_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 
 import 'package:go_router/go_router.dart';
 import '../../domain/models/creation_config.dart';
@@ -41,6 +42,18 @@ class MagicLoadingScreen extends ConsumerWidget {
       case 'generationTimedOut':
         return l10n.generationTimedOut;
       default:
+        if (key.startsWith('fallbackNotice_')) {
+          final modelName = key.split('_').last;
+          // Capitalize first letter
+          final model = modelName.isNotEmpty
+              ? '${modelName[0].toUpperCase()}${modelName.substring(1)}'
+              : modelName;
+
+          // Use appropriate localized string with model info
+          // Note: Hardcoding "Using" as adding new keys requires full l10n update
+          final baseMsg = isImage ? l10n.generatingImage : l10n.creatingVideo;
+          return '$baseMsg\n(Using $model)';
+        }
         return key;
     }
   }
@@ -56,6 +69,71 @@ class MagicLoadingScreen extends ConsumerWidget {
           'prompt': next.config.prompt,
           'isImage': next.config.outputType == OutputType.image,
         });
+      } else if (next.status == CreationWizardStatus.error) {
+        // Show error dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              AppLocalizations.of(context)!.failed,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            content: Text(
+              next.errorMessage ?? 'Unknown error occurred',
+              style: GoogleFonts.outfit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  // Reset state and go back
+                  ref.read(creationControllerProvider.notifier).reset();
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+                child: Text(
+                  AppLocalizations.of(context)!.close,
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  // Reset state and retry
+                  ref
+                      .read(creationControllerProvider.notifier)
+                      .retryGeneration();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.retry,
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
       }
     });
 

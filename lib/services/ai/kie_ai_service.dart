@@ -13,7 +13,8 @@ class KieAIException implements Exception {
   final String? technicalDetails;
   final bool isRetryable;
 
-  KieAIException(this.message, {this.technicalDetails, this.isRetryable = false});
+  KieAIException(this.message,
+      {this.technicalDetails, this.isRetryable = false});
 
   @override
   String toString() => message;
@@ -26,8 +27,15 @@ class KieAIService {
   // Retry configuration
   static const int _maxRetries = 3;
   static const Duration _initialRetryDelay = Duration(seconds: 2);
+
   static const Duration _requestTimeout = Duration(seconds: 30);
-  static const Duration _pollingTimeout = Duration(seconds: 60); // Longer timeout for polling when app may be backgrounded
+  static const Duration _pollingTimeout = Duration(
+      seconds: 60); // Longer timeout for polling when app may be backgrounded
+
+  // Model Constants
+  static const String MODEL_SORA2 = 'sora-2-text-to-video';
+  static const String MODEL_KLING = 'kling';
+  static const String MODEL_HAILUO = 'hailuo';
 
   KieAIService({required String apiKey}) : _apiKey = apiKey;
 
@@ -123,10 +131,77 @@ class KieAIService {
     }
   }
 
-  // ==================== SORA 2 API (Text-to-Video) ====================
+  // ==================== VIDEO GENERATION (Sora 2 / Fallback) ====================
 
-  /// Generate video using Sora 2 (text-to-video only, no image input)
-  Future<String> generateVideoWithSora2({
+  /// Generate video with automatic fallback if primary model is unavailable
+  /// Returns a Map with 'taskId' and 'usedModel'
+  Future<Map<String, String>> generateVideoWithFallback({
+    required String prompt,
+    required String aspectRatio,
+    required String nFrames,
+    bool removeWatermark = true,
+  }) async {
+    try {
+      // Try Sora 2 first
+      final taskId = await _generateVideoWithModel(
+        model: MODEL_SORA2,
+        prompt: prompt,
+        aspectRatio: aspectRatio,
+        nFrames: nFrames,
+        removeWatermark: removeWatermark,
+      );
+      return {'taskId': taskId, 'usedModel': MODEL_SORA2};
+    } catch (e) {
+      // Check for specific error indicating unavailability
+      final errorMsg = e.toString().toLowerCase();
+      if (errorMsg.contains('temporarily unavailable') ||
+          errorMsg.contains('maintenance') ||
+          errorMsg.contains('sora') || // Broad check for Sora issues
+          errorMsg.contains('503') ||
+          errorMsg.contains('404')) {
+        debugPrint(
+            '⚠️ Sora 2 unavailable, switching to fallback model: $MODEL_KLING');
+
+        try {
+          // Fallback to Kling
+          final taskId = await _generateVideoWithModel(
+            model: MODEL_KLING,
+            prompt: prompt,
+            aspectRatio: aspectRatio,
+            nFrames: nFrames,
+            removeWatermark: removeWatermark,
+          );
+          return {'taskId': taskId, 'usedModel': MODEL_KLING};
+        } catch (fallbackError) {
+          debugPrint('❌ Fallback to Kling failed: $fallbackError');
+          // If Kling fails, try Hailuo as last resort
+          debugPrint(
+              '⚠️ Kling unavailable, switching to second fallback: $MODEL_HAILUO');
+          try {
+            final taskId = await _generateVideoWithModel(
+              model: MODEL_HAILUO,
+              prompt: prompt,
+              aspectRatio: aspectRatio,
+              nFrames: nFrames,
+              removeWatermark: removeWatermark,
+            );
+            return {'taskId': taskId, 'usedModel': MODEL_HAILUO};
+          } catch (secondFallbackError) {
+            debugPrint(
+                '❌ Second fallback (Hailuo) failed: $secondFallbackError');
+            rethrow; // Throw original error if all fail, or maybe the last one?
+            // Throwing the last error might be more confusing if the user expects Sora.
+            // But usually best to show the last attempt's error.
+          }
+        }
+      }
+      rethrow;
+    }
+  }
+
+  /// Internal method to generate video with a specific model
+  Future<String> _generateVideoWithModel({
+    required String model,
     required String prompt,
     required String aspectRatio, // "landscape" or "portrait"
     required String nFrames, // "10" or "15"
@@ -137,21 +212,21 @@ class KieAIService {
       await _checkConnectivity();
 
       final response = await _executeWithRetry(() => http.post(
-        Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': 'sora-2-text-to-video',
-          'input': {
-            'prompt': prompt,
-            'aspect_ratio': aspectRatio,
-            'n_frames': nFrames,
-            'remove_watermark': removeWatermark,
-          },
-        }),
-      ));
+            Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
+            headers: {
+              'Authorization': 'Bearer $_apiKey',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'model': model,
+              'input': {
+                'prompt': prompt,
+                'aspect_ratio': aspectRatio,
+                'n_frames': nFrames,
+                'remove_watermark': removeWatermark,
+              },
+            }),
+          ));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -160,13 +235,14 @@ class KieAIService {
         } else {
           throw KieAIException(
             _getUserFriendlyError(data['msg'] ?? 'Unknown error'),
-            technicalDetails: 'Sora 2 API: ${data['msg']}',
+            technicalDetails: '$model API: ${data['msg']}',
           );
         }
       } else if (response.statusCode == 401) {
         throw KieAIException('Invalid API key. Please contact support.');
       } else if (response.statusCode == 402) {
-        throw KieAIException('Insufficient credits. Please top up your account.');
+        throw KieAIException(
+            'Insufficient credits. Please top up your account.');
       } else if (response.statusCode == 429) {
         throw KieAIException(
           'Too many requests. Please wait a moment and try again.',
@@ -182,13 +258,28 @@ class KieAIService {
     } on KieAIException {
       rethrow;
     } catch (e) {
-      debugPrint('Error generating video with Sora 2: $e');
+      debugPrint('Error generating video with $model: $e');
       throw KieAIException(
         _getUserFriendlyError(e.toString()),
         technicalDetails: e.toString(),
         isRetryable: true,
       );
     }
+  }
+
+  /// DEPRECATED: Use generateVideoWithFallback instead
+  Future<String> generateVideoWithSora2({
+    required String prompt,
+    required String aspectRatio,
+    required String nFrames,
+    bool removeWatermark = true,
+  }) async {
+    return _generateVideoWithModel(
+        model: MODEL_SORA2,
+        prompt: prompt,
+        aspectRatio: aspectRatio,
+        nFrames: nFrames,
+        removeWatermark: removeWatermark);
   }
 
   // ==================== VEO3 API (Image-to-Video) ====================
@@ -279,7 +370,9 @@ class KieAIService {
             try {
               final resultJson = jsonDecode(taskData['resultJson']);
               final resultUrls = resultJson['resultUrls'];
-              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+              if (resultUrls != null &&
+                  resultUrls is List &&
+                  resultUrls.isNotEmpty) {
                 return {
                   'state': 'success',
                   'videoUrl': resultUrls[0],
@@ -402,11 +495,14 @@ class KieAIService {
             try {
               final resultJson = jsonDecode(taskData['resultJson']);
               final resultUrls = resultJson['resultUrls'];
-              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+              if (resultUrls != null &&
+                  resultUrls is List &&
+                  resultUrls.isNotEmpty) {
                 return {
                   'state': 'success',
                   'imageUrl': resultUrls[0],
-                  'videoUrl': resultUrls[0], // Also provide as videoUrl for unified handling
+                  'videoUrl': resultUrls[
+                      0], // Also provide as videoUrl for unified handling
                 };
               } else {
                 return {
@@ -475,22 +571,22 @@ class KieAIService {
       await _checkConnectivity();
 
       final response = await _executeWithRetry(() => http.post(
-        Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': 'nano-banana-pro',
-          'input': {
-            'prompt': prompt,
-            'image_input': imageInput ?? [],
-            'aspect_ratio': aspectRatio,
-            'resolution': resolution,
-            'output_format': outputFormat,
-          },
-        }),
-      ));
+            Uri.parse('$_baseUrl/api/v1/jobs/createTask'),
+            headers: {
+              'Authorization': 'Bearer $_apiKey',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'model': 'nano-banana-pro',
+              'input': {
+                'prompt': prompt,
+                'image_input': imageInput ?? [],
+                'aspect_ratio': aspectRatio,
+                'resolution': resolution,
+                'output_format': outputFormat,
+              },
+            }),
+          ));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -505,7 +601,8 @@ class KieAIService {
       } else if (response.statusCode == 401) {
         throw KieAIException('Invalid API key. Please contact support.');
       } else if (response.statusCode == 402) {
-        throw KieAIException('Insufficient credits. Please top up your account.');
+        throw KieAIException(
+            'Insufficient credits. Please top up your account.');
       } else if (response.statusCode == 429) {
         throw KieAIException(
           'Too many requests. Please wait a moment and try again.',
@@ -625,22 +722,26 @@ class KieAIService {
   ) async {
     String taskId;
 
-    // For MVP: Only support text-to-video (Sora 2)
+    // For MVP: Only support text-to-video (Sora 2 / Fallback)
     // Image-to-video (Veo3) requires cloud storage - disabled for now
     if (imageFile == null) {
-      // Use Sora 2 for text-only video
-      taskId = await generateVideoWithSora2(
+      // Use Sora 2 with fallback to Kling/Hailuo
+      final result = await generateVideoWithFallback(
         prompt: enhancedPrompt,
         aspectRatio: config.videoAspectRatio ?? 'landscape',
         nFrames: config.videoDurationSeconds?.toString() ?? '10',
         removeWatermark: true,
       );
 
+      taskId = result['taskId']!;
+      final usedModel = result['usedModel'];
+
       // Return taskId immediately for persistence
       return {
         'type': 'video_task',
         'taskId': taskId,
         'status': 'processing',
+        'usedModel': usedModel,
       };
     } else {
       // Image-to-video is not available yet

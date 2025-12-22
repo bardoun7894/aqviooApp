@@ -1,44 +1,15 @@
-# Build outputs
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+readme.md
+.idea
+.vscode
 build/
 .dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
 .packages
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# iOS/Android specific
-ios/
-android/
-macos/
-linux/
-windows/
-
-# Tests
-test/
-integration_test/
-
-# Documentation
-*.md
-!README.md
-
-# Git
-.git/
-.gitignore
-
-# Environment (commented out because .env is needed for Tabby API)
-# .env
-.env.local
-.env.*.local
-
-# Logs
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
+.pub-cache/
+pubspec.lock
+landing-page/node_modules
+landing-page/.next

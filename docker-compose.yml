@@ -1,16 +1,38 @@
-version: '3.8'
-
 services:
-  aqvioo-admin:
+  # Service 1: Next.js Landing Page
+  landing:
     build:
-      context: .
+      context: ./landing-page
       dockerfile: Dockerfile
-    container_name: aqvioo-admin-dashboard
-    ports:
-      - "3000:80"
+    container_name: aqvioo-landing
+    expose:
+      - "3000"
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-    labels:
-      - "com.aqvioo.description=Aqvioo Admin Dashboard"
-      - "com.aqvioo.version=1.0.0"
+
+  # Service 2: Flutter Web Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Using args to ensure flutter builds with correct base href
+      args:
+        - FLUTTER_BASE_HREF=/dashboard/
+    container_name: aqvioo-dashboard
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  # Service 3: Nginx Gateway
+  gateway:
+    image: nginx:alpine
+    container_name: aqvioo-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - landing
+      - dashboard
+    restart: unless-stopped

@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-cairo), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  --color-primary: #8B5CF6;
+  --color-primary-dark: #6D28D9;
+  --color-primary-light: #A78BFA;
+
+  --color-bg-dark: #0F172A;
+}
+
+/* Base Styles */
+body {
+  background-color: var(--color-bg-dark);
+  color: white;
+}
+
+/* Glassmorphism Utilities (Simplified) */
+.glass {
+  background: rgba(30, 41, 59, 0.7);
+  /* slate-800 with opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}

@@ -13,11 +13,8 @@ RUN flutter pub get
 COPY . .
 
 # Build the web application
-# Uses --web-renderer html can be safer for compatibility, or canvaskit for performance.
-# Auto is usually best, but for admin panels HTML is often lighter/sufficient.
-# However, for Rive/creative apps, CanvasKit is preferred.
-# Defaulting to auto (default behavior).
-RUN flutter build web --release
+ARG FLUTTER_BASE_HREF=/
+RUN flutter build web --release --base-href ${FLUTTER_BASE_HREF}
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine

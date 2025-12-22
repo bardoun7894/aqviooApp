@@ -22,21 +22,54 @@ class MyCreationsScreen extends ConsumerStatefulWidget {
 }
 
 class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
-  String _selectedFilter = 'All'; // All, Video, Image
-  bool _isGridView = true; // Toggle between grid and list view
+  String _selectedFilter = 'All'; // All, Videos, Images, Processing, Failed
+  bool _isGridView = true;
+  bool _isDescending = true; // Newest first
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final creationState = ref.watch(creationControllerProvider);
     final allCreations = creationState.creations;
 
-    // Filter logic
-    final filteredCreations = allCreations.where((item) {
-      if (_selectedFilter == 'All') return true;
-      if (_selectedFilter == 'Videos') return item.type == CreationType.video;
-      if (_selectedFilter == 'Images') return item.type == CreationType.image;
+    // Filter and Search logic
+    var filteredCreations = allCreations.where((item) {
+      // Type/Status filters
+      bool matchesFilter = true;
+      if (_selectedFilter == 'Videos') {
+        matchesFilter = item.type == CreationType.video;
+      } else if (_selectedFilter == 'Images') {
+        matchesFilter = item.type == CreationType.image;
+      } else if (_selectedFilter == 'Processing') {
+        matchesFilter = item.status == CreationStatus.processing;
+      } else if (_selectedFilter == 'Failed') {
+        matchesFilter = item.status == CreationStatus.failed;
+      }
+
+      if (!matchesFilter) return false;
+
+      // Search query filter
+      if (_searchQuery.isNotEmpty) {
+        return item.prompt.toLowerCase().contains(_searchQuery.toLowerCase());
+      }
       return true;
     }).toList();
+
+    // Sorting logic
+    filteredCreations.sort((a, b) {
+      if (_isDescending) {
+        return b.createdAt.compareTo(a.createdAt);
+      } else {
+        return a.createdAt.compareTo(b.createdAt);
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
@@ -85,7 +118,63 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
 
                 const SizedBox(height: 16),
 
-                // Filter Chips and View Toggle
+                // Search Bar
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                      style: GoogleFonts.outfit(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Search prompts...',
+                        hintStyle: GoogleFonts.outfit(
+                          color: AppColors.textSecondary.withOpacity(0.6),
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: AppColors.textSecondary.withOpacity(0.6),
+                          size: 20,
+                        ),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Filter Chips and Actions
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -94,18 +183,68 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
                           child: Row(
                             children: [
-                              _buildFilterChip('All'),
+                              _buildFilterChip('All', allCreations.length),
                               const SizedBox(width: 8),
-                              _buildFilterChip('Videos'),
+                              _buildFilterChip(
+                                  'Videos',
+                                  allCreations
+                                      .where(
+                                          (c) => c.type == CreationType.video)
+                                      .length),
                               const SizedBox(width: 8),
-                              _buildFilterChip('Images'),
+                              _buildFilterChip(
+                                  'Images',
+                                  allCreations
+                                      .where(
+                                          (c) => c.type == CreationType.image)
+                                      .length),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                  'Processing',
+                                  allCreations
+                                      .where((c) =>
+                                          c.status == CreationStatus.processing)
+                                      .length),
+                              const SizedBox(width: 8),
+                              _buildFilterChip(
+                                  'Failed',
+                                  allCreations
+                                      .where((c) =>
+                                          c.status == CreationStatus.failed)
+                                      .length),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
+
+                      // Sort Toggle
+                      GestureDetector(
+                        onTap: () =>
+                            setState(() => _isDescending = !_isDescending),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Icon(
+                            _isDescending
+                                ? Icons.south_rounded
+                                : Icons.north_rounded,
+                            size: 18,
+                            color: AppColors.primaryPurple,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
                       // View Toggle
                       Container(
                         decoration: BoxDecoration(
@@ -324,6 +463,8 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final hasActiveFilter = _selectedFilter != 'All' || _searchQuery.isNotEmpty;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -338,27 +479,37 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.primaryPurple.withOpacity(0.2),
-                    AppColors.primaryPurple.withOpacity(0.05),
+                    (hasActiveFilter ? Colors.grey : AppColors.primaryPurple)
+                        .withOpacity(0.2),
+                    (hasActiveFilter ? Colors.grey : AppColors.primaryPurple)
+                        .withOpacity(0.05),
                   ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.15),
+                    color: (hasActiveFilter
+                            ? Colors.grey
+                            : AppColors.primaryPurple)
+                        .withOpacity(0.15),
                     blurRadius: 40,
                     spreadRadius: 10,
                   ),
                 ],
               ),
               child: Icon(
-                Icons.auto_awesome_rounded,
+                hasActiveFilter
+                    ? Icons.search_off_rounded
+                    : Icons.auto_awesome_rounded,
                 size: 56,
-                color: AppColors.primaryPurple.withOpacity(0.7),
+                color: (hasActiveFilter ? Colors.grey : AppColors.primaryPurple)
+                    .withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 32),
             Text(
-              AppLocalizations.of(context)!.noCreationsYet,
+              hasActiveFilter
+                  ? 'No matches found'
+                  : AppLocalizations.of(context)!.noCreationsYet,
               style: GoogleFonts.outfit(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
@@ -367,7 +518,9 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              AppLocalizations.of(context)!.emptyGalleryDescription,
+              hasActiveFilter
+                  ? 'Try adjusting your filters or search query to find what you\'re looking for.'
+                  : AppLocalizations.of(context)!.emptyGalleryDescription,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
                 color: AppColors.textSecondary,
@@ -376,18 +529,34 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            // Create Button
+            // Action Button
             GestureDetector(
-              onTap: () => context.go('/home'),
+              onTap: () {
+                if (hasActiveFilter) {
+                  _searchController.clear();
+                  setState(() {
+                    _searchQuery = '';
+                    _selectedFilter = 'All';
+                  });
+                } else {
+                  context.go('/home');
+                }
+              },
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  gradient: hasActiveFilter
+                      ? LinearGradient(
+                          colors: [Colors.grey.shade600, Colors.grey.shade400])
+                      : AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryPurple.withOpacity(0.4),
+                      color: (hasActiveFilter
+                              ? Colors.grey
+                              : AppColors.primaryPurple)
+                          .withOpacity(0.4),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -396,14 +565,18 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.add_rounded,
+                    Icon(
+                      hasActiveFilter
+                          ? Icons.filter_alt_off_rounded
+                          : Icons.add_rounded,
                       color: Colors.white,
                       size: 22,
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      AppLocalizations.of(context)!.createYourFirst,
+                      hasActiveFilter
+                          ? 'Clear all filters'
+                          : AppLocalizations.of(context)!.createYourFirst,
                       style: GoogleFonts.outfit(
                         color: Colors.white,
                         fontSize: 16,
@@ -420,7 +593,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label) {
+  Widget _buildFilterChip(String label, int count) {
     final isSelected = _selectedFilter == label;
     String displayLabel;
     switch (label) {
@@ -433,6 +606,12 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
       case 'Images':
         displayLabel = AppLocalizations.of(context)!.images;
         break;
+      case 'Processing':
+        displayLabel = 'Pending';
+        break;
+      case 'Failed':
+        displayLabel = 'Failed';
+        break;
       default:
         displayLabel = label;
     }
@@ -443,7 +622,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           gradient: isSelected
               ? AppColors.primaryGradient
@@ -470,16 +649,38 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
             ),
           ],
         ),
-        child: Center(
-          child: Text(
-            displayLabel,
-            style: GoogleFonts.outfit(
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              letterSpacing: 0.2,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayLabel,
+              style: GoogleFonts.outfit(
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                fontSize: 13,
+              ),
             ),
-          ),
+            if (count > 0) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.2)
+                      : AppColors.primaryPurple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$count',
+                  style: GoogleFonts.outfit(
+                    color: isSelected ? Colors.white : AppColors.primaryPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

@@ -19,7 +19,9 @@ class CreationItem {
   // Additional fields for admin dashboard
   final String? style; // Video or image style
   final String? aspectRatio; // e.g. "16:9", "9:16"
-  final String? outputType; // "video" or "image" (duplicate of type for admin compatibility)
+  final String?
+      outputType; // "video" or "image" (duplicate of type for admin compatibility)
+  final String? generationModel; // e.g. "sora2", "kling"
 
   CreationItem({
     required this.id,
@@ -36,6 +38,7 @@ class CreationItem {
     this.style,
     this.aspectRatio,
     this.outputType,
+    this.generationModel,
   });
 
   CreationItem copyWith({
@@ -53,6 +56,7 @@ class CreationItem {
     String? style,
     String? aspectRatio,
     String? outputType,
+    String? generationModel,
   }) {
     return CreationItem(
       id: id ?? this.id,
@@ -69,6 +73,7 @@ class CreationItem {
       style: style ?? this.style,
       aspectRatio: aspectRatio ?? this.aspectRatio,
       outputType: outputType ?? this.outputType,
+      generationModel: generationModel ?? this.generationModel,
     );
   }
 
@@ -88,6 +93,7 @@ class CreationItem {
       'style': style,
       'aspectRatio': aspectRatio,
       'outputType': outputType ?? type.name,
+      'generationModel': generationModel,
     };
   }
 
@@ -113,6 +119,7 @@ class CreationItem {
       style: map['style'],
       aspectRatio: map['aspectRatio'],
       outputType: map['outputType'] ?? map['type'],
+      generationModel: map['generationModel'],
     );
   }
 

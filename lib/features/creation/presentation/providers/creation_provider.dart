@@ -218,7 +218,8 @@ class CreationController extends Notifier<CreationState> {
   }) async {
     // SAFEGUARD 1: Prevent duplicate generation if already in progress
     if (_isGenerating) {
-      debugPrint('⚠️ Generation already in progress, ignoring duplicate request');
+      debugPrint(
+          '⚠️ Generation already in progress, ignoring duplicate request');
       return;
     }
 
@@ -305,7 +306,25 @@ class CreationController extends Notifier<CreationState> {
             ? config.videoAspectRatio
             : config.imageSize,
         outputType: config.outputType == OutputType.video ? 'video' : 'image',
+        generationModel:
+            result['usedModel'], // Store the model used (e.g. sora2, kling)
       );
+
+      // Check if fallback occurred and notify/update UI context
+      // Logic: If we expected Sora2 (default) but got something else
+      if (config.outputType == OutputType.video &&
+          result['usedModel'] != null &&
+          result['usedModel'] != 'sora-2-text-to-video') {
+        final fallbackModel = result['usedModel'];
+        debugPrint('ℹ️ UI Notice: Using fallback model $fallbackModel');
+
+        // Add a subtle notice to the hidden context or update step message
+        // Updating step message is more visible
+        state = state.copyWith(
+          currentStepMessage:
+              "fallbackNotice_$fallbackModel", // Can be handled by localization or UI logic
+        );
+      }
 
       // Save to repository
       await _repository.saveCreation(newItem);
@@ -343,12 +362,41 @@ class CreationController extends Notifier<CreationState> {
       debugPrint('❌ Generation error: $e');
       state = state.copyWith(
         status: CreationWizardStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _friendlyErrorMessage(e),
       );
     } finally {
       // Always reset the generating flag
       _isGenerating = false;
     }
+  }
+
+  void retryGeneration() {
+    // Reset status to idle so generateVideo doesn't block it
+    state =
+        state.copyWith(status: CreationWizardStatus.idle, errorMessage: null);
+    // Retry with existing config
+    generateVideo();
+  }
+
+  String _friendlyErrorMessage(Object error) {
+    final e = error.toString();
+    if (e.contains('SocketException') || e.contains('Network is unreachable')) {
+      return 'No internet connection. Please check your network.';
+    }
+    if (e.contains('TimeoutException')) {
+      return 'The connection timed out. Please try again.';
+    }
+    if (e.contains('insufficient_quota')) {
+      return 'You have run out of credits. Please upgrade your plan.';
+    }
+    if (e.contains('KieAIException')) {
+      // Extract message from KieAIException string if possible, or just return it
+      // Assuming clean string is better
+      return e
+          .replaceFirst('Exception: ', '')
+          .replaceFirst('KieAIException: ', '');
+    }
+    return 'Something went wrong. Please try again.\n($e)';
   }
 
   Future<void> _pollTask(CreationItem item) async {
@@ -357,7 +405,8 @@ class CreationController extends Notifier<CreationState> {
     final notificationService = NotificationService();
     final isVideo = item.type == CreationType.video;
     int consecutiveNetworkErrors = 0;
-    const maxConsecutiveNetworkErrors = 10; // Increased tolerance for background mode
+    const maxConsecutiveNetworkErrors =
+        10; // Increased tolerance for background mode
     int consecutiveTimeouts = 0;
     const maxConsecutiveTimeouts = 3; // Track timeouts separately
 
@@ -442,20 +491,23 @@ class CreationController extends Notifier<CreationState> {
             return;
           } else if (status['isNetworkError'] == true) {
             consecutiveNetworkErrors++;
-            debugPrint('Network error $consecutiveNetworkErrors/$maxConsecutiveNetworkErrors');
+            debugPrint(
+                'Network error $consecutiveNetworkErrors/$maxConsecutiveNetworkErrors');
 
             // If too many consecutive network errors, fail gracefully
             if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
               final updatedItem = item.copyWith(
                 status: CreationStatus.failed,
-                errorMessage: 'Network connection lost. Your content may still be generating - check My Creations later.',
+                errorMessage:
+                    'Network connection lost. Your content may still be generating - check My Creations later.',
               );
               await _updateItem(updatedItem);
 
               if (state.currentTaskId == item.id) {
                 state = state.copyWith(
                   status: CreationWizardStatus.error,
-                  errorMessage: 'Network connection lost. Check My Creations later.',
+                  errorMessage:
+                      'Network connection lost. Check My Creations later.',
                 );
               }
               return;
@@ -465,11 +517,13 @@ class CreationController extends Notifier<CreationState> {
         } on TimeoutException catch (e) {
           // Handle timeout specifically - common when app is backgrounded
           consecutiveTimeouts++;
-          debugPrint('Polling timeout ${consecutiveTimeouts}/$maxConsecutiveTimeouts for ${item.id}: $e');
+          debugPrint(
+              'Polling timeout ${consecutiveTimeouts}/$maxConsecutiveTimeouts for ${item.id}: $e');
 
           if (consecutiveTimeouts >= maxConsecutiveTimeouts) {
             // After multiple timeouts, wait longer before next attempt
-            debugPrint('Multiple timeouts detected, waiting 30 seconds before retry...');
+            debugPrint(
+                'Multiple timeouts detected, waiting 30 seconds before retry...');
             await Future.delayed(const Duration(seconds: 30));
             consecutiveTimeouts = 0; // Reset and try again
           }
@@ -478,10 +532,12 @@ class CreationController extends Notifier<CreationState> {
           debugPrint('Polling error for ${item.id}: $e');
 
           // Check if it's a timeout-related error message
-          if (e.toString().contains('TimeoutException') || e.toString().contains('timeout')) {
+          if (e.toString().contains('TimeoutException') ||
+              e.toString().contains('timeout')) {
             consecutiveTimeouts++;
             if (consecutiveTimeouts >= maxConsecutiveTimeouts) {
-              debugPrint('Multiple timeouts detected, waiting 30 seconds before retry...');
+              debugPrint(
+                  'Multiple timeouts detected, waiting 30 seconds before retry...');
               await Future.delayed(const Duration(seconds: 30));
               consecutiveTimeouts = 0;
             }
@@ -493,7 +549,8 @@ class CreationController extends Notifier<CreationState> {
           // If too many consecutive errors, fail gracefully but don't mark as failed
           // since the task might still be processing on the server
           if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
-            debugPrint('Too many polling errors, stopping polling but keeping as processing');
+            debugPrint(
+                'Too many polling errors, stopping polling but keeping as processing');
             // Don't mark as failed - user can manually refresh later
             return;
           }
@@ -503,7 +560,8 @@ class CreationController extends Notifier<CreationState> {
       // Timeout after 10 minutes
       final timeoutItem = item.copyWith(
         status: CreationStatus.failed,
-        errorMessage: 'Generation timed out. This usually means high server load - please try again.',
+        errorMessage:
+            'Generation timed out. This usually means high server load - please try again.',
       );
       await _updateItem(timeoutItem);
 
