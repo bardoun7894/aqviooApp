@@ -13,3 +13,11 @@ build/
 pubspec.lock
 landing-page/node_modules
 landing-page/.next
+
+# Ignore native platforms for web build to speed up context
+android/
+ios/
+macos/
+linux/
+windows/
+test/

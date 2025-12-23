@@ -10,13 +10,11 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-
   # Service 2: Flutter Web Dashboard
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile
-      # Using args to ensure flutter builds with correct base href
       args:
         - FLUTTER_BASE_HREF=/dashboard/
     container_name: aqvioo-dashboard
