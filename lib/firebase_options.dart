@@ -60,8 +60,7 @@ class DefaultFirebaseOptions {
   // Phone auth requires: 1) Real App ID, 2) SHA-1 certificate added to Firebase Console
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBmxSaHG6CDRO5a7_MRH4U8SpcUNpBgVpo',
-    appId:
-        '1:651649539964:android:YOUR_ANDROID_APP_ID', // <-- Replace with real App ID from Firebase Console
+    appId: '1:651649539964:android:802828cdb6df4de826cef9',
     messagingSenderId: '651649539964',
     projectId: 'beldify-b445b',
     authDomain: 'beldify-b445b.firebaseapp.com',

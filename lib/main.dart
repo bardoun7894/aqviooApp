@@ -16,7 +16,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Use path-based URLs instead of hash-based URLs on web
-  usePathUrlStrategy();
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
 
   try {
     // Load .env file (may fail on web if not bundled properly)
