@@ -5,10 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:checkout_flutter/checkout_flutter.dart';
 import 'package:http/http.dart' as http;
 
+import 'package:akvioo/core/utils/safe_api_caller.dart';
+
 /// Service class to handle Tap Payments SDK integration
 /// Using official Checkout Flutter SDK from developers.tap.company
 /// Secure payment processing for Android and iOS
-class TapPaymentService {
+class TapPaymentService with SafeApiCaller {
   static final TapPaymentService _instance = TapPaymentService._internal();
   factory TapPaymentService() => _instance;
   TapPaymentService._internal();
@@ -83,20 +85,21 @@ class TapPaymentService {
 
     final String apiUrl = 'https://api.tap.company/v2/charges/$chargeId';
 
+    // Use safeApiCall for robust error handling
     try {
-      final response = await http.get(
-        Uri.parse(apiUrl),
-        headers: {
-          'Authorization': 'Bearer $_secretKey',
-          'accept': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw TimeoutException('Transaction verification timed out');
-        },
+      final response = await safeApiCall(
+        () => http.get(
+          Uri.parse(apiUrl),
+          headers: {
+            'Authorization': 'Bearer $_secretKey',
+            'accept': 'application/json',
+          },
+        ),
+        timeout: const Duration(seconds: 30),
       );
 
+      // SafeApiCall handles 429, 500, etc.
+      // We still check 200 for expected business logic
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final status = data['status'] as String? ?? 'UNKNOWN';
@@ -118,18 +121,14 @@ class TapPaymentService {
           message: 'Failed to verify: HTTP ${response.statusCode}',
         );
       }
-    } on TimeoutException {
-      return TransactionVerificationResult(
-        success: false,
-        status: 'TIMEOUT',
-        message: 'Verification request timed out',
-      );
     } catch (e) {
       debugPrint('❌ Error verifying transaction: $e');
+      // Use user friendly error if it's an API exception, otherwise generic
+      final errorMessage = getUserFriendlyError(e);
       return TransactionVerificationResult(
         success: false,
         status: 'ERROR',
-        message: e.toString(),
+        message: errorMessage,
       );
     }
   }

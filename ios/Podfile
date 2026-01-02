@@ -8,6 +8,10 @@ ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 # This flag was introduced in CocoaPods 1.13+ and causes linker errors
 ENV['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'true'
 
+# Note: Codemagic uses latest Xcode which supports the latest Firebase SDK
+# Only pin if needed for compatibility
+# $FirebaseSDKVersion = '11.0.0'
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -112,7 +116,7 @@ post_install do |installer|
   base_dir = File.dirname(__FILE__)
 
   # Patch all Firebase Swift files to remove Swift 6 syntax
-  ['FirebaseSharedSwift', 'FirebaseCoreInternal'].each do |pod_name|
+  ['FirebaseSharedSwift', 'FirebaseCoreInternal', 'FirebaseAuth', 'FirebaseCore', 'FirebaseFirestore', 'FirebaseFirestoreInternal'].each do |pod_name|
     pod_dir = File.join(base_dir, "Pods/#{pod_name}")
     if File.exist?(pod_dir)
       Dir.glob(File.join(pod_dir, "**/*.swift")).each do |swift_file|
@@ -121,13 +125,26 @@ post_install do |installer|
           content = File.read(swift_file)
           original_content = content.dup
 
-          # Remove all Swift 6 concurrency keywords (but not from import statements)
-          # Match keywords only when NOT part of "import" statements
-          content.gsub!(/(?<!import\s)\bconsuming\s+/, '')
-          content.gsub!(/(?<!import\s)\bborrowing\s+/, '')
-          content.gsub!(/(?<!import\s)\bsending\s+/, '')
-          content.gsub!(/(?<!import\s)\bnonisolated\(unsafe\)\s+/, '')
-          content.gsub!(/(?<!import\s)\bnonisolated\s+/, '')
+          # Remove Swift 6 access-controlled imports (internal import, private import)
+          content.gsub!(/\binternal\s+import\b/, 'import')
+          content.gsub!(/\bprivate\s+import\b/, 'import')
+          content.gsub!(/\bpublic\s+import\b/, 'import')
+          content.gsub!(/\bpackage\s+import\b/, 'import')
+
+          # Remove problematic @available(swift, deprecated:...) blocks wrapped in #if !FIREBASE_CI
+          # These cause parsing issues in Swift 5.7
+          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\(\s*swift,\s*deprecated:[^)]+\)\s*\n\s*#endif[^\n]*\n/m, '')
+
+          # Also handle multi-line @available blocks
+          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\(\s*\*,\s*\n[^#]+#endif[^\n]*\n/m, '')
+          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\([^)]+\)\s*\n\s*#endif[^\n]*\n/m, '')
+
+          # Remove all Swift 6 concurrency keywords
+          content.gsub!(/\bconsuming\s+/, '')
+          content.gsub!(/\bborrowing\s+/, '')
+          content.gsub!(/\bsending\s+/, '')
+          content.gsub!(/\bnonisolated\(unsafe\)\s+/, '')
+          content.gsub!(/\bnonisolated\s+/, '')
           content.gsub!(/\bunsafe_Sendable/, 'Sendable')
 
           # Only write if content changed

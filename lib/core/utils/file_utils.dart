@@ -2,12 +2,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:akvioo/core/utils/safe_api_caller.dart';
 import 'package:gal/gal.dart';
 
+// Helper class to access SafeApiCaller
+class _ApiHelper with SafeApiCaller {}
+
 class FileUtils {
+  static final _ApiHelper _api = _ApiHelper();
   static Future<File?> downloadFile(String url) async {
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await _api.safeApiCall(() => http.get(Uri.parse(url)));
+
       if (response.statusCode == 200) {
         final dir = await getTemporaryDirectory();
         final fileName = url.split('/').last;
@@ -18,6 +24,7 @@ class FileUtils {
       return null;
     } catch (e) {
       print("Error downloading file: $e");
+      // Optionally rethrow or handle user-friendly error if this was UI-facing
       return null;
     }
   }

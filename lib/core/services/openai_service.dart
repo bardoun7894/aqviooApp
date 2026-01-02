@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/safe_api_caller.dart';
 
-class OpenAIService {
+class OpenAIService with SafeApiCaller {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
 
   String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
@@ -56,41 +57,44 @@ Enhanced: "A fluffy orange tabby cat playfully batting a red yarn ball across a 
 Now enhance this prompt:''';
 
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: jsonEncode({
-          'model': 'gpt-4o', // Using GPT-4 Optimized (latest and best)
-          'messages': [
-            {
-              'role': 'system',
-              'content': systemPrompt,
+      final response = await safeApiCall(() => http.post(
+            Uri.parse(_baseUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $_apiKey',
             },
-            {
-              'role': 'user',
-              'content': userPrompt,
-            },
-          ],
-          'temperature': 0.8,
-          'max_tokens': 200,
-        }),
-      );
+            body: jsonEncode({
+              'model': 'gpt-4o',
+              'messages': [
+                {
+                  'role': 'system',
+                  'content': systemPrompt,
+                },
+                {
+                  'role': 'user',
+                  'content': userPrompt,
+                },
+              ],
+              'temperature': 0.8,
+              'max_tokens': 200,
+            }),
+          ));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         final enhancedPrompt =
             data['choices'][0]['message']['content'] as String;
         return enhancedPrompt.trim();
       } else {
+        // SafeApiCall handles 429, 500, etc. This catches other non-200s
         final errorData = jsonDecode(response.body);
-        throw Exception(
-            'OpenAI API Error: ${errorData['error']['message'] ?? 'Unknown error'}');
+        throw ApiException(
+            'OpenAI API Error: ${errorData['error']['message'] ?? 'Unknown error'}',
+            statusCode: response.statusCode);
       }
     } catch (e) {
-      throw Exception('Failed to enhance prompt: $e');
+      // Re-throw localized/friendly error message
+      throw Exception(getUserFriendlyError(e));
     }
   }
 }
