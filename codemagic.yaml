@@ -21,15 +21,15 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create .env file
+      - name: Create assets/env file
         script: |
-          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
-          echo "ELEVEN_LABS_API_KEY=$ELEVEN_LABS_API_KEY" >> .env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
+          mkdir -p assets
+          echo "KIE_API_KEY=$KIE_API_KEY" >> assets/env
+          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> assets/env
+          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> assets/env
+          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> assets/env
+          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> assets/env
+          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> assets/env
       - name: Set up code signing
         script: |
           keychain initialize
@@ -71,5 +71,5 @@ workflows:
           - mbardouni44@gmail.com
       app_store_connect:
         auth: integration
-        submit_to_testflight: false
-        submit_to_app_store: true
+        submit_to_testflight: true
+        submit_to_app_store: false

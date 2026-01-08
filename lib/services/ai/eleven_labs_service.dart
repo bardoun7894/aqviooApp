@@ -1,17 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../core/utils/safe_api_caller.dart';
 
-class ElevenLabsService {
-  ElevenLabsService({required String apiKey});
+/// Mocked ElevenLabs service for text-to-speech
+/// Currently returns sample audio - can be implemented later if needed
+class ElevenLabsService with SafeApiCaller {
+  ElevenLabsService();
 
   Future<String> generateAudio(String script) async {
-    // TODO: Implement ElevenLabs API call using _apiKey
-    await Future.delayed(const Duration(seconds: 2));
-    return "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Mock Audio URL
+    // Mocked implementation - returns sample audio
+    await Future.delayed(const Duration(seconds: 1));
+    return "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
   }
 }
 
 final elevenLabsServiceProvider = Provider<ElevenLabsService>((ref) {
-  final apiKey = dotenv.env['ELEVEN_LABS_API_KEY'] ?? '';
-  return ElevenLabsService(apiKey: apiKey);
+  return ElevenLabsService();
 });
