@@ -3,6 +3,8 @@ workflows:
     name: Default Workflow - iOS App Store Only
     max_build_duration: 120
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: codemagic
     triggering:
       events:
         - push
@@ -66,3 +68,7 @@ workflows:
         recipients:
           - Aseef2023@hotmail.com
           - mbardouni44@gmail.com
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
