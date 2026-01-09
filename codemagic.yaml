@@ -28,6 +28,12 @@ workflows:
           echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> assets/env
           echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> assets/env
           echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> assets/env
+      - name: Set up code signing
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Get dependencies
         script: flutter pub get
       - name: Clean pods cache
