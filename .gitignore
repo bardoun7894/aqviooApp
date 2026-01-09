@@ -130,7 +130,7 @@ $RECYCLE.BIN/
 .nfs*
 
 # Flutter Web
-/web/
+
 
 # Flutter-specific
 /Flutter/Generated.xcconfig
@@ -222,6 +222,7 @@ typings/
 
 # dotenv environment variables file
 .env
+assets/env
 .env.test
 .env.production
 .env.local

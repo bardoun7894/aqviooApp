@@ -119,11 +119,24 @@ class AdminAuthController extends StateNotifier<AdminAuthState> {
         isLoading: false,
       );
     } catch (e) {
-      debugPrint('🔐 Admin Auth: ❌ _checkAuthState error: $e');
-      state = AdminAuthState(
-        isLoading: false,
-        errorMessage: 'Failed to check authentication: $e',
-      );
+      // If we get a permission error, it definitively means the user is NOT an admin
+      // (because admins would have permission via the rules).
+      // So we should just set isAuthenticated = false and stop loading.
+      if (e.toString().contains('permission-denied') ||
+          e.toString().contains('PERMISSION_DENIED')) {
+        debugPrint(
+            '🔐 Admin Auth: Permission denied check - User is NOT an admin.');
+        state = const AdminAuthState(
+          isLoading: false,
+          isAuthenticated: false,
+        );
+      } else {
+        debugPrint('🔐 Admin Auth: ❌ _checkAuthState error: $e');
+        state = AdminAuthState(
+          isLoading: false,
+          errorMessage: 'Failed to check authentication: $e',
+        );
+      }
     }
   }
 

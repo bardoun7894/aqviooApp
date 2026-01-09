@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:country_code_picker/country_code_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../providers/auth_provider.dart';
+import '../services/ip_location_service.dart';
 import '../../../../generated/app_localizations.dart';
 
 /// Compact 2025 Material 3 Signup Screen
@@ -27,7 +29,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _otpController = TextEditingController();
 
   final _nameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
@@ -37,10 +38,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
   // State
   bool _usePhone = false; // false = email, true = phone
-  bool _codeSent = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String? _verificationId;
+  String _initialCountryCode = 'SA'; // Default to Saudi Arabia
+  String _selectedDialCode = '+966';
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -56,6 +57,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
+    _initCountryCode();
+  }
+
+  Future<void> _initCountryCode() async {
+    final countryCode = await IpLocationService.getCountryCode();
+    if (mounted) {
+      setState(() {
+        _initialCountryCode = countryCode;
+      });
+    }
   }
 
   @override
@@ -65,7 +76,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _phoneController.dispose();
-    _otpController.dispose();
     _nameFocusNode.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
@@ -127,50 +137,64 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
     // Call Firebase signup
     ref.read(authControllerProvider.notifier).signUpWithEmailPassword(
-      email: email,
-      password: password,
-      name: name,
-    );
+          email: email,
+          password: password,
+          name: name,
+        );
   }
 
   void _signupWithPhone() {
+    final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty) {
+      _showSnackBar('Please enter your name', isError: true);
+      return;
+    }
 
     if (!_isValidPhone(phone)) {
       _showSnackBar('Please enter a valid phone number', isError: true);
       return;
     }
 
-    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+    if (password.length < 6) {
+      _showSnackBar('Password must be at least 6 characters', isError: true);
+      return;
+    }
 
-    ref.read(authControllerProvider.notifier).verifyPhoneNumber(
-          phoneNumber: '+$digits',
-          codeSent: (verificationId, resendToken) {
-            setState(() {
-              _verificationId = verificationId;
-              _codeSent = true;
-            });
-            _showSnackBar('Verification code sent!');
-          },
+    if (password != confirmPassword) {
+      _showSnackBar('Passwords do not match', isError: true);
+      return;
+    }
+
+    // Clean and format the phone number
+    String digits = phone.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Combine dial code + phone number
+    // Remove if user pasted full number including country code
+    final plainDialCode = _selectedDialCode.replaceAll('+', '');
+    if (digits.startsWith(plainDialCode)) {
+      // user likely pasted full number, keep as is
+    } else {
+      digits = '$_selectedDialCode$digits'.replaceAll('+', '');
+    }
+
+    // Ensure starts with +
+    digits = '+$digits';
+
+    // Create dummy email from phone number for Firebase Auth
+    final dummyEmail = '$digits@phone.aqvioo.com';
+
+    // Use email/password authentication with the dummy email
+    // Pass the actual phone number to be stored in Firestore
+    ref.read(authControllerProvider.notifier).signUpWithEmailPassword(
+          email: dummyEmail,
+          password: password,
+          name: name,
+          phoneNumber: digits, // Store real phone number in Firestore
         );
-  }
-
-  void _verifyOTP() {
-    final otp = _otpController.text.trim();
-    if (otp.isEmpty || otp.length != 6) {
-      _showSnackBar('Please enter a valid 6-digit code', isError: true);
-      return;
-    }
-
-    if (_verificationId == null) {
-      _showSnackBar('Session expired. Please try again', isError: true);
-      setState(() => _codeSent = false);
-      return;
-    }
-
-    ref
-        .read(authControllerProvider.notifier)
-        .verifyOTP(verificationId: _verificationId!, smsCode: otp);
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -196,7 +220,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
             ),
           ],
         ),
-        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
+        backgroundColor:
+            isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(12),
@@ -225,7 +250,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     });
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -245,7 +271,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                   const SizedBox(height: 16),
 
                   // Already have account
-                  if (!_codeSent) _buildLoginLink(context, isDark),
+                  _buildLoginLink(context, isDark),
 
                   const SizedBox(height: 24),
 
@@ -277,7 +303,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     }
   }
 
-  Widget _buildCompactHeader(BuildContext context, AppLocalizations l10n, bool isDark) {
+  Widget _buildCompactHeader(
+      BuildContext context, AppLocalizations l10n, bool isDark) {
     return Column(
       children: [
         // Compact Logo
@@ -337,7 +364,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     );
   }
 
-  Widget _buildCompactCard(BuildContext context, bool isLoading, AppLocalizations l10n, bool isDark) {
+  Widget _buildCompactCard(BuildContext context, bool isLoading,
+      AppLocalizations l10n, bool isDark) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),
       decoration: BoxDecoration(
@@ -354,9 +382,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         ],
       ),
       padding: const EdgeInsets.all(24),
-      child: _codeSent
-          ? _buildOTPForm(context, isLoading, isDark)
-          : _buildSignupForm(context, isLoading, isDark),
+      child: _buildSignupForm(context, isLoading, isDark),
     );
   }
 
@@ -389,16 +415,71 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
         // Email or Phone
         if (_usePhone)
-          _buildCompactTextField(
-            controller: _phoneController,
-            focusNode: _phoneFocusNode,
-            hintText: l10n.phoneNumber,
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            isDark: isDark,
-            onSubmitted: (_) => _handleSignup(),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkGray : AppColors.lightGray,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.1)
+                    : AppColors.neuShadowDark.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                CountryCodePicker(
+                  onChanged: (country) {
+                    _selectedDialCode = country.dialCode ?? '+966';
+                  },
+                  initialSelection: _initialCountryCode,
+                  favorite: const ['SA', 'AE', 'KW', 'BH', 'QA', 'OM', 'US'],
+                  textStyle: GoogleFonts.outfit(
+                    color: isDark ? AppColors.white : AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  dialogTextStyle: GoogleFonts.outfit(
+                    color: AppColors.textPrimary,
+                  ),
+                  searchDecoration: InputDecoration(
+                    hintText: 'Search country',
+                    hintStyle: GoogleFonts.outfit(color: AppColors.textHint),
+                    prefixIcon: const Icon(Icons.search),
+                  ),
+                  flagWidth: 24,
+                  padding: EdgeInsets.zero,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _phoneController,
+                    focusNode: _phoneFocusNode,
+                    keyboardType: TextInputType.phone,
+                    onSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? AppColors.white : AppColors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: l10n.phoneNumber,
+                      hintStyle: GoogleFonts.outfit(
+                        color:
+                            isDark ? AppColors.mediumGray : AppColors.textHint,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           )
-        else ...[
+        else
           _buildCompactTextField(
             controller: _emailController,
             focusNode: _emailFocusNode,
@@ -408,48 +489,52 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
             isDark: isDark,
             onSubmitted: (_) => _passwordFocusNode.requestFocus(),
           ),
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          // Password
-          _buildCompactTextField(
-            controller: _passwordController,
-            focusNode: _passwordFocusNode,
-            hintText: l10n.password,
-            icon: Icons.lock_outline,
-            obscureText: _obscurePassword,
-            isDark: isDark,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                size: 18,
-              ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        // Password
+        _buildCompactTextField(
+          controller: _passwordController,
+          focusNode: _passwordFocusNode,
+          hintText: l10n.password,
+          icon: Icons.lock_outline,
+          obscureText: _obscurePassword,
+          isDark: isDark,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              size: 18,
             ),
-            onSubmitted: (_) => _confirmPasswordFocusNode.requestFocus(),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
-          const SizedBox(height: 12),
+          onSubmitted: (_) => _confirmPasswordFocusNode.requestFocus(),
+        ),
+        const SizedBox(height: 12),
 
-          // Confirm Password
-          _buildCompactTextField(
-            controller: _confirmPasswordController,
-            focusNode: _confirmPasswordFocusNode,
-            hintText: l10n.confirmPassword,
-            icon: Icons.lock_outline,
-            obscureText: _obscureConfirmPassword,
-            isDark: isDark,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-                size: 18,
-              ),
-              onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+        // Confirm Password
+        _buildCompactTextField(
+          controller: _confirmPasswordController,
+          focusNode: _confirmPasswordFocusNode,
+          hintText: l10n.confirmPassword,
+          icon: Icons.lock_outline,
+          obscureText: _obscureConfirmPassword,
+          isDark: isDark,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureConfirmPassword
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
+              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+              size: 18,
             ),
-            onSubmitted: (_) => _handleSignup(),
+            onPressed: () => setState(
+                () => _obscureConfirmPassword = !_obscureConfirmPassword),
           ),
-        ],
-
+          onSubmitted: (_) => _handleSignup(),
+        ),
         const SizedBox(height: 20),
 
         // Signup Button
@@ -482,7 +567,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: !_usePhone
-                      ? (isDark ? AppColors.white.withOpacity(0.1) : AppColors.white)
+                      ? (isDark
+                          ? AppColors.white.withOpacity(0.1)
+                          : AppColors.white)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: !_usePhone
@@ -505,17 +592,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                       size: 16,
                       color: !_usePhone
                           ? AppColors.primaryPurple
-                          : (isDark ? AppColors.mediumGray : AppColors.textHint),
+                          : (isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textHint),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       l10n.email,
                       style: GoogleFonts.outfit(
                         fontSize: 13,
-                        fontWeight: !_usePhone ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight:
+                            !_usePhone ? FontWeight.w600 : FontWeight.w500,
                         color: !_usePhone
                             ? (isDark ? AppColors.white : AppColors.textPrimary)
-                            : (isDark ? AppColors.mediumGray : AppColors.textHint),
+                            : (isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textHint),
                       ),
                     ),
                   ],
@@ -531,7 +623,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _usePhone
-                      ? (isDark ? AppColors.white.withOpacity(0.1) : AppColors.white)
+                      ? (isDark
+                          ? AppColors.white.withOpacity(0.1)
+                          : AppColors.white)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: _usePhone
@@ -554,17 +648,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                       size: 16,
                       color: _usePhone
                           ? AppColors.primaryPurple
-                          : (isDark ? AppColors.mediumGray : AppColors.textHint),
+                          : (isDark
+                              ? AppColors.mediumGray
+                              : AppColors.textHint),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       l10n.phone,
                       style: GoogleFonts.outfit(
                         fontSize: 13,
-                        fontWeight: _usePhone ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight:
+                            _usePhone ? FontWeight.w600 : FontWeight.w500,
                         color: _usePhone
                             ? (isDark ? AppColors.white : AppColors.textPrimary)
-                            : (isDark ? AppColors.mediumGray : AppColors.textHint),
+                            : (isDark
+                                ? AppColors.mediumGray
+                                : AppColors.textHint),
                       ),
                     ),
                   ],
@@ -574,105 +673,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildOTPForm(BuildContext context, bool isLoading, bool isDark) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.otpVerification,
-          style: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: isDark ? AppColors.white : AppColors.textPrimary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${l10n.enterOtp}\n${_phoneController.text}',
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-
-        // OTP Input
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkGray : AppColors.lightGray,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: _otpController.text.isEmpty
-                  ? (isDark ? Colors.white.withOpacity(0.1) : AppColors.neuShadowDark.withOpacity(0.2))
-                  : AppColors.primaryPurple,
-              width: 2,
-            ),
-          ),
-          child: TextField(
-            controller: _otpController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 6,
-            onChanged: (value) => setState(() {}),
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.white : AppColors.textPrimary,
-              letterSpacing: 10,
-              fontFeatures: [const FontFeature.tabularFigures()],
-            ),
-            decoration: InputDecoration(
-              hintText: l10n.otpInputHint,
-              hintStyle: GoogleFonts.outfit(
-                color: isDark ? AppColors.darkGray : AppColors.textHint,
-                fontSize: 24,
-                letterSpacing: 10,
-              ),
-              border: InputBorder.none,
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            onSubmitted: (_) => _verifyOTP(),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Verify Button
-        _buildCompactButton(
-          label: l10n.verify,
-          icon: Icons.check_circle_outline,
-          onPressed: isLoading ? null : _verifyOTP,
-          isLoading: isLoading,
-          isDark: isDark,
-        ),
-        const SizedBox(height: 12),
-
-        // Back Button
-        Center(
-          child: TextButton.icon(
-            onPressed: () => setState(() => _codeSent = false),
-            icon: Icon(
-              Icons.arrow_back,
-              size: 16,
-              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-            ),
-            label: Text(
-              l10n.changeNumber,
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 

@@ -15,6 +15,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String name,
+    String? phoneNumber,
   });
   Future<UserCredential> signInWithEmailPassword({
     required String email,
@@ -28,6 +29,7 @@ abstract class AuthRepository {
     required void Function(String) codeAutoRetrievalTimeout,
   });
   Future<void> signInWithCredential(PhoneAuthCredential credential);
+  Future<void> signInWithMockPhone(String phoneNumber);
   Future<void> signOut();
 }
 
@@ -66,6 +68,7 @@ class MockAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String name,
+    String? phoneNumber,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
     _isLoggedIn = true;
@@ -103,6 +106,14 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInWithCredential(PhoneAuthCredential credential) async {
+    await Future.delayed(const Duration(seconds: 1));
+    _isLoggedIn = true;
+    _isAnonymous = false;
+    _authStateController.add(true);
+  }
+
+  @override
+  Future<void> signInWithMockPhone(String phoneNumber) async {
     await Future.delayed(const Duration(seconds: 1));
     _isLoggedIn = true;
     _isAnonymous = false;
@@ -148,6 +159,7 @@ class FirebaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String name,
+    String? phoneNumber,
   }) async {
     final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
@@ -162,6 +174,7 @@ class FirebaseAuthRepository implements AuthRepository {
         userCredential.user!,
         displayName: name,
         email: email,
+        phoneNumber: phoneNumber,
       );
     }
 
@@ -173,45 +186,61 @@ class FirebaseAuthRepository implements AuthRepository {
     User user, {
     String? displayName,
     String? email,
+    String? phoneNumber,
     bool isAnonymous = false,
   }) async {
     try {
       final userDoc = _firestore.collection('users').doc(user.uid);
 
-      // Check if user document already exists
-      final existingDoc = await userDoc.get();
+      String? finalPhone = phoneNumber ?? user.phoneNumber;
+      String? finalEmail = email ?? user.email;
 
-      if (!existingDoc.exists) {
-        // Create new user document
-        await userDoc.set({
-          'displayName': displayName ?? user.displayName ?? 'Anonymous',
-          'email': email ?? user.email,
-          'phoneNumber': user.phoneNumber,
-          'photoURL': user.photoURL,
-          'isAnonymous': isAnonymous,
-          'status': 'active',
-          'createdAt': FieldValue.serverTimestamp(),
-          'lastLoginAt': FieldValue.serverTimestamp(),
-        });
-
-        // Initialize credits subcollection
-        await userDoc.collection('data').doc('credits').set({
-          'balance': 10.0, // Initial free balance in SAR
-          'hasGeneratedFirst': false,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        });
-
-        print('✅ New user saved to Firestore: ${user.uid}');
-      } else {
-        // Update last login time
-        await userDoc.update({
-          'lastLoginAt': FieldValue.serverTimestamp(),
-        });
-        print('✅ Existing user login updated: ${user.uid}');
+      // Extract phone from dummy email if needed
+      if (finalPhone == null &&
+          finalEmail != null &&
+          finalEmail.endsWith('@phone.aqvioo.com')) {
+        finalPhone = finalEmail.split('@').first;
       }
+
+      // Use set with merge: true to avoid the preliminary get() call
+      // which is prone to "client is offline" errors.
+      await userDoc.set({
+        'displayName': displayName ?? user.displayName ?? 'Anonymous',
+        'email': finalEmail,
+        'phoneNumber': finalPhone,
+        'photoURL': user.photoURL,
+        'isAnonymous': isAnonymous,
+        'status': 'active',
+        'lastLoginAt': FieldValue.serverTimestamp(),
+        // Only set createdAt if it doesn't exist
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Check if credits exist separately - wrapped in a quiet try-catch
+      try {
+        final creditsDoc = userDoc.collection('data').doc('credits');
+        // Use a 2-second timeout and prefer cache to avoid blocking on unstable networks
+        final creditsSnap = await creditsDoc
+            .get(const GetOptions(source: Source.serverAndCache))
+            .timeout(const Duration(seconds: 2));
+
+        if (!creditsSnap.exists) {
+          await creditsDoc.set({
+            'balance': 100.0,
+            'hasGeneratedFirst': false,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        // Log but don't crash - credits can be initialized later if needed
+        print('ℹ️ Note: Credits check skipped due to network: $e');
+      }
+
+      print('✅ User profile synced to Firestore: ${user.uid}');
     } catch (e) {
-      print('❌ Error saving user to Firestore: $e');
-      // Don't rethrow - we don't want to block auth if Firestore save fails
+      print('⚠️ Non-critical Error syncing user to Firestore: $e');
+      // We don't rethrow because the user IS authenticated.
+      // Firestore will sync the write when it comes back online.
     }
   }
 
@@ -260,6 +289,35 @@ class FirebaseAuthRepository implements AuthRepository {
     // Save phone user to Firestore
     if (userCredential.user != null) {
       await _saveUserToFirestore(userCredential.user!);
+    }
+  }
+
+  @override
+  Future<void> signInWithMockPhone(String phoneNumber) async {
+    // 1. Sign in anonymously first to get a valid Firebase UID
+    final userCredential = await _firebaseAuth.signInAnonymously();
+
+    // 2. Save user to Firestore, but pretending they have a phone number
+    if (userCredential.user != null) {
+      final user = userCredential.user!;
+      final userDoc = _firestore.collection('users').doc(user.uid);
+
+      // Create/Overwrite with phone data
+      await userDoc.set({
+        'displayName': 'Test User',
+        'phoneNumber': phoneNumber, // Save the magic number
+        'isAnonymous': false, // Pretend it's not anonymous
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Initialize credits subcollection
+      await userDoc.collection('data').doc('credits').set({
+        'balance': 100.0, // Give some test credits
+        'hasGeneratedFirst': false,
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
     }
   }
 

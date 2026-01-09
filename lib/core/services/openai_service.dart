@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/safe_api_caller.dart';
@@ -57,28 +58,31 @@ Enhanced: "A fluffy orange tabby cat playfully batting a red yarn ball across a 
 Now enhance this prompt:''';
 
     try {
-      final response = await safeApiCall(() => http.post(
-            Uri.parse(_baseUrl),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $_apiKey',
-            },
-            body: jsonEncode({
-              'model': 'gpt-4o',
-              'messages': [
-                {
-                  'role': 'system',
-                  'content': systemPrompt,
-                },
-                {
-                  'role': 'user',
-                  'content': userPrompt,
-                },
-              ],
-              'temperature': 0.8,
-              'max_tokens': 200,
-            }),
-          ));
+      final response = await safeApiCall(
+        () => http.post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_apiKey',
+          },
+          body: jsonEncode({
+            'model': 'gpt-4o',
+            'messages': [
+              {
+                'role': 'system',
+                'content': systemPrompt,
+              },
+              {
+                'role': 'user',
+                'content': userPrompt,
+              },
+            ],
+            'temperature': 0.8,
+            'max_tokens': 200,
+          }),
+        ),
+        serviceName: 'OpenAI',
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -97,4 +101,14 @@ Now enhance this prompt:''';
       throw Exception(getUserFriendlyError(e));
     }
   }
+
+  Future<String> generateScript(String prompt) async {
+    // Using the same structure as enhancePrompt but with a script generation persona
+    return enhancePrompt(
+        prompt); // Re-using for now to unblock, or implement distinct prompt
+  }
 }
+
+final openAIServiceProvider = Provider<OpenAIService>((ref) {
+  return OpenAIService();
+});

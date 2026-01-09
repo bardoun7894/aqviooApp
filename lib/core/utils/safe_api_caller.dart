@@ -35,6 +35,7 @@ mixin SafeApiCaller {
     Future<http.Response> Function() request, {
     int maxRetries = _defaultMaxRetries,
     Duration? timeout,
+    String? serviceName,
   }) async {
     // Check connectivity first
     await _checkConnectivity();
@@ -62,8 +63,9 @@ mixin SafeApiCaller {
             isRetryable: true,
           );
         } else if (response.statusCode == 401) {
+          final servicePrefix = serviceName != null ? '$serviceName: ' : '';
           throw ApiException(
-            'Unauthorized. Please check your API key.',
+            '${servicePrefix}Unauthorized. Please check your API key.',
             statusCode: 401,
             isRetryable: false, // Usually not retryable without auth fix
           );
@@ -114,23 +116,38 @@ mixin SafeApiCaller {
   /// Check internet connectivity
   Future<void> _checkConnectivity() async {
     try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 5));
-      if (result.isEmpty || result[0].rawAddress.isEmpty) {
+      // Try multiple reliable hosts to avoid false negatives
+      final List<String> hosts = [
+        'google.com',
+        'cloudflare.com',
+        '1.1.1.1',
+      ];
+
+      bool isConnected = false;
+      for (final host in hosts) {
+        try {
+          final result = await InternetAddress.lookup(host)
+              .timeout(const Duration(seconds: 3));
+          if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+            isConnected = true;
+            break;
+          }
+        } catch (_) {
+          continue;
+        }
+      }
+
+      if (!isConnected) {
         throw ApiException(
           'No internet connection. Please check your Wi-Fi or mobile data.',
           isRetryable: true,
         );
       }
-    } on SocketException catch (_) {
+    } catch (_) {
       throw ApiException(
         'No internet connection. Please check your Wi-Fi or mobile data.',
         isRetryable: true,
-      );
-    } on TimeoutException catch (_) {
-      throw ApiException(
-        'Network is slow. Please try again.',
-        isRetryable: true,
+        technicalDetails: 'Failed to lookup reliable hosts',
       );
     }
   }

@@ -294,6 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final creditsState = ref.read(creditsControllerProvider);
 
     if (!canGenerate) {
+      if (!mounted) return;
       // Show payment dialog
       final cost = creditsController.getCost(outputType);
       final contentType = outputType == OutputType.video
@@ -302,10 +303,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       showDialog(
         context: context,
         builder: (context) {
-           final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
-           
-           if (isAnonymous) {
-             return AlertDialog(
+          final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+
+          if (isAnonymous) {
+            return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -340,79 +341,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryPurple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                   child: Text(
                     AppLocalizations.of(context)!.signUp,
-                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.outfit(
+                        color: Colors.white, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
-             );
-           }
-           
-           
-           return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            AppLocalizations.of(context)!.insufficientCredits,
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
+            );
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${contentType} costs ${cost.toStringAsFixed(2)} ${Pricing.currency}',
-                style: GoogleFonts.outfit(),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your balance: ${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
-                style: GoogleFonts.outfit(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                AppLocalizations.of(context)!.cancel,
-                style: GoogleFonts.outfit(
-                  color: AppColors.textSecondary,
-                ),
+            title: Text(
+              AppLocalizations.of(context)!.insufficientCredits,
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
               ),
             ),
-            if (!kIsWeb)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.push('/payment', extra: 199.0);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${contentType} costs ${cost.toStringAsFixed(2)} ${Pricing.currency}',
+                  style: GoogleFonts.outfit(),
                 ),
-                child: Text(
-                  AppLocalizations.of(context)!.buyCredits,
+                const SizedBox(height: 8),
+                Text(
+                  'Your balance: ${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
                   style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  AppLocalizations.of(context)!.cancel,
+                  style: GoogleFonts.outfit(
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
-          ],
-        );
-      },
-    );
+              if (!kIsWeb)
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/payment', extra: 199.0);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    AppLocalizations.of(context)!.buyCredits,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      );
       return;
     }
 
@@ -425,6 +427,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Start video generation
     ref.read(creationControllerProvider.notifier).generateVideo();
 
+    if (!mounted) return;
     // Navigate to magic loading screen
     context.push('/magic-loading');
   }
@@ -1285,7 +1288,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ].take(6).toList();
 
     if (recentCreations.isEmpty) {
-      return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.4),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPurple.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.video_library_outlined,
+                  size: 32,
+                  color: AppColors.primaryPurple.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No creations yet',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Create your first magic video now!',
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Padding(
@@ -1860,6 +1911,7 @@ class HomeProjectCard extends StatefulWidget {
 class _HomeProjectCardState extends State<HomeProjectCard> {
   VideoPlayerController? _videoController;
   bool _isPlayerInitialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -1873,9 +1925,25 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
 
   Future<void> _initializeVideo() async {
     try {
+      // Add a small staggered delay to prevent all videos from loading at once
+      // which causes main thread lag (skipped frames) on some devices
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(widget.item.url!),
       );
+
+      // Add error listener for async playback errors (like 404)
+      _videoController!.addListener(() {
+        if (mounted && _videoController!.value.hasError) {
+          setState(() {
+            _hasError = true;
+            _isPlayerInitialized = false;
+          });
+        }
+      });
+
       await _videoController!.initialize();
       await _videoController!.setVolume(0); // Mute for background play
       await _videoController!.setLooping(true);
@@ -1887,6 +1955,11 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
       }
     } catch (e) {
       debugPrint('Error initializing video preview: $e');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -1897,6 +1970,15 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
   }
 
   void _handleTap() {
+    // Check if item is older than 14 days
+    final isExpired =
+        DateTime.now().difference(widget.item.createdAt).inDays >= 14;
+    if (isExpired) {
+      // Don't allow clicking on expired files
+      debugPrint('🚫 Creation is expired (> 14 days), ignoring tap');
+      return;
+    }
+
     if (widget.item.status == CreationStatus.success &&
         widget.item.url != null) {
       // Navigate to full preview screen for both video and image
@@ -1997,11 +2079,46 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                size: 32,
-                                color: Colors.white.withOpacity(0.7),
+                            return Container(
+                              color: Colors.black.withOpacity(0.1),
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 24,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'File deleted',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    DateTime.now()
+                                                .difference(item.createdAt)
+                                                .inDays >
+                                            60
+                                        ? '(Expired > 2 months)'
+                                        : DateTime.now()
+                                                    .difference(item.createdAt)
+                                                    .inDays >
+                                                14
+                                            ? '(Expired > 14 days)'
+                                            : '(File deleted)',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 8,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -2027,6 +2144,51 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
                             width: _videoController!.value.size.width,
                             height: _videoController!.value.size.height,
                             child: VideoPlayer(_videoController!),
+                          ),
+                        ),
+
+                      // Error state for video
+                      if (isVideo && _hasError)
+                        Container(
+                          color: Colors.black.withOpacity(0.1),
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.video_library_outlined,
+                                size: 24,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'File deleted',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                DateTime.now()
+                                            .difference(item.createdAt)
+                                            .inDays >
+                                        60
+                                    ? '(Expired > 2 months)'
+                                    : DateTime.now()
+                                                .difference(item.createdAt)
+                                                .inDays >
+                                            14
+                                        ? '(Expired > 14 days)'
+                                        : '(File deleted)',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 8,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
 

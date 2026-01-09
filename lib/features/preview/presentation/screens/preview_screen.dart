@@ -20,6 +20,7 @@ class PreviewScreen extends ConsumerStatefulWidget {
   final String? thumbnailUrl;
   final String? prompt;
   final bool isImage;
+  final DateTime? createdAt;
 
   const PreviewScreen({
     super.key,
@@ -27,6 +28,7 @@ class PreviewScreen extends ConsumerStatefulWidget {
     this.thumbnailUrl,
     this.prompt,
     this.isImage = false,
+    this.createdAt,
   });
 
   @override
@@ -97,41 +99,141 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     });
   }
 
+  bool _hasError = false;
+
   Future<void> _initializePlayer() async {
-    _videoPlayerController = VideoPlayerController.networkUrl(
-      Uri.parse(widget.videoUrl!),
-    );
-    await _videoPlayerController!.initialize();
-
-    setState(() {
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController!,
-        autoPlay: true,
-        looping: true,
-        showControls: true, // Enable standard controls
-        placeholder: widget.thumbnailUrl != null
-            ? Center(
-                child: Image.network(
-                  widget.thumbnailUrl!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox(),
-                ),
-              )
-            : null,
+    try {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl!),
       );
-    });
+      await _videoPlayerController!.initialize();
 
-    // Listen to playback state changes
-    _videoPlayerController!.addListener(() {
+      setState(() {
+        _chewieController = ChewieController(
+          videoPlayerController: _videoPlayerController!,
+          autoPlay: true,
+          looping: true,
+          showControls: true,
+          placeholder: widget.thumbnailUrl != null
+              ? Center(
+                  child: Image.network(
+                    widget.thumbnailUrl!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.black,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 48,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'File deleted',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              widget.createdAt != null
+                                  ? DateTime.now()
+                                              .difference(widget.createdAt!)
+                                              .inDays >
+                                          60
+                                      ? '(Expired > 2 months)'
+                                      : DateTime.now()
+                                                  .difference(widget.createdAt!)
+                                                  .inDays >
+                                              14
+                                          ? '(Expired > 14 days)'
+                                          : '(File deleted)'
+                                  : '(Expired)',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                )
+              : null,
+          errorBuilder: (context, errorMessage) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Video Unavailable',
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (errorMessage.contains('404'))
+                    Text(
+                      widget.createdAt != null
+                          ? DateTime.now()
+                                      .difference(widget.createdAt!)
+                                      .inDays >
+                                  60
+                              ? '(Expired > 2 months)'
+                              : DateTime.now()
+                                          .difference(widget.createdAt!)
+                                          .inDays >
+                                      14
+                                  ? '(Expired > 14 days)'
+                                  : '(File deleted)'
+                          : '(File deleted)',
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      });
+
+      _videoPlayerController!.addListener(() {
+        if (mounted) {
+          // Check for errors in the controller value
+          if (_videoPlayerController!.value.hasError) {
+            setState(() {
+              _hasError = true;
+            });
+          }
+          setState(() {
+            _isPlaying = _videoPlayerController!.value.isPlaying;
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint('Error initializing video player: $e');
       if (mounted) {
         setState(() {
-          _isPlaying = _videoPlayerController!.value.isPlaying;
+          _hasError = true;
         });
       }
-    });
+    }
   }
 
   Widget _buildActionButton({
@@ -212,14 +314,15 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     if (_videoPlayerController == null) return;
     double currentSpeed = _videoPlayerController!.value.playbackSpeed;
     double newSpeed;
-    if (currentSpeed == 1.0)
+    if (currentSpeed == 1.0) {
       newSpeed = 1.5;
-    else if (currentSpeed == 1.5)
+    } else if (currentSpeed == 1.5) {
       newSpeed = 2.0;
-    else if (currentSpeed == 2.0)
+    } else if (currentSpeed == 2.0) {
       newSpeed = 0.5;
-    else
+    } else {
       newSpeed = 1.0;
+    }
 
     _videoPlayerController!.setPlaybackSpeed(newSpeed);
     setState(() {}); // Update UI
@@ -262,9 +365,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success
-                ? l10n.savedToPhotos
-                : l10n.failedToSave),
+            content: Text(success ? l10n.savedToPhotos : l10n.failedToSave),
             backgroundColor: success ? AppColors.primaryPurple : Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -400,7 +501,9 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                widget.isImage ? l10n.generateNewContent : l10n.generateNewVideo,
+                widget.isImage
+                    ? l10n.generateNewContent
+                    : l10n.generateNewVideo,
                 style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -547,7 +650,8 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
     ref.read(creationControllerProvider.notifier).updatePrompt(prompt);
 
     // Add random enhancement if requested
-    if (useEnhancement) {
+    // ignore: use_build_context_synchronously
+    if (useEnhancement && mounted) {
       final l10n = AppLocalizations.of(context)!;
       final enhancements = [
         l10n.enhanceCinematic,
@@ -700,17 +804,101 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(Icons.broken_image_outlined,
-                                    color: Colors.white, size: 64),
+                              return Container(
+                                color: Colors.black,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.image_not_supported_outlined,
+                                      size: 64,
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'File deleted',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      widget.createdAt != null
+                                          ? DateTime.now()
+                                                      .difference(
+                                                          widget.createdAt!)
+                                                      .inDays >
+                                                  60
+                                              ? '(Expired > 2 months)'
+                                              : DateTime.now()
+                                                          .difference(
+                                                              widget.createdAt!)
+                                                          .inDays >
+                                                      14
+                                                  ? '(Expired > 14 days)'
+                                                  : '(File deleted)'
+                                          : '(Expired)',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
                             },
                           );
                         },
                       )
-                    : _chewieController != null
-                        ? Chewie(controller: _chewieController!)
-                        : const SizedBox(),
+                    : _hasError
+                        ? Container(
+                            color: Colors.black,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.error_outline_rounded,
+                                  size: 64,
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Video Unavailable',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.createdAt != null
+                                      ? DateTime.now()
+                                                  .difference(widget.createdAt!)
+                                                  .inDays >
+                                              60
+                                          ? '(Expired > 2 months)'
+                                          : DateTime.now()
+                                                      .difference(
+                                                          widget.createdAt!)
+                                                      .inDays >
+                                                  14
+                                              ? '(Expired > 14 days)'
+                                              : '(File deleted)'
+                                      : '(File deleted)',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : _chewieController != null
+                            ? Chewie(controller: _chewieController!)
+                            : const SizedBox(),
               ),
             ),
 

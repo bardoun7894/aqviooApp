@@ -20,14 +20,16 @@ class AuthController extends AsyncNotifier<void> {
     required String email,
     required String password,
     required String name,
+    String? phoneNumber,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () => ref.read(authRepositoryProvider).signUpWithEmailPassword(
-        email: email,
-        password: password,
-        name: name,
-      ),
+            email: email,
+            password: password,
+            name: name,
+            phoneNumber: phoneNumber,
+          ),
     );
   }
 
@@ -38,9 +40,16 @@ class AuthController extends AsyncNotifier<void> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
       () => ref.read(authRepositoryProvider).signInWithEmailPassword(
-        email: email,
-        password: password,
-      ),
+            email: email,
+            password: password,
+          ),
+    );
+  }
+
+  Future<void> signInWithMockPhone(String phoneNumber) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithMockPhone(phoneNumber),
     );
   }
 

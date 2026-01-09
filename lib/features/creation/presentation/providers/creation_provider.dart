@@ -616,8 +616,8 @@ class CreationController extends Notifier<CreationState> {
       currentList.removeWhere((item) => item.id == id);
       state = state.copyWith(creations: currentList);
     } catch (e) {
-      print('Error deleting creation: $e');
-      rethrow;
+      debugPrint('Error deleting creation: $e');
+      // Don't rethrow - just log it. The UI can still function.
     }
   }
 }

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm.apps.googleusercontent.com</string>
+	<string>651649539964-ca2lr37oq9cpbop2bor8988hsej03ppi.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm</string>
+	<string>com.googleusercontent.apps.651649539964-ca2lr37oq9cpbop2bor8988hsej03ppi</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>651649539964-6oshvig747pc7dfhf3qkodh5cbpnsbp0.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.aqvioo.akvioo</string>
+	<string>com.example.akvioo</string>
 	<key>PROJECT_ID</key>
 	<string>beldify-b445b</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:651649539964:ios:60a0c21c677f49f626cef9</string>
+	<string>1:651649539964:ios:d03878f1e09ed0f126cef9</string>
 </dict>
 </plist>

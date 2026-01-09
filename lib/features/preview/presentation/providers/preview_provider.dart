@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
 
@@ -5,6 +6,7 @@ class PreviewState {
   final VideoPlayerController? videoController;
   final bool isInitialized;
   final bool isPlaying;
+  final bool hasError;
   final int currentStyleIndex;
   final List<String> styles;
 
@@ -12,6 +14,7 @@ class PreviewState {
     this.videoController,
     this.isInitialized = false,
     this.isPlaying = false,
+    this.hasError = false,
     this.currentStyleIndex = 0,
     this.styles = const [
       'Original',
@@ -26,12 +29,14 @@ class PreviewState {
     VideoPlayerController? videoController,
     bool? isInitialized,
     bool? isPlaying,
+    bool? hasError,
     int? currentStyleIndex,
   }) {
     return PreviewState(
       videoController: videoController ?? this.videoController,
       isInitialized: isInitialized ?? this.isInitialized,
       isPlaying: isPlaying ?? this.isPlaying,
+      hasError: hasError ?? this.hasError,
       currentStyleIndex: currentStyleIndex ?? this.currentStyleIndex,
       styles: styles,
     );
@@ -51,7 +56,22 @@ class PreviewController extends Notifier<PreviewState> {
     // Dispose previous controller if exists
     state.videoController?.dispose();
 
+    // Reset error state
+    state = state.copyWith(hasError: false);
+
     final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+
+    // Add error listener for async playback errors (like 404)
+    controller.addListener(() {
+      if (controller.value.hasError && !state.hasError) {
+        debugPrint("⚠️ PreviewController: Async video error detected");
+        state = state.copyWith(
+          hasError: true,
+          isInitialized: false,
+          isPlaying: false,
+        );
+      }
+    });
 
     try {
       await controller.initialize();
@@ -64,8 +84,9 @@ class PreviewController extends Notifier<PreviewState> {
         isPlaying: true,
       );
     } catch (e) {
-      // Handle error
-      print("Error initializing video: $e");
+      // Handle error - set error state
+      debugPrint("Error initializing video: $e");
+      state = state.copyWith(hasError: true);
     }
   }
 
@@ -88,8 +109,7 @@ class PreviewController extends Notifier<PreviewState> {
   }
 
   void previousStyle() {
-    final prevIndex =
-        (state.currentStyleIndex - 1 + state.styles.length) %
+    final prevIndex = (state.currentStyleIndex - 1 + state.styles.length) %
         state.styles.length;
     state = state.copyWith(currentStyleIndex: prevIndex);
   }

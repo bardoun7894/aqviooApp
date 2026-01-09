@@ -461,12 +461,6 @@ class _ContentViewerScreenState extends ConsumerState<ContentViewerScreen> {
                 color: AppColors.primaryPurple.withOpacity(0.1),
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(16)),
-                image: item['thumbnailUrl'] != null
-                    ? DecorationImage(
-                        image: NetworkImage(item['thumbnailUrl']),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
               ),
               child: item['thumbnailUrl'] == null
                   ? Center(
@@ -479,7 +473,57 @@ class _ContentViewerScreenState extends ConsumerState<ContentViewerScreen> {
                       ),
                     )
                   : Stack(
+                      fit: StackFit.expand,
                       children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16)),
+                          child: Image.network(
+                            item['thumbnailUrl'],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.black.withOpacity(0.1),
+                                padding: const EdgeInsets.all(8),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.image_not_supported_outlined,
+                                      size: 24,
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.7)
+                                          : AppColors.textSecondary
+                                              .withOpacity(0.7),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'File deleted',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.textPrimary,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    Text(
+                                      '(Expired)',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 8,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.8)
+                                            : AppColors.textSecondary,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                         if (type == 'video')
                           Center(
                             child: Container(
@@ -749,12 +793,36 @@ class _ContentViewerScreenState extends ConsumerState<ContentViewerScreen> {
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                     height: double.infinity,
-                                    errorBuilder: (_, __, ___) => Center(
-                                      child: Icon(
-                                        Icons.broken_image_outlined,
-                                        size: 48,
-                                        color: AppColors.primaryPurple
-                                            .withOpacity(0.5),
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: Colors.black,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.image_not_supported_outlined,
+                                            size: 48,
+                                            color:
+                                                Colors.white.withOpacity(0.7),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'File deleted',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          Text(
+                                            '(Expired > 2 months)',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              color:
+                                                  Colors.white.withOpacity(0.8),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -1207,6 +1275,17 @@ class _VideoPreviewState extends State<_VideoPreview> {
       _videoPlayerController = VideoPlayerController.networkUrl(
         Uri.parse(widget.videoUrl),
       );
+
+      // Add error listener for async playback errors (like 404)
+      _videoPlayerController.addListener(() {
+        if (mounted && _videoPlayerController.value.hasError) {
+          setState(() {
+            _error = true;
+            _isLoading = false;
+            _errorMessage = 'Video file deleted or expired';
+          });
+        }
+      });
 
       debugPrint('🎬 VideoPreview: Calling initialize()...');
       await _videoPlayerController.initialize();

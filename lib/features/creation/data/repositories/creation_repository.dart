@@ -19,26 +19,41 @@ class CreationRepository {
 
     try {
       // Try to load from cache first for instant UI
-      await _getCachedCreations();
+      // We do this manually because we want to show *something* immediately
+      // before waiting for Firestore
+      final cached = await _getCachedCreations();
+      if (cached.isNotEmpty) {
+        // Return immediately if we have cache, but still fetch fresh data in background
+        // Note: In a real app we might want to use a stream or state management to update
+        // when the fresh data arrives. Here we just return cached and let the fresh
+        // fetch happen on next refresh or via stream.
+        // BUT for this specific method, we want fresh data if possible.
+        // So we will try to fetch fresh data, and if it fails (offline), return cached.
+      }
 
       // Load from Firestore (source of truth)
+      // Use serverAndCache to hopefully get *some* data if offline but persistence is on
       final snapshot = await _firestore
           .collection('users')
           .doc(uid)
           .collection('creations')
           .orderBy('createdAt', descending: true)
-          .get();
+          .get(const GetOptions(source: Source.serverAndCache));
 
-      final creations = snapshot.docs
-          .map((doc) => CreationItem.fromMap(doc.data()))
-          .toList();
+      final creations =
+          snapshot.docs.map((doc) => CreationItem.fromMap(doc.data())).toList();
 
       // Update cache
       await _cacheCreations(creations);
 
       return creations;
     } catch (e) {
-      print('Error loading creations from Firestore: $e');
+      if (e.toString().contains('unavailable') ||
+          e.toString().contains('offline')) {
+        print('⚠️ Firestore unavailable (offline), using cache.');
+      } else {
+        print('Error loading creations from Firestore: $e');
+      }
 
       // Return cached data if Firebase fails
       final cached = await _getCachedCreations();
@@ -58,9 +73,8 @@ class CreationRepository {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      final creations = snapshot.docs
-          .map((doc) => CreationItem.fromMap(doc.data()))
-          .toList();
+      final creations =
+          snapshot.docs.map((doc) => CreationItem.fromMap(doc.data())).toList();
 
       // Update cache in background
       _cacheCreations(creations);
@@ -131,7 +145,9 @@ class CreationRepository {
 
       if (cachedJson != null) {
         final List<dynamic> decoded = json.decode(cachedJson);
-        return decoded.map((item) => CreationItem.fromMap(item as Map<String, dynamic>)).toList();
+        return decoded
+            .map((item) => CreationItem.fromMap(item as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
       print('Error loading cached creations: $e');

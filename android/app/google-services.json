@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "651649539964-6oshvig747pc7dfhf3qkodh5cbpnsbp0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aqvioo.app",
+            "certificate_hash": "96fe4489d3d49560a1d1cd5f08fb1827b7870703"
+          }
+        },
+        {
+          "client_id": "651649539964-8pa7rnua6p5tst75mg305lqdqqvq0qa1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aqvioo.app",
+            "certificate_hash": "21b2703a7232844685d7334511831c4675c0cfe4"
+          }
+        },
+        {
           "client_id": "651649539964-bge3vcpskv1fqgoo42ib57e3sq2solc7.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +45,13 @@
             {
               "client_id": "651649539964-bge3vcpskv1fqgoo42ib57e3sq2solc7.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.aqvioo.akvioo"
+              }
             }
           ]
         }

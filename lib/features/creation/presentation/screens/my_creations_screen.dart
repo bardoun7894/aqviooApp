@@ -839,6 +839,7 @@ class _CreationCardState extends State<CreationCard>
   late Animation<double> _scaleAnimation;
   VideoPlayerController? _videoController;
   bool _isPlayerInitialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -863,6 +864,17 @@ class _CreationCardState extends State<CreationCard>
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(widget.item.url!),
       );
+
+      // Add error listener for async playback errors (like 404)
+      _videoController!.addListener(() {
+        if (mounted && _videoController!.value.hasError) {
+          setState(() {
+            _hasError = true;
+            _isPlayerInitialized = false;
+          });
+        }
+      });
+
       await _videoController!.initialize();
       await _videoController!.setVolume(0); // Mute for background play
       await _videoController!.setLooping(true);
@@ -874,6 +886,11 @@ class _CreationCardState extends State<CreationCard>
       }
     } catch (e) {
       debugPrint('Error initializing video preview: $e');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -885,6 +902,14 @@ class _CreationCardState extends State<CreationCard>
   }
 
   void _handleTap() async {
+    // Check if item is older than 14 days
+    final isExpired =
+        DateTime.now().difference(widget.item.createdAt).inDays >= 14;
+    if (isExpired) {
+      debugPrint('🚫 Creation is expired (> 14 days), ignoring tap');
+      return;
+    }
+
     if (widget.item.status == CreationStatus.success &&
         widget.item.url != null) {
       await _animationController.forward();
@@ -900,6 +925,7 @@ class _CreationCardState extends State<CreationCard>
           'thumbnailUrl': widget.item.thumbnailUrl,
           'prompt': widget.item.prompt,
           'isImage': widget.item.type == CreationType.image,
+          'createdAt': widget.item.createdAt,
         },
       );
     }
@@ -1088,11 +1114,50 @@ class _CreationCardState extends State<CreationCard>
                                   );
                                 },
                                 errorBuilder: (context, error, stackTrace) {
-                                  return Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 48,
-                                      color: Colors.white.withOpacity(0.7),
+                                  return Container(
+                                    color: Colors.black.withOpacity(0.1),
+                                    padding: const EdgeInsets.all(8),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image_not_supported_outlined,
+                                          size: 32,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'File deleted',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Text(
+                                          DateTime.now()
+                                                      .difference(
+                                                          item.createdAt)
+                                                      .inDays >
+                                                  60
+                                              ? '(Expired > 2 months)'
+                                              : DateTime.now()
+                                                          .difference(
+                                                              item.createdAt)
+                                                          .inDays >
+                                                      14
+                                                  ? '(Expired > 14 days)'
+                                                  : '(File deleted)',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 10,
+                                            color:
+                                                Colors.white.withOpacity(0.8),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                     ),
                                   );
                                 },
@@ -1119,6 +1184,51 @@ class _CreationCardState extends State<CreationCard>
                                   width: _videoController!.value.size.width,
                                   height: _videoController!.value.size.height,
                                   child: VideoPlayer(_videoController!),
+                                ),
+                              ),
+
+                            // Error state for video (expired/deleted)
+                            if (isVideo && _hasError)
+                              Container(
+                                color: Colors.black.withOpacity(0.1),
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.video_library_outlined,
+                                      size: 32,
+                                      color: Colors.white.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'File deleted',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    Text(
+                                      DateTime.now()
+                                                  .difference(item.createdAt)
+                                                  .inDays >
+                                              60
+                                          ? '(Expired > 2 months)'
+                                          : DateTime.now()
+                                                      .difference(item.createdAt)
+                                                      .inDays >
+                                                  14
+                                              ? '(Expired > 14 days)'
+                                              : '(File deleted)',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 10,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 ),
                               ),
 
@@ -1150,7 +1260,7 @@ class _CreationCardState extends State<CreationCard>
                               ),
 
                             // Play icon for video
-                            if (isVideo && !isProcessing && !isFailed)
+                            if (isVideo && !isProcessing && !isFailed && !_hasError)
                               Positioned(
                                 top: 12,
                                 right: 12,
@@ -1397,6 +1507,7 @@ class GridCreationCard extends StatefulWidget {
 class _GridCreationCardState extends State<GridCreationCard> {
   VideoPlayerController? _videoController;
   bool _isPlayerInitialized = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -1410,9 +1521,25 @@ class _GridCreationCardState extends State<GridCreationCard> {
 
   Future<void> _initializeVideo() async {
     try {
+      // Add a small staggered delay to prevent performance issues
+      // when loading multiple cards in a grid
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(widget.item.url!),
       );
+
+      // Add error listener for async playback errors (like 404)
+      _videoController!.addListener(() {
+        if (mounted && _videoController!.value.hasError) {
+          setState(() {
+            _hasError = true;
+            _isPlayerInitialized = false;
+          });
+        }
+      });
+
       await _videoController!.initialize();
       await _videoController!.setVolume(0);
       await _videoController!.setLooping(true);
@@ -1424,6 +1551,11 @@ class _GridCreationCardState extends State<GridCreationCard> {
       }
     } catch (e) {
       debugPrint('Error initializing video preview: $e');
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -1434,6 +1566,14 @@ class _GridCreationCardState extends State<GridCreationCard> {
   }
 
   void _handleTap() {
+    // Check if item is older than 14 days
+    final isExpired =
+        DateTime.now().difference(widget.item.createdAt).inDays >= 14;
+    if (isExpired) {
+      debugPrint('🚫 Creation is expired (> 14 days), ignoring tap');
+      return;
+    }
+
     if (widget.item.status == CreationStatus.success &&
         widget.item.url != null) {
       // Navigate to full preview screen for both video and image
@@ -1444,6 +1584,7 @@ class _GridCreationCardState extends State<GridCreationCard> {
           'thumbnailUrl': widget.item.thumbnailUrl,
           'prompt': widget.item.prompt,
           'isImage': widget.item.type == CreationType.image,
+          'createdAt': widget.item.createdAt,
         },
       );
     }
@@ -1607,11 +1748,46 @@ class _GridCreationCardState extends State<GridCreationCard> {
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                size: 32,
-                                color: Colors.white.withOpacity(0.7),
+                            return Container(
+                              color: Colors.black.withOpacity(0.1),
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 24,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'File deleted',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  Text(
+                                    DateTime.now()
+                                                .difference(item.createdAt)
+                                                .inDays >
+                                            60
+                                        ? '(Expired > 2 months)'
+                                        : DateTime.now()
+                                                    .difference(item.createdAt)
+                                                    .inDays >
+                                                14
+                                            ? '(Expired > 14 days)'
+                                            : '(File deleted)',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 8,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -1640,6 +1816,51 @@ class _GridCreationCardState extends State<GridCreationCard> {
                           ),
                         ),
 
+                      // Error state for video (expired/deleted)
+                      if (isVideo && _hasError)
+                        Container(
+                          color: Colors.black.withOpacity(0.1),
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.video_library_outlined,
+                                size: 24,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'File deleted',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                DateTime.now()
+                                            .difference(item.createdAt)
+                                            .inDays >
+                                        60
+                                    ? '(Expired > 2 months)'
+                                    : DateTime.now()
+                                                .difference(item.createdAt)
+                                                .inDays >
+                                            14
+                                        ? '(Expired > 14 days)'
+                                        : '(File deleted)',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 8,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+
                       // Gradient Overlay
                       Container(
                         decoration: BoxDecoration(
@@ -1655,7 +1876,7 @@ class _GridCreationCardState extends State<GridCreationCard> {
                       ),
 
                       // Play icon for video
-                      if (isVideo)
+                      if (isVideo && !_hasError)
                         Positioned(
                           top: 8,
                           right: 8,

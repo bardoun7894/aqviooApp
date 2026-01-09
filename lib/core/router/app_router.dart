@@ -21,12 +21,17 @@ import '../../features/admin/users/screens/users_list_screen.dart';
 import '../../features/admin/users/screens/user_detail_screen.dart';
 import '../../features/admin/content/screens/content_viewer_screen.dart';
 import '../../features/admin/payments/screens/payments_screen.dart';
+import '../widgets/error_screen.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
   final adminAuthState = ref.watch(adminAuthControllerProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: kIsWeb ? '/admin/login' : '/splash',
     refreshListenable: GoRouterRefreshStream(
       ref.watch(authRepositoryProvider).authStateChanges,
@@ -41,17 +46,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSplash = currentPath == '/splash';
       final isLogin = currentPath == '/login';
       final isSignup = currentPath == '/signup';
+      final isError = currentPath == '/error'; // Allow error page access
 
       debugPrint(
           '🛣️ Router: path=$currentPath, isAdminRoute=$isAdminRoute, isAdminLoading=$isAdminLoading, isAdminLoggedIn=$isAdminLoggedIn, mobileAuthLoading=${authState.isLoading}');
 
-      // Platform-specific routing
-      // Admin dashboard is WEB ONLY - redirect mobile users away from admin routes
-      if (isAdminRoute && !kIsWeb) {
-        debugPrint(
-            '🛣️ Router: Admin routes not available on mobile, redirecting to /home');
-        return isLoggedIn ? '/home' : '/login';
-      }
+      // Always allow error screen
+      if (isError) return null;
+
+      // Admin dashboard is available on all platforms for this project
+      // (Removing restriction that redirected mobile users away from admin routes)
+
+      // Payment route is MOBILE ONLY - redirect web users away from payment
 
       // Payment route is MOBILE ONLY - redirect web users away from payment
       if (currentPath == '/payment' && kIsWeb) {
@@ -114,6 +120,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
+        path: '/error',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ErrorScreen(
+            errorDetails: extra?['error'] as String?,
+          );
+        },
+      ),
+      GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
@@ -149,6 +164,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             thumbnailUrl: thumbnailUrl,
             prompt: prompt,
             isImage: isImage,
+            createdAt: state.extra is Map<String, dynamic>
+                ? (state.extra as Map<String, dynamic>)['createdAt']
+                    as DateTime?
+                : null,
           );
         },
       ),

@@ -81,14 +81,19 @@ class CreditsController extends StateNotifier<CreditsState> {
       );
     } else {
       // User logged in or changed
-      if (_lastLoadedUserId != user.uid) {
-        print(
-            '💰 Credits: New user detected, setting up cache for ${user.uid}');
-        await CacheManager.setCurrentUser(user.uid);
-        // Start real-time listener for this user
-        _startCreditsListener();
+      try {
+        if (_lastLoadedUserId != user.uid) {
+          print(
+              '💰 Credits: New user detected, setting up cache for ${user.uid}');
+          await CacheManager.setCurrentUser(user.uid);
+          // Start real-time listener for this user
+          _startCreditsListener();
+        }
+        await _loadBalance();
+      } catch (e) {
+        print('⚠️ Credits: Error during auth change handler: $e');
+        // loadBalance already has internal catch, but this catches listener setup
       }
-      await _loadBalance();
     }
   }
 
@@ -184,61 +189,65 @@ class CreditsController extends StateNotifier<CreditsState> {
   }
 
   Future<void> _loadBalance() async {
+    final userId = _userId;
+    if (userId == null) {
+      state = const CreditsState(
+        balance: 0,
+        hasGeneratedFirst: false,
+        isLoading: false,
+      );
+      return;
+    }
+
     state = state.copyWith(isLoading: true);
 
     try {
-      final userId = _userId;
       print('💰 Credits: Loading balance for user: $userId');
 
-      if (userId == null) {
-        print('💰 Credits: No user logged in');
-        state = const CreditsState(
-          balance: 0,
-          hasGeneratedFirst: false,
-          isLoading: false,
+      // Try local cache first to show something immediately
+      final cachedBalance = CacheManager.getCachedBalance(userId);
+      final cachedHasGeneratedFirst =
+          CacheManager.getCachedHasGeneratedFirst(userId);
+      if (cachedBalance != null) {
+        state = CreditsState(
+          balance: cachedBalance,
+          hasGeneratedFirst: cachedHasGeneratedFirst ?? false,
+          isLoading: true, // Still loading in BG
         );
-        return;
       }
 
-      // Always fetch from Firebase (source of truth)
+      // Fetch from Firestore with a timeout
       print('💰 Credits: Fetching from Firestore...');
-      final doc = await _userCreditsDoc?.get();
+      final doc = await _userCreditsDoc
+          ?.get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(seconds: 5));
 
       if (doc != null && doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         print('💰 Credits: Firestore data: $data');
 
-        // Support both old 'credits' (int) and new 'balance' (double) fields
-        // Use the greater value to handle cases where one field was updated but not the other
-        // (e.g. admin top-up updated credits, legacy spend updated balance)
         double balanceVal = 0.0;
         double creditsVal = 0.0;
 
         if (data.containsKey('balance')) {
           balanceVal = (data['balance'] as num).toDouble();
         }
-
         if (data.containsKey('credits')) {
           creditsVal = (data['credits'] as num).toDouble();
         }
 
         double balance;
-        // Use initial balance if both are missing/zero logic
         if (!data.containsKey('balance') && !data.containsKey('credits')) {
           balance = Pricing.initialBalance;
         } else {
-          // Take the maximum to ensure user doesn't lose credits from sync issues
           balance = balanceVal > creditsVal ? balanceVal : creditsVal;
         }
-
-        print(
-            '💰 Credits: Resolved balance: $balance (balance field: $balanceVal, credits field: $creditsVal)');
 
         final hasGeneratedFirst = data['hasGeneratedFirst'] as bool? ??
             data['hasGeneratedFirstVideo'] as bool? ??
             false;
 
-        // Update cache with Firebase data
+        // Update cache
         await CacheManager.setCachedBalance(userId, balance);
         await CacheManager.setCachedHasGeneratedFirst(
             userId, hasGeneratedFirst);
@@ -249,61 +258,54 @@ class CreditsController extends StateNotifier<CreditsState> {
           hasGeneratedFirst: hasGeneratedFirst,
           isLoading: false,
         );
-        print('💰 Credits: Final balance from Firebase: $balance');
-      } else {
-        // First time user - create credits document
+      } else if (doc != null && !doc.exists) {
+        // Doc definitely doesn't exist on server
         print('💰 Credits: No credits document found, creating new one');
-        try {
-          // Determine initial balance based on user type
-          // Guest: 4.0 SAR (1 video or 2 images)
-          // Registered: 10.0 SAR (Welcome bonus)
-          final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
-          final initialBalance = isAnonymous ? 4.0 : Pricing.initialBalance;
+        final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
+        final initialBalance = isAnonymous ? 4.0 : Pricing.initialBalance;
 
+        try {
           await _userCreditsDoc?.set({
             'balance': initialBalance,
             'hasGeneratedFirst': false,
             'lastUpdated': FieldValue.serverTimestamp(),
           });
-          print('💰 Credits: Created new credits doc');
         } catch (e) {
-          print('💰 Credits: Failed to create credits doc: $e');
+          print('💰 Credits: Background creation failed (ignoring): $e');
         }
-
-        // Use same logic for cache
-        final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
-        final initialBalance = isAnonymous ? 4.0 : Pricing.initialBalance;
-
-        await CacheManager.setCachedBalance(userId, initialBalance);
-        await CacheManager.setCachedHasGeneratedFirst(userId, false);
-        _lastLoadedUserId = userId;
 
         state = CreditsState(
           balance: initialBalance,
           hasGeneratedFirst: false,
           isLoading: false,
         );
-        print('💰 Credits: Set initial balance: $initialBalance');
       }
     } catch (e) {
-      print('❌ Credits: Error loading balance from Firebase: $e');
+      print('ℹ️ Credits: Could not fetch from server (offline/timeout): $e');
 
-      // Fallback to cache only if Firebase fails AND cache is for same user
-      final userId = _userId;
-      if (userId != null) {
+      // If we already have a cached state from up above, just mark as not loading anymore
+      if (state.balance > 0 || state.hasGeneratedFirst) {
+        state = state.copyWith(isLoading: false);
+      } else {
+        // Final fallback to cache if we didn't do it at start
         final cachedBalance = CacheManager.getCachedBalance(userId);
         if (cachedBalance != null) {
-          print('💰 Credits: Using cached balance as fallback: $cachedBalance');
           state = CreditsState(
             balance: cachedBalance,
             hasGeneratedFirst:
                 CacheManager.getCachedHasGeneratedFirst(userId) ?? false,
             isLoading: false,
           );
-          return;
+        } else {
+          // No cache, no server - use guest default as last resort
+          final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
+          state = CreditsState(
+            balance: isAnonymous ? 4.0 : Pricing.initialBalance,
+            hasGeneratedFirst: false,
+            isLoading: false,
+          );
         }
       }
-      state = state.copyWith(isLoading: false);
     }
   }
 

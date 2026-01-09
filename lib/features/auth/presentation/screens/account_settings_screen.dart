@@ -1,9 +1,11 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -23,6 +25,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   final _phoneController = TextEditingController();
   bool _isSaving = false;
   bool _hasChanges = false;
+  String _initialName = '';
+  String _initialPhone = '';
 
   @override
   void initState() {
@@ -30,11 +34,45 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _loadUserData();
   }
 
-  void _loadUserData() {
+  Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _nameController.text = user.displayName ?? '';
-      _phoneController.text = user.phoneNumber ?? '';
+      _initialName = user.displayName ?? '';
+      _nameController.text = _initialName;
+
+      // Fallback 1: Extract from dummy email if applicable
+      String phoneBase = '';
+      if (user.email != null && user.email!.endsWith('@phone.aqvioo.com')) {
+        phoneBase = user.email!.split('@').first;
+      } else {
+        phoneBase = user.phoneNumber ?? '';
+      }
+      _initialPhone = phoneBase;
+      _phoneController.text = phoneBase;
+
+      // Final Source of Truth: Firestore
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (mounted && userDoc.exists) {
+          final data = userDoc.data();
+          final firestorePhone = data?['phoneNumber'] as String?;
+          if (firestorePhone != null && firestorePhone.isNotEmpty) {
+            _initialPhone = firestorePhone;
+            _phoneController.text = firestorePhone;
+          }
+          final firestoreName = data?['displayName'] as String?;
+          if (firestoreName != null && firestoreName.isNotEmpty) {
+            _initialName = firestoreName;
+            _nameController.text = firestoreName;
+          }
+        }
+      } catch (e) {
+        debugPrint('⚠️ AccountSettings: Error loading Firestore data: $e');
+      }
     }
 
     _nameController.addListener(_onFieldChanged);
@@ -42,9 +80,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   void _onFieldChanged() {
-    final user = FirebaseAuth.instance.currentUser;
-    final hasNameChanged = _nameController.text != (user?.displayName ?? '');
-    final hasPhoneChanged = _phoneController.text != (user?.phoneNumber ?? '');
+    final hasNameChanged = _nameController.text.trim() != _initialName;
+    final hasPhoneChanged = _phoneController.text.trim() != _initialPhone;
 
     if (_hasChanges != (hasNameChanged || hasPhoneChanged)) {
       setState(() {
@@ -70,7 +107,22 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await user.updateDisplayName(_nameController.text.trim());
+        final newName = _nameController.text.trim();
+        final newPhone = _phoneController.text.trim();
+
+        // 1. Update Firebase Auth Profile
+        await user.updateDisplayName(newName);
+
+        // 2. Update Firestore Document (Primary source for phone)
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'displayName': newName,
+          'phoneNumber': newPhone,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // Update local baseline
+        _initialName = newName;
+        _initialPhone = newPhone;
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -196,6 +248,26 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
                         // Danger Zone
                         _buildDangerZone(context, ref),
+
+                        if (kDebugMode) ...[
+                          const SizedBox(height: 24),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: _buildSettingsTile(
+                              icon: Icons.bug_report_rounded,
+                              title: 'Simulate Crash (Debug)',
+                              subtitle: 'Throw test exception',
+                              iconColor: Colors.purple,
+                              onTap: () {
+                                throw Exception(
+                                    'Manual Test Crash from AccountSettings');
+                              },
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 100),
                       ],
@@ -552,8 +624,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
   }
 
-  void _showLanguageDialog(
-    BuildContext context, WidgetRef ref, AppLocalizations l10n, Locale currentLocale) {
+  void _showLanguageDialog(BuildContext context, WidgetRef ref,
+      AppLocalizations l10n, Locale currentLocale) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

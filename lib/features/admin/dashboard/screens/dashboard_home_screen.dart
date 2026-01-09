@@ -762,6 +762,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
               backgroundImage: user['photoURL'] != null
                   ? NetworkImage(user['photoURL'])
                   : null,
+              onBackgroundImageError: (_, __) {
+                // Swallows exception on 404
+              },
               child: user['photoURL'] == null
                   ? Text(
                       (user['displayName'] as String?)?.isNotEmpty == true
@@ -990,6 +993,9 @@ class _DashboardHomeScreenState extends ConsumerState<DashboardHomeScreen> {
                 ? DecorationImage(
                     image: NetworkImage(creation['thumbnailUrl']),
                     fit: BoxFit.cover,
+                    onError: (_, __) {
+                      // Handle error (image won't render, showing background color)
+                    },
                   )
                 : null,
           ),

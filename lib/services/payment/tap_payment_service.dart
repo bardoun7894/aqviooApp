@@ -96,6 +96,7 @@ class TapPaymentService with SafeApiCaller {
           },
         ),
         timeout: const Duration(seconds: 30),
+        serviceName: 'TapPayment',
       );
 
       // SafeApiCall handles 429, 500, etc.

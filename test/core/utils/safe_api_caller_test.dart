@@ -39,6 +39,7 @@ void main() {
       } catch (e) {
         // If it fails due to connectivity check in a restricted env, log it.
         if (e.toString().contains('No internet')) {
+          // ignore: avoid_print
           print('Skipping test due to no internet in test env');
           return;
         }

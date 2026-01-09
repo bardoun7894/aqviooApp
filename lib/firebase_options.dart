@@ -25,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -57,22 +51,47 @@ class DefaultFirebaseOptions {
   );
 
   // TODO: Configure Android app in Firebase Console and replace placeholder App ID
-  // Phone auth requires: 1) Real App ID, 2) SHA-1 certificate added to Firebase Console
+
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBmxSaHG6CDRO5a7_MRH4U8SpcUNpBgVpo',
+    apiKey: 'AIzaSyAWHiozXHu9h4by4WsjYmpgZwRUvVQ97G4',
     appId: '1:651649539964:android:802828cdb6df4de826cef9',
+    messagingSenderId: '651649539964',
+    projectId: 'beldify-b445b',
+    storageBucket: 'beldify-b445b.firebasestorage.app',
+  );
+
+  // Phone auth requires: 1) Real App ID, 2) SHA-1 certificate added to Firebase Console
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAPm59HesfNtYYt88NjDW46XOjFvWMwHU4',
+    appId: '1:651649539964:ios:60a0c21c677f49f626cef9',
+    messagingSenderId: '651649539964',
+    projectId: 'beldify-b445b',
+    storageBucket: 'beldify-b445b.firebasestorage.app',
+    androidClientId: '651649539964-6oshvig747pc7dfhf3qkodh5cbpnsbp0.apps.googleusercontent.com',
+    iosClientId: '651649539964-tp94apv3cka907ot05ia8gl5sh9vdthm.apps.googleusercontent.com',
+    iosBundleId: 'com.aqvioo.akvioo',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAPm59HesfNtYYt88NjDW46XOjFvWMwHU4',
+    appId: '1:651649539964:ios:d03878f1e09ed0f126cef9',
+    messagingSenderId: '651649539964',
+    projectId: 'beldify-b445b',
+    storageBucket: 'beldify-b445b.firebasestorage.app',
+    androidClientId: '651649539964-6oshvig747pc7dfhf3qkodh5cbpnsbp0.apps.googleusercontent.com',
+    iosClientId: '651649539964-ca2lr37oq9cpbop2bor8988hsej03ppi.apps.googleusercontent.com',
+    iosBundleId: 'com.example.akvioo',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBmxSaHG6CDRO5a7_MRH4U8SpcUNpBgVpo',
+    appId: '1:651649539964:web:6e6beaafceed3f7626cef9',
     messagingSenderId: '651649539964',
     projectId: 'beldify-b445b',
     authDomain: 'beldify-b445b.firebaseapp.com',
     storageBucket: 'beldify-b445b.firebasestorage.app',
+    measurementId: 'G-Y3S56QJWKX',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAPm59HesfNtYYt88NjDW46XOjFvWMwHU4',
-    appId: '1:651649539964:ios:60a0c21c67ff49f626cef9',
-    messagingSenderId: '651649539964',
-    projectId: 'beldify-b445b',
-    storageBucket: 'beldify-b445b.firebasestorage.app',
-    iosBundleId: 'com.aqvioo.akvioo',
-  );
 }

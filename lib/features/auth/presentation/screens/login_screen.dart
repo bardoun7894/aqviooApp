@@ -24,14 +24,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   // Controllers
   final _identifierController = TextEditingController(); // Email or Phone
   final _passwordController = TextEditingController();
-  final _otpController = TextEditingController();
+
   final _identifierFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
 
   // State
-  bool _codeSent = false;
   bool _obscurePassword = true;
-  String? _verificationId;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -53,7 +51,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   void dispose() {
     _identifierController.dispose();
     _passwordController.dispose();
-    _otpController.dispose();
     _identifierFocusNode.dispose();
     _passwordFocusNode.dispose();
     _fadeController.dispose();
@@ -97,42 +94,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     // Call Firebase signin
     ref.read(authControllerProvider.notifier).signInWithEmailPassword(
-      email: email,
-      password: password,
-    );
-  }
-
-  void _signInWithPhone(String phone) {
-    final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
-
-    ref.read(authControllerProvider.notifier).verifyPhoneNumber(
-          phoneNumber: '+$digits',
-          codeSent: (verificationId, resendToken) {
-            setState(() {
-              _verificationId = verificationId;
-              _codeSent = true;
-            });
-            _showSnackBar('Verification code sent!');
-          },
+          email: email,
+          password: password,
         );
   }
 
-  void _verifyOTP() {
-    final otp = _otpController.text.trim();
-    if (otp.isEmpty || otp.length != 6) {
-      _showSnackBar('Please enter a valid 6-digit code', isError: true);
+  void _signInWithPhone(String phone) {
+    final password = _passwordController.text.trim();
+
+    if (password.isEmpty) {
+      _showSnackBar('Please enter your password', isError: true);
       return;
     }
 
-    if (_verificationId == null) {
-      _showSnackBar('Session expired. Please try again', isError: true);
-      setState(() => _codeSent = false);
-      return;
+    // Clean and format the phone number
+    String digits = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    if (!digits.startsWith('+')) {
+      digits = '+$digits';
     }
 
-    ref
-        .read(authControllerProvider.notifier)
-        .verifyOTP(verificationId: _verificationId!, smsCode: otp);
+    // Create dummy email from phone number for Firebase Auth
+    final dummyEmail = '$digits@phone.aqvioo.com';
+
+    // Use email/password authentication with the dummy email
+    ref.read(authControllerProvider.notifier).signInWithEmailPassword(
+          email: dummyEmail,
+          password: password,
+        );
   }
 
   Future<void> _guestLogin() async {
@@ -220,13 +208,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   const SizedBox(height: 16),
 
                   // Guest Login
-                  if (!_codeSent)
-                    _buildCompactGuestLogin(context, isLoading, l10n, isDark),
+                  _buildCompactGuestLogin(context, isLoading, l10n, isDark),
 
                   const SizedBox(height: 12),
 
                   // Don't have account - Signup link
-                  if (!_codeSent) _buildSignupLink(context, isDark),
+                  _buildSignupLink(context, isDark),
 
                   const SizedBox(height: 24),
 
@@ -340,9 +327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ],
         ),
         padding: const EdgeInsets.all(24),
-        child: _codeSent
-            ? _buildOTPForm(context, isLoading, isDark)
-            : _buildUnifiedForm(context, isLoading, isDark),
+        child: _buildUnifiedForm(context, isLoading, isDark),
       ),
     );
   }
@@ -350,7 +335,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _buildUnifiedForm(BuildContext context, bool isLoading, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     final identifier = _identifierController.text.trim();
-    final showPassword = identifier.isNotEmpty && _isEmail(identifier);
+    final showPassword = identifier.isNotEmpty;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -434,108 +419,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
         ],
-      ],
-    );
-  }
-
-  Widget _buildOTPForm(BuildContext context, bool isLoading, bool isDark) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          l10n.otpVerification,
-          style: GoogleFonts.outfit(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: isDark ? AppColors.white : AppColors.textPrimary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          '${l10n.enterOtp}\n${_identifierController.text}',
-          style: GoogleFonts.outfit(
-            fontSize: 12,
-            color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-
-        // OTP Input
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkGray : AppColors.lightGray,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: _otpController.text.isEmpty
-                  ? (isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : AppColors.neuShadowDark.withOpacity(0.2))
-                  : AppColors.primaryPurple,
-              width: 2,
-            ),
-          ),
-          child: TextField(
-            controller: _otpController,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            maxLength: 6,
-            onChanged: (value) => setState(() {}),
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.white : AppColors.textPrimary,
-              letterSpacing: 10,
-              fontFeatures: [const FontFeature.tabularFigures()],
-            ),
-            decoration: InputDecoration(
-              hintText: l10n.otpInputHint,
-              hintStyle: GoogleFonts.outfit(
-                color: isDark ? AppColors.darkGray : AppColors.textHint,
-                fontSize: 24,
-                letterSpacing: 10,
-              ),
-              border: InputBorder.none,
-              counterText: '',
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            onSubmitted: (_) => _verifyOTP(),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Verify Button
-        _buildCompactButton(
-          label: l10n.verify,
-          icon: Icons.check_circle_outline,
-          onPressed: isLoading ? null : _verifyOTP,
-          isLoading: isLoading,
-          isDark: isDark,
-        ),
-        const SizedBox(height: 12),
-
-        // Back Button
-        Center(
-          child: TextButton.icon(
-            onPressed: () => setState(() => _codeSent = false),
-            icon: Icon(
-              Icons.arrow_back,
-              size: 16,
-              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-            ),
-            label: Text(
-              l10n.changeNumber,
-              style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
