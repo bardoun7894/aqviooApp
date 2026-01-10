@@ -19,19 +19,18 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Create assets/env file
+      - name: Create .env file
         script: |
-          mkdir -p assets
-          echo "KIE_API_KEY=$KIE_API_KEY" >> assets/env
-          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> assets/env
-          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> assets/env
-          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> assets/env
-          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> assets/env
-          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> assets/env
+          echo "KIE_API_KEY=$KIE_API_KEY" >> .env
+          echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env
+          echo "TAP_SECRET_KEY=$TAP_SECRET_KEY" >> .env
+          echo "TAP_PUBLIC_KEY=$TAP_PUBLIC_KEY" >> .env
+          echo "TAP_MERCHANT_ID=$TAP_MERCHANT_ID" >> .env
+          echo "TAP_TEST_MODE=$TAP_TEST_MODE" >> .env
       - name: Set up code signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE
+          app-store-connect fetch-signing-files "com.aqvioo.akvioo" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
       - name: Get dependencies
@@ -58,7 +57,8 @@ workflows:
           fi
       - name: Build IPA
         script: |
-          flutter build ipa --release --build-number=$BUILD_NUMBER
+          xcode-project use-profiles
+          flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:

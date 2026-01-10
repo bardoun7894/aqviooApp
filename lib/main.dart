@@ -49,7 +49,7 @@ void main() async {
     try {
       // Load .env file (may fail on web if not bundled properly)
       try {
-        await dotenv.load(fileName: "assets/env");
+        await dotenv.load(fileName: ".env");
       } catch (e) {
         if (kDebugMode) {
           debugPrint('Warning: Could not load .env file: $e');
