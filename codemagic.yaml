@@ -56,10 +56,30 @@ workflows:
             echo "Warning: gRPC-Core file not found at $GRPC_FILE"
             find ios/Pods -name "basic_seq.h" 2>/dev/null || echo "No basic_seq.h found"
           fi
+      - name: Create export options plist
+        script: |
+          cat <<EOF > /Users/builder/export_options.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>4LGGU2TT4V</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>uploadBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+          echo "Created export_options.plist"
+          cat /Users/builder/export_options.plist
       - name: Build IPA
         script: |
           xcode-project use-profiles
-          flutter build ipa --release --build-number=$BUILD_NUMBER
+          flutter build ipa --release --build-number=$BUILD_NUMBER --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
