@@ -9,6 +9,9 @@ import '../../../../core/providers/credits_provider.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../services/payment/tap_payment_service.dart';
 import '../../../../services/payment/transaction_service.dart';
+import '../../../../services/payment/iap_service.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'dart:io';
 
 // Balance packages in SAR
 class BalancePackage {
@@ -64,6 +67,74 @@ class PaymentScreen extends ConsumerStatefulWidget {
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   int _selectedPackageIndex = 1; // Default to popular package
   bool _isProcessing = false;
+
+  // IAP Product IDs mapping to index
+  final Map<int, String> _productIds = {
+    0: 'credits_package_15',
+    1: 'credits_package_30',
+    2: 'credits_package_50',
+    3: 'credits_package_100',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isIOS) {
+      _initializeIAP();
+    }
+  }
+
+  Future<void> _initializeIAP() async {
+    final iapService = IAPService();
+    await iapService.initialize();
+
+    // Set callback to handle purchases
+    iapService.onPurchaseUpdated = (PurchaseDetails purchaseDetails) {
+      _handleIAPUpdate(purchaseDetails);
+    };
+
+    // Trigger rebuild to update UI if needed (though we use static list for now)
+    if (mounted) setState(() {});
+  }
+
+  void _handleIAPUpdate(PurchaseDetails purchaseDetails) async {
+    if (purchaseDetails.status == PurchaseStatus.pending) {
+      setState(() => _isProcessing = true);
+    } else {
+      if (purchaseDetails.status == PurchaseStatus.error) {
+        setState(() => _isProcessing = false);
+        _showErrorSnackBar(purchaseDetails.error?.message ?? 'Purchase failed');
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        // Find which package was bought to know how much to credit
+        // In a real app, verify receipt on backend.
+        // Here we trust the productID to add credits.
+        final productID = purchaseDetails.productID;
+        final packageIndex = _productIds.entries
+            .firstWhere((entry) => entry.value == productID,
+                orElse: () => MapEntry(-1, ''))
+            .key;
+
+        if (packageIndex != -1) {
+          final package = creditPackages[packageIndex];
+          try {
+            await ref
+                .read(creditsControllerProvider.notifier)
+                .addBalance(package.amount);
+            if (mounted) {
+              setState(() => _isProcessing = false);
+              _showSuccessDialog(package);
+            }
+          } catch (e) {
+            debugPrint('Error adding credits: $e');
+            setState(() => _isProcessing = false);
+          }
+        } else {
+          setState(() => _isProcessing = false);
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -353,24 +424,26 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.lock_outline,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.securePaymentTap,
-                        style: GoogleFonts.outfit(
-                          fontSize: 12,
+                  if (!Platform
+                      .isIOS) // Only show Tap secure badge on Android/Web
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.lock_outline,
+                          size: 16,
                           color: AppColors.textSecondary,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.securePaymentTap,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -381,6 +454,46 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   Future<void> _handlePurchase() async {
+    // Platform-specific logic
+    if (Platform.isIOS) {
+      await _handleIOSPurchase();
+    } else {
+      await _handleTapPayment();
+    }
+  }
+
+  Future<void> _handleIOSPurchase() async {
+    final productId = _productIds[_selectedPackageIndex];
+    if (productId == null) return;
+
+    setState(() => _isProcessing = true);
+
+    final iapService = IAPService();
+    // Find product details
+    try {
+      final product = iapService.products.firstWhere(
+        (p) => p.id == productId,
+        orElse: () => throw Exception('Product not found'),
+      );
+
+      await iapService.buyConsumable(product);
+      // Processing state will be updated by the listener
+    } catch (e) {
+      setState(() => _isProcessing = false);
+
+      // If product not found (e.g. not configured in Connect yet), prompt user
+      if (e.toString().contains('Product not found')) {
+        _showErrorDialog(
+            title: 'Store Error',
+            message:
+                'Product not configured in App Store. Please ensure product ID "$productId" exists.');
+      } else {
+        _showErrorSnackBar('Failed to initiate purchase: ${e.toString()}');
+      }
+    }
+  }
+
+  Future<void> _handleTapPayment() async {
     setState(() {
       _isProcessing = true;
     });

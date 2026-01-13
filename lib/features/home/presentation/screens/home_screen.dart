@@ -79,6 +79,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _pickImage() async {
+    // SAFEGUARD: Prevent image picking for Video type (Image-to-Video not supported yet)
+    final outputType = ref.read(creationControllerProvider).config.outputType;
+    if (outputType == OutputType.video) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              "Image-to-Video is coming soon! Please use text prompt only."),
+          backgroundColor: AppColors.primaryPurple,
+        ),
+      );
+      return;
+    }
+
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {

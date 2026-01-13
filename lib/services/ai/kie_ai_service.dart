@@ -711,6 +711,9 @@ class KieAIService {
       }
     } catch (e) {
       debugPrint('Error in generateContent: $e');
+      if (e is UnimplementedError) {
+        throw Exception(e.message ?? 'This feature is coming soon.');
+      }
       throw Exception(_getUserFriendlyError(e.toString()));
     }
   }
