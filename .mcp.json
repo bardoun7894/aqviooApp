@@ -7,9 +7,9 @@
         "appstore-connect-mcp-server"
       ],
       "env": {
-        "APP_STORE_CONNECT_KEY_ID": "5N2P5VNV84",
+        "APP_STORE_CONNECT_KEY_ID": "6RYDUN854U",
         "APP_STORE_CONNECT_ISSUER_ID": "0c31fe63-e8b1-4b25-adff-8ae358854e30",
-        "APP_STORE_CONNECT_P8_PATH": "/Users/mac/aqvioo/AuthKey_5N2P5VNV84.p8",
+        "APP_STORE_CONNECT_P8_PATH": "/Users/mac/aqvioo/AuthKey_6RYDUN854U.p8",
         "APP_STORE_CONNECT_VENDOR_NUMBER": "92969208"
       }
     },
