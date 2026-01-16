@@ -837,6 +837,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذرت معالجة الدفع. يرجى المحاولة مرة أخرى.';
 
   @override
+  String get purchaseButton => 'شراء';
+
+  @override
+  String get restorePurchases => 'استعادة';
+
+  @override
+  String get purchasesRestored => 'تم استعادة المشتريات بنجاح';
+
+  @override
+  String get restoreFailed => 'فشل استعادة المشتريات';
+
+  @override
   String get securePaymentTabby => 'اشترِ الآن وادفع لاحقاً بأمان عبر تابي';
 
   @override

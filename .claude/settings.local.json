@@ -3,7 +3,10 @@
     "allow": [
       "Bash(flutter pub:*)",
       "Bash(flutter create:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(flutter gen-l10n:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

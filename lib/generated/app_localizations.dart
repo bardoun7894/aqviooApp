@@ -1694,6 +1694,30 @@ abstract class AppLocalizations {
   /// **'Unable to process payment. Please try again.'**
   String get paymentFailedMessage;
 
+  /// No description provided for @purchaseButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get purchaseButton;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restorePurchases;
+
+  /// No description provided for @purchasesRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases restored successfully'**
+  String get purchasesRestored;
+
+  /// No description provided for @restoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to restore purchases'**
+  String get restoreFailed;
+
   /// No description provided for @securePaymentTabby.
   ///
   /// In en, this message translates to:

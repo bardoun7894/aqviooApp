@@ -838,6 +838,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to process payment. Please try again.';
 
   @override
+  String get purchaseButton => 'Purchase';
+
+  @override
+  String get restorePurchases => 'Restore';
+
+  @override
+  String get purchasesRestored => 'Purchases restored successfully';
+
+  @override
+  String get restoreFailed => 'Failed to restore purchases';
+
+  @override
   String get securePaymentTabby => 'Secure buy now, pay later with Tabby';
 
   @override

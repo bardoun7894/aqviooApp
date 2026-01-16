@@ -408,34 +408,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         color: Colors.white,
                       ),
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.lightGray,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.camera_alt_rounded,
-                    size: 16,
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              ),
+              // Camera button removed - profile picture editing not supported
             ],
           ),
 

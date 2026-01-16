@@ -61,14 +61,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _initSpeech() async {
     try {
       _speechAvailable = await _speech.initialize(
-        onError: (error) => print('Speech recognition error: $error'),
-        onStatus: (status) => print('Speech recognition status: $status'),
+        onError: (error) {
+          debugPrint('Speech recognition error: $error');
+          if (mounted) {
+            setState(() => _speechAvailable = false);
+          }
+        },
+        onStatus: (status) => debugPrint('Speech recognition status: $status'),
       );
       if (mounted) {
         setState(() {});
       }
     } catch (e) {
-      print('Error initializing speech: $e');
+      debugPrint('Error initializing speech: $e');
+      // Explicitly mark as unavailable on any initialization error
+      _speechAvailable = false;
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -437,12 +447,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Update prompt in config
     ref.read(creationControllerProvider.notifier).updatePrompt(prompt);
 
-    // Start video generation
-    ref.read(creationControllerProvider.notifier).generateVideo();
+    // Start video generation with error handling
+    try {
+      ref.read(creationControllerProvider.notifier).generateVideo();
 
-    if (!mounted) return;
-    // Navigate to magic loading screen
-    context.push('/magic-loading');
+      if (!mounted) return;
+      // Navigate to magic loading screen
+      context.push('/magic-loading');
+    } catch (e) {
+      debugPrint('Error starting generation: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(AppLocalizations.of(context)!.errorMessage(e.toString())),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
