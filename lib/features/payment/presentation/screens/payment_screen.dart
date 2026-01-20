@@ -148,10 +148,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final creditsState = ref.watch(creditsControllerProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    // Get screen width for responsive layout
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 600;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
