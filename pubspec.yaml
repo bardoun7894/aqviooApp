@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number used as the build suffix.
-version: 1.0.0+11
+version: 1.0.0+15
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -51,8 +51,8 @@ dependencies:
 
   # UI & Assets
   google_fonts: ^6.2.1
-  rive: ^0.13.4
-  video_player: ^2.8.6
+  rive: ^0.14.1
+  video_player: ^2.9.2
   chewie: ^1.8.1
   image_picker: ^1.1.1
   country_code_picker: ^3.0.0
@@ -73,7 +73,7 @@ dependencies:
   # image_gallery_saver: ^2.0.3  # REMOVED - causing Kotlin compilation error
   http: ^1.2.1
   speech_to_text: ^7.3.0
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   intl: ^0.20.2
   uuid: ^4.2.2
   flutter_web_plugins:

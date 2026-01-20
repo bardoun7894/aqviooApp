@@ -174,4 +174,59 @@ class CreationRepository {
       print('Error clearing cache: $e');
     }
   }
+
+  /// Cleanup creations older than 10 days (Kie AI retention limit)
+  /// This should be called on app startup to prevent crashes from expired URLs
+  static const int _retentionDays = 10;
+
+  Future<int> cleanupExpiredCreations() async {
+    final uid = _userId;
+    if (uid == null) return 0;
+
+    int deletedCount = 0;
+    final cutoffDate =
+        DateTime.now().subtract(const Duration(days: _retentionDays));
+
+    try {
+      // Get all creations
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('creations')
+          .get();
+
+      // Find and delete expired ones
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final createdAt = data['createdAt'];
+        DateTime? creationDate;
+
+        if (createdAt is Timestamp) {
+          creationDate = createdAt.toDate();
+        } else if (createdAt is String) {
+          creationDate = DateTime.tryParse(createdAt);
+        }
+
+        if (creationDate != null && creationDate.isBefore(cutoffDate)) {
+          await doc.reference.delete();
+          deletedCount++;
+          print(
+              '🗑️ Deleted expired creation: ${doc.id} (created: $creationDate)');
+        }
+      }
+
+      // Update cache to remove expired items
+      if (deletedCount > 0) {
+        final cached = await _getCachedCreations();
+        final updatedCache =
+            cached.where((c) => c.createdAt.isAfter(cutoffDate)).toList();
+        await _cacheCreations(updatedCache);
+        print('✅ Cleaned up $deletedCount expired creations');
+      }
+    } catch (e) {
+      print('Error cleaning up expired creations: $e');
+    }
+
+    return deletedCount;
+  }
 }

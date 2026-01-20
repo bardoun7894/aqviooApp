@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../../../generated/app_localizations.dart';
+import '../../../features/creation/presentation/providers/creation_provider.dart';
 
 /// Screen displayed when a global error occurs
-class ErrorScreen extends StatelessWidget {
+class ErrorScreen extends ConsumerWidget {
   final String? errorDetails;
 
   const ErrorScreen({super.key, this.errorDetails});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // We can't rely on AppLocalizations if the error happened before localization loaded
     // So we use hardcoded fallbacks if l10n is null, or just simple english
     final l10n = AppLocalizations.of(context);
@@ -74,7 +77,22 @@ class ErrorScreen extends StatelessWidget {
                   children: [
                     // Restart Button
                     ElevatedButton.icon(
-                      onPressed: () => context.go('/splash'),
+                      onPressed: () async {
+                        // Clear cached creation state to break the error loop
+                        try {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.remove('current_task_id');
+                          await prefs.remove('creation_state');
+                          // Reset creation provider state
+                          ref.invalidate(creationControllerProvider);
+                        } catch (e) {
+                          debugPrint('Error clearing state: $e');
+                        }
+                        // Navigate to home instead of splash to avoid re-triggering init errors
+                        if (context.mounted) {
+                          context.go('/home');
+                        }
+                      },
                       icon: const Icon(Icons.refresh, color: Colors.white),
                       label: Text(
                         'Restart App',

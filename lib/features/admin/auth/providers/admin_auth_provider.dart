@@ -67,25 +67,9 @@ class AdminAuthController extends StateNotifier<AdminAuthState> {
       debugPrint('🔐 Admin Auth: Admin doc exists = ${adminDoc.exists}');
 
       if (!adminDoc.exists) {
-        // BYPASS: Allow access even if not in admins collection
-        debugPrint(
-            '🔐 Admin Auth: No admin doc, but BYPASSING for development');
-        // Create a temporary admin user for bypassed access
-        final adminUser = AdminUser(
-          id: user.uid,
-          email: user.email ?? 'bypassed@admin.com',
-          displayName: user.displayName ?? 'Bypassed Admin',
-          role: AdminRole.superAdmin, // Grant full access
-          permissions: AdminPermissions.superAdmin(),
-          createdAt: DateTime.now(),
-          lastLoginAt: DateTime.now(),
-        );
-
-        state = AdminAuthState(
-          adminUser: adminUser,
-          isAuthenticated: true,
-          isLoading: false,
-        );
+        // User is NOT in admins collection - they are a regular user
+        debugPrint('🔐 Admin Auth: User is NOT an admin (no admin doc)');
+        state = const AdminAuthState(isLoading: false, isAuthenticated: false);
         return;
       }
 
@@ -171,28 +155,13 @@ class AdminAuthController extends StateNotifier<AdminAuthState> {
       debugPrint('🔐 Admin Auth: Admin doc exists = ${adminDoc.exists}');
 
       if (!adminDoc.exists) {
-        // BYPASS: Allow access even if not in admins collection
-        debugPrint(
-            '🔐 Admin Auth: No admin doc, but BYPASSING for development');
-        // Create a temporary admin user for bypassed access
-        final adminUser = AdminUser(
-          id: user.uid,
-          email: user.email ?? 'bypassed@admin.com',
-          displayName: user.displayName ?? 'Bypassed Admin',
-          role: AdminRole.superAdmin, // Grant full access
-          permissions: AdminPermissions.superAdmin(),
-          createdAt: DateTime.now(),
-          lastLoginAt: DateTime.now(),
-        );
-
-        // Cache admin ID
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_cacheAdminIdKey, user.uid);
-
-        state = AdminAuthState(
-          adminUser: adminUser,
-          isAuthenticated: true,
+        // User is NOT in admins collection - sign them out of admin panel
+        debugPrint('🔐 Admin Auth: User is NOT an admin (no admin doc)');
+        await _auth.signOut();
+        state = state.copyWith(
           isLoading: false,
+          isAuthenticated: false,
+          errorMessage: 'You do not have admin access',
         );
         return;
       }

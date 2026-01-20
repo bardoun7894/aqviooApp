@@ -285,34 +285,77 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                             await Future.delayed(const Duration(seconds: 1));
                           },
                           color: AppColors.primaryPurple,
-                          child: _isGridView
-                              ? GridView.builder(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  physics: const BouncingScrollPhysics(),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                    childAspectRatio: 0.75,
+                          child: Column(
+                            children: [
+                              // Retention notice hint
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.orange.withOpacity(0.3),
+                                    ),
                                   ),
-                                  itemCount: filteredCreations.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildGridCard(
-                                        filteredCreations[index]);
-                                  },
-                                )
-                              : ListView.builder(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  physics: const BouncingScrollPhysics(),
-                                  itemCount: filteredCreations.length,
-                                  itemBuilder: (context, index) {
-                                    return _buildCreationCard(
-                                        filteredCreations[index]);
-                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.access_time_rounded,
+                                        color: Colors.orange[700],
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Videos and images are stored for 10 days',
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 12,
+                                            color: Colors.orange[800],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Actual list/grid
+                              Expanded(
+                                child: _isGridView
+                                    ? GridView.builder(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        physics: const BouncingScrollPhysics(),
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: 0.75,
+                                        ),
+                                        itemCount: filteredCreations.length,
+                                        itemBuilder: (context, index) {
+                                          return _buildGridCard(
+                                              filteredCreations[index]);
+                                        },
+                                      )
+                                    : ListView.builder(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20),
+                                        physics: const BouncingScrollPhysics(),
+                                        itemCount: filteredCreations.length,
+                                        itemBuilder: (context, index) {
+                                          return _buildCreationCard(
+                                              filteredCreations[index]);
+                                        },
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
                 ),
               ],
@@ -1217,7 +1260,8 @@ class _CreationCardState extends State<CreationCard>
                                               60
                                           ? '(Expired > 2 months)'
                                           : DateTime.now()
-                                                      .difference(item.createdAt)
+                                                      .difference(
+                                                          item.createdAt)
                                                       .inDays >
                                                   14
                                               ? '(Expired > 14 days)'
@@ -1260,7 +1304,10 @@ class _CreationCardState extends State<CreationCard>
                               ),
 
                             // Play icon for video
-                            if (isVideo && !isProcessing && !isFailed && !_hasError)
+                            if (isVideo &&
+                                !isProcessing &&
+                                !isFailed &&
+                                !_hasError)
                               Positioned(
                                 top: 12,
                                 right: 12,

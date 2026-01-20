@@ -94,6 +94,9 @@ class CreationController extends Notifier<CreationState> {
   }
 
   Future<void> _loadCreations() async {
+    // Cleanup expired creations (older than 10 days) to prevent crashes from invalid URLs
+    await _repository.cleanupExpiredCreations();
+
     final items = await _repository.getCreations();
     state = state.copyWith(creations: items);
 

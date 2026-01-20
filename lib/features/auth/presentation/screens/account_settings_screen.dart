@@ -185,37 +185,47 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       backgroundColor: const Color(0xFFF5F5F7),
       body: Stack(
         children: [
-          // Background gradient orbs
+          // Background gradient orbs - responsive for iPad
           Positioned(
             top: -100,
             left: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.primaryPurple.withOpacity(0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final size = MediaQuery.of(context).size.width > 600 ? 600.0 : 400.0;
+                return Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.primaryPurple.withOpacity(0.15),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           Positioned(
             bottom: -50,
             right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF6B9DFF).withOpacity(0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final size = MediaQuery.of(context).size.width > 600 ? 450.0 : 300.0;
+                return Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF6B9DFF).withOpacity(0.12),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -228,10 +238,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
                 // Settings content
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 800),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
                       children: [
                         const SizedBox(height: 24),
 
@@ -271,6 +284,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
                         const SizedBox(height: 100),
                       ],
+                    ),
+                  ),
                     ),
                   ),
                 ),
@@ -530,8 +545,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Widget _buildSettingsSection(BuildContext context, WidgetRef ref) {
-    final adminAuthState = ref.watch(adminAuthControllerProvider);
-    final isAdmin = adminAuthState.isAuthenticated;
+    // Safely watch admin auth provider with error handling for iPad compatibility
+    bool isAdmin = false;
+    try {
+      final adminAuthState = ref.watch(adminAuthControllerProvider);
+      isAdmin = adminAuthState.isAuthenticated;
+    } catch (e) {
+      debugPrint('⚠️ Settings: Error watching adminAuthControllerProvider: $e');
+    }
+
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
     final isArabic = locale.languageCode == 'ar';

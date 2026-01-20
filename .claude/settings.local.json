@@ -6,7 +6,14 @@
       "Bash(docker build:*)",
       "Bash(flutter gen-l10n:*)",
       "Bash(flutter analyze:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(open:*)",
+      "Bash(ls:*)",
+      "Bash(unzip:*)",
+      "mcp__app-store-connect__list_apps",
+      "Bash(git checkout:*)",
+      "Bash(xcrun altool:*)"
     ],
     "deny": [],
     "ask": []

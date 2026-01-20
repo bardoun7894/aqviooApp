@@ -85,16 +85,22 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   Future<void> _initializeIAP() async {
-    final iapService = IAPService();
-    await iapService.initialize();
+    try {
+      final iapService = IAPService();
+      await iapService.initialize();
 
-    // Set callback to handle purchases
-    iapService.onPurchaseUpdated = (PurchaseDetails purchaseDetails) {
-      _handleIAPUpdate(purchaseDetails);
-    };
+      // Set callback to handle purchases
+      iapService.onPurchaseUpdated = (PurchaseDetails purchaseDetails) {
+        _handleIAPUpdate(purchaseDetails);
+      };
 
-    // Trigger rebuild to update UI if needed (though we use static list for now)
-    if (mounted) setState(() {});
+      // Trigger rebuild to update UI if needed (though we use static list for now)
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('⚠️ Payment: IAP initialization failed (iPad): $e');
+      // Don't block the UI if IAP fails - user can still see packages
+      if (mounted) setState(() {});
+    }
   }
 
   void _handleIAPUpdate(PurchaseDetails purchaseDetails) async {
@@ -138,8 +144,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Safely watch credits provider with error handling for iPad compatibility
     final creditsState = ref.watch(creditsControllerProvider);
     final l10n = AppLocalizations.of(context)!;
+
+    // Get screen width for responsive layout
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -172,11 +183,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Current Balance
-          Container(
-            margin: const EdgeInsets.all(20),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            children: [
+              // Current Balance
+              Container(
+                margin: const EdgeInsets.all(20),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -471,6 +485,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           ),
         ],
       ),
+        ),
+        ),
     );
   }
 
@@ -526,13 +542,22 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Future<void> _handleIOSPurchase() async {
     final productId = _productIds[_selectedPackageIndex];
-    if (productId == null) return;
+    if (productId == null) {
+      debugPrint('⚠️ Payment: No product ID for index $_selectedPackageIndex');
+      return;
+    }
 
     setState(() => _isProcessing = true);
 
-    final iapService = IAPService();
-    // Find product details
     try {
+      final iapService = IAPService();
+
+      // Check if products are loaded
+      if (iapService.products.isEmpty) {
+        throw Exception('Store products not loaded. Please try again.');
+      }
+
+      // Find product details
       final product = iapService.products.firstWhere(
         (p) => p.id == productId,
         orElse: () => throw Exception('Product not found'),
@@ -541,14 +566,18 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       await iapService.buyConsumable(product);
       // Processing state will be updated by the listener
     } catch (e) {
+      debugPrint('❌ Payment: iOS purchase failed: $e');
+      if (!mounted) return;
+
       setState(() => _isProcessing = false);
 
       // If product not found (e.g. not configured in Connect yet), prompt user
-      if (e.toString().contains('Product not found')) {
+      if (e.toString().contains('Product not found') ||
+          e.toString().contains('not loaded')) {
         _showErrorDialog(
             title: 'Store Error',
             message:
-                'Product not configured in App Store. Please ensure product ID "$productId" exists.');
+                'In-app purchases are not available right now. Please try again later or contact support if the issue persists.');
       } else {
         _showErrorSnackBar('Failed to initiate purchase: ${e.toString()}');
       }
