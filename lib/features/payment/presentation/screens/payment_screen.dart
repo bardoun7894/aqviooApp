@@ -164,20 +164,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          // Restore Purchases button - required by Apple
-          if (Platform.isIOS)
-            TextButton(
-              onPressed: _isProcessing ? null : _handleRestorePurchases,
-              child: Text(
-                l10n.restorePurchases ?? 'Restore',
-                style: GoogleFonts.outfit(
-                  color: AppColors.primaryPurple,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
       ),
       body: Center(
         child: ConstrainedBox(
@@ -484,47 +470,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         ),
         ),
     );
-  }
-
-  Future<void> _handleRestorePurchases() async {
-    if (!Platform.isIOS) return;
-
-    setState(() => _isProcessing = true);
-
-    try {
-      final iapService = IAPService();
-      await iapService.initialize();
-      await InAppPurchase.instance.restorePurchases();
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.purchasesRestored ??
-                'Purchases restored successfully',
-            style: GoogleFonts.outfit(),
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error restoring purchases: $e');
-      if (!mounted) return;
-
-      _showErrorSnackBar(
-        AppLocalizations.of(context)!.restoreFailed ??
-            'Failed to restore purchases',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
   }
 
   Future<void> _handlePurchase() async {
