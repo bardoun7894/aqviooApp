@@ -105,8 +105,8 @@ void main() async {
         }
       }
 
-      // Initialize Tap Payments SDK (only on mobile platforms, not web)
-      if (!kIsWeb) {
+      // Initialize Tap Payments SDK (Android and Web only - iOS uses IAP)
+      if (!kIsWeb && !Platform.isIOS) {
         final tapSecretKey =
             dotenv.isInitialized ? (dotenv.env['TAP_SECRET_KEY'] ?? '') : '';
         final tapPublicKey =
@@ -134,6 +134,8 @@ void main() async {
         } else {
           debugPrint('❌ Tap Payment keys are empty!');
         }
+      } else if (Platform.isIOS && kDebugMode) {
+        debugPrint('🍎 iOS: Skipping Tap Payment - using IAP only');
       }
 
       runApp(const ProviderScope(child: AqviooApp()));

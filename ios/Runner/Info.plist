@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>akvioo</string>
+	<string>Aqvioo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -46,5 +46,7 @@
 	<string>This app needs speech recognition for voice-to-text input</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to select images for video creation</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aqvioo uses your location to provide region-specific content and optimize video delivery speeds by connecting to the nearest server. For example, users in Saudi Arabia will connect to regional servers for faster processing.</string>
 </dict>
 </plist>

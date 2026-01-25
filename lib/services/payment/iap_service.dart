@@ -60,14 +60,25 @@ class IAPService {
           await _iap.queryProductDetails(_kProductIds);
 
       if (response.notFoundIDs.isNotEmpty) {
-        debugPrint('Products not found: ${response.notFoundIDs}');
+        debugPrint('⚠️ IAP: Products not found in App Store: ${response.notFoundIDs}');
+        debugPrint('⚠️ IAP: This usually means products need screenshots uploaded in App Store Connect');
+      }
+
+      if (response.error != null) {
+        debugPrint('⚠️ IAP: Query error: ${response.error}');
       }
 
       _products = response.productDetails;
-      // Sort by price
-      _products.sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
+
+      if (_products.isEmpty) {
+        debugPrint('⚠️ IAP: No products loaded. Check App Store Connect configuration.');
+      } else {
+        debugPrint('✅ IAP: Loaded ${_products.length} products successfully');
+        // Sort by price
+        _products.sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
+      }
     } catch (e) {
-      debugPrint('Error loading products: $e');
+      debugPrint('❌ IAP: Error loading products: $e');
     }
   }
 
