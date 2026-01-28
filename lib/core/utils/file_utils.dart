@@ -72,9 +72,14 @@ class FileUtils {
 
     try {
       // Check for access permission
-      final hasAccess = await Gal.hasAccess();
+      bool hasAccess = await Gal.hasAccess();
       if (!hasAccess) {
-        await Gal.requestAccess();
+        // Request permission and verify it was granted
+        hasAccess = await Gal.requestAccess();
+        if (!hasAccess) {
+          debugPrint('Gallery permission denied by user');
+          return false;
+        }
       }
 
       // Save to gallery

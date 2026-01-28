@@ -64,20 +64,26 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
         final files = mediaDir.listSync();
         if (mounted) {
           setState(() {
-            _mediaFiles =
-                files
-                    .where(
-                      (file) =>
-                          file.path.endsWith('.jpg') ||
-                          file.path.endsWith('.png') ||
-                          file.path.endsWith('.mp4'),
-                    )
-                    .toList()
-                  ..sort(
-                    (a, b) => File(b.path).lastModifiedSync().compareTo(
+            _mediaFiles = files
+                .where(
+                  (file) =>
+                      file.path.endsWith('.jpg') ||
+                      file.path.endsWith('.png') ||
+                      file.path.endsWith('.mp4'),
+                )
+                .toList();
+
+            // Try to sort by date, but don't fail if file stats aren't accessible
+            try {
+              _mediaFiles.sort(
+                (a, b) => File(b.path).lastModifiedSync().compareTo(
                       File(a.path).lastModifiedSync(),
                     ),
-                  );
+              );
+            } catch (e) {
+              debugPrint('Could not sort files by date: $e');
+              // Files will remain in their original order
+            }
           });
         }
       }
@@ -280,8 +286,15 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
   Widget _buildMediaCard(FileSystemEntity file) {
     final isVideo = file.path.endsWith('.mp4');
     final fileName = file.path.split(Platform.pathSeparator).last;
-    final fileStats = File(file.path).statSync();
-    final fileSize = (fileStats.size / 1024 / 1024).toStringAsFixed(2);
+
+    // Try to get file size, but don't crash if it fails
+    String fileSize = '--';
+    try {
+      final fileStats = File(file.path).statSync();
+      fileSize = (fileStats.size / 1024 / 1024).toStringAsFixed(2);
+    } catch (e) {
+      debugPrint('Could not get file stats for ${file.path}: $e');
+    }
 
     return GestureDetector(
       onTap: () {

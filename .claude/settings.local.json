@@ -13,7 +13,8 @@
       "Bash(unzip:*)",
       "mcp__app-store-connect__list_apps",
       "Bash(git checkout:*)",
-      "Bash(xcrun altool:*)"
+      "Bash(xcrun altool:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
