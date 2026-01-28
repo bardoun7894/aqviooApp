@@ -881,6 +881,7 @@ class _CreationCardState extends State<CreationCard>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   VideoPlayerController? _videoController;
+  VoidCallback? _videoErrorListener;
   bool _isPlayerInitialized = false;
   bool _hasError = false;
 
@@ -909,14 +910,15 @@ class _CreationCardState extends State<CreationCard>
       );
 
       // Add error listener for async playback errors (like 404)
-      _videoController!.addListener(() {
+      _videoErrorListener = () {
         if (mounted && _videoController!.value.hasError) {
           setState(() {
             _hasError = true;
             _isPlayerInitialized = false;
           });
         }
-      });
+      };
+      _videoController!.addListener(_videoErrorListener!);
 
       await _videoController!.initialize();
       await _videoController!.setVolume(0); // Mute for background play
@@ -940,6 +942,9 @@ class _CreationCardState extends State<CreationCard>
   @override
   void dispose() {
     _animationController.dispose();
+    if (_videoErrorListener != null && _videoController != null) {
+      _videoController!.removeListener(_videoErrorListener!);
+    }
     _videoController?.dispose();
     super.dispose();
   }

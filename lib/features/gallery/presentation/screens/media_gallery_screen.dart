@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,6 +43,18 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
   Future<void> _loadMedia() async {
     setState(() => _isLoading = true);
 
+    // Local file gallery not supported on web platform
+    if (kIsWeb) {
+      if (mounted) {
+        setState(() {
+          _mediaFiles = [];
+          _isLoading = false;
+        });
+        _animationController.forward();
+      }
+      return;
+    }
+
     try {
       // Get app directory for saved media
       final directory = await getApplicationDocumentsDirectory();
@@ -49,28 +62,32 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
 
       if (await mediaDir.exists()) {
         final files = mediaDir.listSync();
-        setState(() {
-          _mediaFiles =
-              files
-                  .where(
-                    (file) =>
-                        file.path.endsWith('.jpg') ||
-                        file.path.endsWith('.png') ||
-                        file.path.endsWith('.mp4'),
-                  )
-                  .toList()
-                ..sort(
-                  (a, b) => File(b.path).lastModifiedSync().compareTo(
-                    File(a.path).lastModifiedSync(),
-                  ),
-                );
-        });
+        if (mounted) {
+          setState(() {
+            _mediaFiles =
+                files
+                    .where(
+                      (file) =>
+                          file.path.endsWith('.jpg') ||
+                          file.path.endsWith('.png') ||
+                          file.path.endsWith('.mp4'),
+                    )
+                    .toList()
+                  ..sort(
+                    (a, b) => File(b.path).lastModifiedSync().compareTo(
+                      File(a.path).lastModifiedSync(),
+                    ),
+                  );
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error loading media: $e');
     } finally {
-      setState(() => _isLoading = false);
-      _animationController.forward();
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _animationController.forward();
+      }
     }
   }
 

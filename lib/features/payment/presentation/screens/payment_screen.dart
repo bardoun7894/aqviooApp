@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -80,7 +82,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       _initializeIAP();
     }
   }
@@ -106,9 +108,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   void _handleIAPUpdate(PurchaseDetails purchaseDetails) async {
     if (purchaseDetails.status == PurchaseStatus.pending) {
+      if (!mounted) return;
       setState(() => _isProcessing = true);
     } else {
       if (purchaseDetails.status == PurchaseStatus.error) {
+        if (!mounted) return;
         setState(() => _isProcessing = false);
         _showErrorSnackBar(purchaseDetails.error?.message ?? 'Purchase failed');
       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
@@ -134,9 +138,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             }
           } catch (e) {
             debugPrint('Error adding credits: $e');
+            if (!mounted) return;
             setState(() => _isProcessing = false);
           }
         } else {
+          if (!mounted) return;
           setState(() => _isProcessing = false);
         }
       }
@@ -426,14 +432,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Platform.isIOS
+                                      (!kIsWeb && Platform.isIOS)
                                           ? Icons.shopping_bag
                                           : Icons.credit_card,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      Platform.isIOS
+                                      (!kIsWeb && Platform.isIOS)
                                           ? '${l10n.purchaseButton} - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR'
                                           : '${l10n.payWithTap} - ${creditPackages[_selectedPackageIndex].price.toStringAsFixed(0)} SAR',
                                       style: GoogleFonts.outfit(
@@ -446,8 +452,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (!Platform
-                          .isIOS) // Only show Tap secure badge on Android/Web
+                      if (!kIsWeb && !Platform
+                          .isIOS) // Only show Tap secure badge on Android
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -479,7 +485,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Future<void> _handlePurchase() async {
     // Platform-specific logic
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       await _handleIOSPurchase();
     } else {
       await _handleTapPayment();
@@ -781,60 +787,85 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
       // Handle payment result
       if (paymentResult.success && paymentResult.chargeId != null) {
-        // Verify transaction via API for additional security
-        final verification = await TapPaymentService().verifyTransaction(
-          paymentResult.chargeId!,
-        );
-
-        if (!mounted) return;
-
-        if (verification.success &&
-            (verification.isCaptured || verification.isAuthorized)) {
-          // Payment verified - Update transaction status
-          if (transactionId != null) {
-            try {
-              await TransactionService().updateTransactionStatus(
-                transactionId: transactionId,
-                status: verification.isCaptured
-                    ? TransactionStatus.captured
-                    : TransactionStatus.authorized,
-              );
-            } catch (e) {
-              debugPrint('❌ Failed to update transaction status: $e');
-            }
-          }
-
-          // Add balance in SAR
-          try {
-            await ref
-                .read(creditsControllerProvider.notifier)
-                .addBalance(package.amount);
-          } catch (e) {
-            debugPrint('❌ Failed to add balance: $e');
-            // Still show success as payment was captured
-          }
-
-          if (!mounted) return;
-          _showSuccessDialog(package);
-        } else {
-          // Verification failed
-          if (transactionId != null) {
-            try {
-              await TransactionService().updateTransactionStatus(
-                transactionId: transactionId,
-                status: TransactionStatus.failed,
-              );
-            } catch (e) {
-              debugPrint('❌ Failed to update transaction status: $e');
-            }
-          }
-
-          if (!mounted) return;
-          _showErrorSnackBar(
-            isArabic
-                ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.'
-                : 'Payment verification failed. Please contact support if amount was deducted.',
+        try {
+          // Verify transaction via API for additional security with timeout
+          final verification = await TapPaymentService().verifyTransaction(
+            paymentResult.chargeId!,
+          ).timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw TimeoutException('Payment verification timed out');
+            },
           );
+
+          if (!mounted) return;
+
+          if (verification.success &&
+              (verification.isCaptured || verification.isAuthorized)) {
+            // Payment verified - Update transaction status
+            if (transactionId != null) {
+              try {
+                await TransactionService().updateTransactionStatus(
+                  transactionId: transactionId,
+                  status: verification.isCaptured
+                      ? TransactionStatus.captured
+                      : TransactionStatus.authorized,
+                );
+              } catch (e) {
+                debugPrint('❌ Failed to update transaction status: $e');
+              }
+            }
+
+            // Add balance in SAR
+            try {
+              await ref
+                  .read(creditsControllerProvider.notifier)
+                  .addBalance(package.amount);
+
+              if (!mounted) return;
+              _showSuccessDialog(package);
+            } catch (e) {
+              debugPrint('❌ Failed to add balance: $e');
+              if (!mounted) return;
+              _showErrorSnackBar(
+                isArabic
+                    ? 'تم الدفع بنجاح ولكن فشل تحديث الرصيد. يرجى التواصل مع الدعم.'
+                    : 'Payment successful but failed to update balance. Please contact support.',
+              );
+            }
+          } else {
+            // Verification failed
+            if (transactionId != null) {
+              try {
+                await TransactionService().updateTransactionStatus(
+                  transactionId: transactionId,
+                  status: TransactionStatus.failed,
+                );
+              } catch (e) {
+                debugPrint('❌ Failed to update transaction status: $e');
+              }
+            }
+
+            if (!mounted) return;
+            _showErrorSnackBar(
+              isArabic
+                  ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.'
+                  : 'Payment verification failed. Please contact support if amount was deducted.',
+            );
+          }
+        } catch (e) {
+          debugPrint('❌ Payment verification error: $e');
+          if (!mounted) return;
+
+          // Show user-friendly error
+          final errorMsg = e is TimeoutException
+              ? (isArabic
+                  ? 'انتهت مهلة التحقق من الدفع. يرجى التحقق من رصيدك أو التواصل مع الدعم.'
+                  : 'Payment verification timed out. Please check your balance or contact support.')
+              : (isArabic
+                  ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم. رقم المعاملة: ${paymentResult.chargeId}'
+                  : 'Payment verification failed. Please contact support with charge ID: ${paymentResult.chargeId}');
+          _showErrorSnackBar(errorMsg);
         }
       } else if (paymentResult.success) {
         // Success but no charge ID - still add balance (fallback)
@@ -923,7 +954,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   void _showErrorDialog({required String title, required String message}) {
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       showCupertinoDialog(
         context: context,
         builder: (context) => CupertinoAlertDialog(
@@ -970,7 +1001,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   void _showSuccessDialog(CreditPackage package) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       showCupertinoDialog(
         context: context,
         barrierDismissible: false,

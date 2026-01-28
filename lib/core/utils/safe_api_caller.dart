@@ -115,6 +115,9 @@ mixin SafeApiCaller {
 
   /// Check internet connectivity
   Future<void> _checkConnectivity() async {
+    // Skip connectivity check on web platform as InternetAddress is not available
+    if (kIsWeb) return;
+
     try {
       // Try multiple reliable hosts to avoid false negatives
       final List<String> hosts = [

@@ -41,9 +41,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to capture photos for video creation</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Aqvioo uses your microphone to record voice narrations that you can add to your AI-generated videos. For example, you can record your voice to add personalized commentary or explanations to your promotional content.</string>
+	<string>Aqvioo uses your microphone for voice-to-text conversion when creating video prompts. When you tap the microphone icon, your spoken words are converted to text so you can quickly describe the video you want to create. For example, you can say "a sunset over the ocean" and it will be typed into the prompt field for you.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>This app needs speech recognition for voice-to-text input</string>
+	<string>Aqvioo uses speech recognition to convert your spoken words into text prompts for video creation. When you tap the microphone button, your speech is transcribed in real-time so you can quickly input video ideas by speaking instead of typing. For example, saying "a car driving through the desert" will automatically fill in the text field.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs photo library access to select images for video creation</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

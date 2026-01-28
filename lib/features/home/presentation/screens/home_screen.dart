@@ -260,6 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     await _speech.listen(
       onResult: (result) {
+        if (!mounted) return;
         setState(() {
           _promptController.text = result.recognizedWords;
           ref
@@ -1946,6 +1947,7 @@ class HomeProjectCard extends StatefulWidget {
 
 class _HomeProjectCardState extends State<HomeProjectCard> {
   VideoPlayerController? _videoController;
+  VoidCallback? _videoErrorListener;
   bool _isPlayerInitialized = false;
   bool _hasError = false;
 
@@ -1971,14 +1973,15 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
       );
 
       // Add error listener for async playback errors (like 404)
-      _videoController!.addListener(() {
+      _videoErrorListener = () {
         if (mounted && _videoController!.value.hasError) {
           setState(() {
             _hasError = true;
             _isPlayerInitialized = false;
           });
         }
-      });
+      };
+      _videoController!.addListener(_videoErrorListener!);
 
       await _videoController!.initialize();
       await _videoController!.setVolume(0); // Mute for background play
@@ -2001,6 +2004,9 @@ class _HomeProjectCardState extends State<HomeProjectCard> {
 
   @override
   void dispose() {
+    if (_videoErrorListener != null && _videoController != null) {
+      _videoController!.removeListener(_videoErrorListener!);
+    }
     _videoController?.dispose();
     super.dispose();
   }

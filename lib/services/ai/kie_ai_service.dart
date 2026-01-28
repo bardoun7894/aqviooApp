@@ -88,6 +88,9 @@ class KieAIService {
 
   /// Check internet connectivity
   Future<void> _checkConnectivity() async {
+    // Skip connectivity check on web platform as InternetAddress is not available
+    if (kIsWeb) return;
+
     try {
       final result = await InternetAddress.lookup('api.kie.ai')
           .timeout(const Duration(seconds: 5));
@@ -435,6 +438,11 @@ class KieAIService {
         headers: {
           'Authorization': 'Bearer $_apiKey',
         },
+      ).timeout(
+        _pollingTimeout, // Duration(seconds: 60)
+        onTimeout: () {
+          throw TimeoutException('Task status check timed out after ${_pollingTimeout.inSeconds}s');
+        },
       );
 
       if (response.statusCode == 200) {
@@ -444,11 +452,28 @@ class KieAIService {
           final state = taskData['state'];
 
           if (state == 'success') {
-            final resultJson = jsonDecode(taskData['resultJson']);
-            return {
-              'state': 'success',
-              'videoUrl': resultJson['resultUrls'][0],
-            };
+            // Safely parse resultJson with try-catch
+            try {
+              final resultJson = jsonDecode(taskData['resultJson']);
+              final resultUrls = resultJson['resultUrls'];
+              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+                return {
+                  'state': 'success',
+                  'videoUrl': resultUrls[0],
+                };
+              } else {
+                return {
+                  'state': 'fail',
+                  'error': 'Video URL not found in response',
+                };
+              }
+            } catch (parseError) {
+              debugPrint('Error parsing Veo3 result JSON: $parseError');
+              return {
+                'state': 'fail',
+                'error': 'Failed to parse video result',
+              };
+            }
           } else if (state == 'fail') {
             return {
               'state': 'fail',
@@ -683,15 +708,17 @@ class KieAIService {
     File? imageFile,
   }) async {
     try {
-      // Check connectivity first
-      try {
-        final result = await InternetAddress.lookup('google.com');
-        if (result.isEmpty || result[0].rawAddress.isEmpty) {
-          throw SocketException('No internet connection');
+      // Check connectivity first (skip for web platform as InternetAddress is not available)
+      if (!kIsWeb) {
+        try {
+          final result = await InternetAddress.lookup('google.com');
+          if (result.isEmpty || result[0].rawAddress.isEmpty) {
+            throw SocketException('No internet connection');
+          }
+        } on SocketException catch (_) {
+          throw Exception(
+              'No internet connection. Please check your Wi-Fi or data.');
         }
-      } on SocketException catch (_) {
-        throw Exception(
-            'No internet connection. Please check your Wi-Fi or data.');
       }
 
       // Step 1: Enhance prompt

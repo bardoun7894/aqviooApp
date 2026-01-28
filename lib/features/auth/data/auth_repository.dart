@@ -214,7 +214,12 @@ class FirebaseAuthRepository implements AuthRepository {
         'lastLoginAt': FieldValue.serverTimestamp(),
         // Only set createdAt if it doesn't exist
         'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      }, SetOptions(merge: true)).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw TimeoutException('Firestore user profile write timed out');
+        },
+      );
 
       // Check if credits exist separately - wrapped in a quiet try-catch
       try {
@@ -229,7 +234,12 @@ class FirebaseAuthRepository implements AuthRepository {
             'balance': 100.0,
             'hasGeneratedFirst': false,
             'lastUpdated': FieldValue.serverTimestamp(),
-          });
+          }).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('Firestore credits write timed out');
+            },
+          );
         }
       } catch (e) {
         // Log but don't crash - credits can be initialized later if needed

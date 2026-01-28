@@ -135,7 +135,7 @@ void main() async {
         } else {
           debugPrint('❌ Tap Payment keys are empty!');
         }
-      } else if (Platform.isIOS && kDebugMode) {
+      } else if (!kIsWeb && Platform.isIOS && kDebugMode) {
         debugPrint('🍎 iOS: Skipping Tap Payment - using IAP only');
       }
 
