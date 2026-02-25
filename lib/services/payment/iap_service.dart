@@ -101,26 +101,42 @@ class IAPService {
   }
 
   void _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
-    purchaseDetailsList.forEach((PurchaseDetails purchaseDetails) async {
-      if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Show pending UI if needed
-        onPurchaseUpdated?.call(purchaseDetails);
-      } else {
-        if (purchaseDetails.status == PurchaseStatus.error) {
-          debugPrint('Purchase error: ${purchaseDetails.error}');
-          onPurchaseUpdated?.call(purchaseDetails);
-        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-            purchaseDetails.status == PurchaseStatus.restored) {
-          // Verify payment receipt if needed here
-          // For now, we trust the status for this implementation phase
+    for (final purchaseDetails in purchaseDetailsList) {
+      _processPurchaseUpdate(purchaseDetails);
+    }
+  }
 
-          if (purchaseDetails.pendingCompletePurchase) {
-            await _iap.completePurchase(purchaseDetails);
-          }
+  Future<void> _processPurchaseUpdate(PurchaseDetails purchaseDetails) async {
+    if (purchaseDetails.status == PurchaseStatus.pending) {
+      // Show pending UI if needed
+      onPurchaseUpdated?.call(purchaseDetails);
+    } else {
+      if (purchaseDetails.status == PurchaseStatus.error) {
+        debugPrint('Purchase error: ${purchaseDetails.error}');
+        onPurchaseUpdated?.call(purchaseDetails);
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        // IMPORTANT: Notify the callback FIRST so credits are added,
+        // THEN complete the purchase. This prevents losing purchases
+        // if the app crashes between completePurchase and credit addition.
+        try {
           onPurchaseUpdated?.call(purchaseDetails);
+        } catch (e) {
+          debugPrint('Error in purchase callback: $e');
+        }
+
+        // Complete the purchase AFTER credits have been added
+        if (purchaseDetails.pendingCompletePurchase) {
+          try {
+            await _iap.completePurchase(purchaseDetails);
+          } catch (e) {
+            debugPrint('Error completing purchase: $e');
+            // Even if completePurchase fails, credits were already added.
+            // The purchase will be retried by StoreKit on next app launch.
+          }
         }
       }
-    });
+    }
   }
 
   void dispose() {

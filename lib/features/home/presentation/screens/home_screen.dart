@@ -485,12 +485,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    // Start generation - await it so errors are properly caught
-    try {
-      await ref.read(creationControllerProvider.notifier).generateVideo();
-    } catch (e) {
-      debugPrint('Error during generation: $e');
-      // Refund credits since generation failed
+    // Start generation and check result
+    // Note: generateVideo() catches all errors internally and sets state to error,
+    // so it will not throw. We check the state after it completes.
+    await ref.read(creationControllerProvider.notifier).generateVideo();
+
+    // Check if generation failed immediately (before polling starts)
+    // If so, refund the credits since the API call itself failed
+    final postGenState = ref.read(creationControllerProvider);
+    if (postGenState.status == CreationWizardStatus.error) {
+      debugPrint('Generation failed immediately, refunding credits...');
       try {
         await creditsController.addBalance(
           outputType == OutputType.video
@@ -1997,6 +2001,7 @@ class _AdvancedSettingsSheetState
 
 extension StringExtension on String {
   String capitalize() {
+    if (isEmpty) return this;
     return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

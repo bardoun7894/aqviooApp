@@ -41,7 +41,7 @@ mixin SafeApiCaller {
     await _checkConnectivity();
 
     int attempt = 0;
-    Exception? lastException;
+    Object? lastException;
     final effectiveTimeout = timeout ?? _defaultRequestTimeout;
 
     while (attempt < maxRetries) {
@@ -80,7 +80,7 @@ mixin SafeApiCaller {
         lastException = e;
         debugPrint('Network error (attempt ${attempt + 1}/$maxRetries): $e');
       } on TimeoutException catch (e) {
-        lastException = e as Exception;
+        lastException = e;
         debugPrint('Timeout (attempt ${attempt + 1}/$maxRetries): $e');
       } on http.ClientException catch (e) {
         lastException = e;

@@ -98,10 +98,26 @@ class CreationItem {
   }
 
   factory CreationItem.fromMap(Map<String, dynamic> map) {
+    // Parse createdAt safely -- handle Firestore Timestamp, ISO string, or null
+    DateTime parsedCreatedAt;
+    final rawCreatedAt = map['createdAt'];
+    if (rawCreatedAt is String) {
+      parsedCreatedAt = DateTime.tryParse(rawCreatedAt) ?? DateTime.now();
+    } else if (rawCreatedAt != null && rawCreatedAt.toString().isNotEmpty) {
+      // Handle Firestore Timestamp or other types
+      try {
+        parsedCreatedAt = DateTime.parse(rawCreatedAt.toString());
+      } catch (_) {
+        parsedCreatedAt = DateTime.now();
+      }
+    } else {
+      parsedCreatedAt = DateTime.now();
+    }
+
     return CreationItem(
-      id: map['id'],
-      taskId: map['taskId'],
-      prompt: map['prompt'],
+      id: map['id'] as String? ?? '',
+      taskId: map['taskId'] as String?,
+      prompt: map['prompt'] as String? ?? '',
       type: CreationType.values.firstWhere(
         (e) => e.name == map['type'],
         orElse: () => CreationType.video,
@@ -110,16 +126,16 @@ class CreationItem {
         (e) => e.name == map['status'],
         orElse: () => CreationStatus.failed,
       ),
-      url: map['url'],
-      localPath: map['localPath'],
-      thumbnailUrl: map['thumbnailUrl'],
-      createdAt: DateTime.parse(map['createdAt']),
-      duration: map['duration'],
-      errorMessage: map['errorMessage'],
-      style: map['style'],
-      aspectRatio: map['aspectRatio'],
-      outputType: map['outputType'] ?? map['type'],
-      generationModel: map['generationModel'],
+      url: map['url'] as String?,
+      localPath: map['localPath'] as String?,
+      thumbnailUrl: map['thumbnailUrl'] as String?,
+      createdAt: parsedCreatedAt,
+      duration: map['duration'] as String?,
+      errorMessage: map['errorMessage'] as String?,
+      style: map['style'] as String?,
+      aspectRatio: map['aspectRatio'] as String?,
+      outputType: (map['outputType'] ?? map['type']) as String?,
+      generationModel: map['generationModel'] as String?,
     );
   }
 

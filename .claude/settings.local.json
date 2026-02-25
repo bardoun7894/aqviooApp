@@ -14,7 +14,12 @@
       "mcp__app-store-connect__list_apps",
       "Bash(git checkout:*)",
       "Bash(xcrun altool:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git push:*)",
+      "Bash(curl -s -X POST \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -H \"x-auth-token: OoezjE5Da9MSfnJr6IDmfhT3KRRBeNvCa0tkb02Sfb0\" \\\\\n  \"https://api.codemagic.io/builds\" \\\\\n  -d '{\n    \"appId\": \"6934b14196d1a24cab7ab437\",\n    \"workflowId\": \"default\",\n    \"branch\": \"main\"\n  }' 2>&1 | python3 -m json.tool 2>&1)",
+      "mcp__app-store-connect__get_app_info",
+      "mcp__app-store-connect__list_app_store_version_localizations",
+      "Bash(head:*)"
     ],
     "deny": [],
     "ask": []

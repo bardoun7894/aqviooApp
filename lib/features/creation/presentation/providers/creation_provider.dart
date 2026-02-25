@@ -80,9 +80,17 @@ class CreationController extends Notifier<CreationState> {
   KieAIService get _kieAI => ref.read(kieAIServiceProvider);
   final CreationRepository _repository = CreationRepository();
   final _uuid = const Uuid();
+  bool _disposed = false;
 
   @override
   CreationState build() {
+    _disposed = false;
+
+    // Mark as disposed when the notifier is torn down
+    ref.onDispose(() {
+      _disposed = true;
+    });
+
     // Watch auth state to reload creations when user logs in/out
     ref.watch(authStateProvider);
 
@@ -91,6 +99,13 @@ class CreationController extends Notifier<CreationState> {
     Future.microtask(() => _loadCreations());
 
     return CreationState();
+  }
+
+  /// Safely update state only if notifier is still alive
+  void _safeSetState(CreationState newState) {
+    if (!_disposed) {
+      state = newState;
+    }
   }
 
   Future<void> _loadCreations() async {
@@ -443,6 +458,12 @@ class CreationController extends Notifier<CreationState> {
       // Poll for 10 minutes max (120 iterations * 5 seconds = 10 minutes)
       // Video generation can take 3-5 minutes
       for (int i = 0; i < 120; i++) {
+        // Stop polling if notifier has been disposed (e.g., user logged out)
+        if (_disposed) {
+          debugPrint('Polling stopped: notifier disposed');
+          return;
+        }
+
         await Future.delayed(const Duration(seconds: 5));
 
         try {
@@ -478,12 +499,12 @@ class CreationController extends Notifier<CreationState> {
             }
 
             // If this is the currently watched task, update wizard status
-            if (state.currentTaskId == item.id) {
-              state = state.copyWith(
+            if (!_disposed && state.currentTaskId == item.id) {
+              _safeSetState(state.copyWith(
                 status: CreationWizardStatus.success,
                 videoUrl: url,
                 currentStepMessage: "magicComplete",
-              );
+              ));
             }
             return;
           } else if (status['state'] == 'fail') {
@@ -504,11 +525,11 @@ class CreationController extends Notifier<CreationState> {
               debugPrint('Failed to show error notification: $notifError');
             }
 
-            if (state.currentTaskId == item.id) {
-              state = state.copyWith(
+            if (!_disposed && state.currentTaskId == item.id) {
+              _safeSetState(state.copyWith(
                 status: CreationWizardStatus.error,
                 errorMessage: errorMessage,
-              );
+              ));
             }
             return;
           } else if (status['isNetworkError'] == true) {
@@ -525,12 +546,12 @@ class CreationController extends Notifier<CreationState> {
               );
               await _updateItem(updatedItem);
 
-              if (state.currentTaskId == item.id) {
-                state = state.copyWith(
+              if (!_disposed && state.currentTaskId == item.id) {
+                _safeSetState(state.copyWith(
                   status: CreationWizardStatus.error,
                   errorMessage:
                       'Network connection lost. Check My Creations later.',
-                );
+                ));
               }
               return;
             }
@@ -596,11 +617,11 @@ class CreationController extends Notifier<CreationState> {
         debugPrint('Failed to show timeout notification: $notifError');
       }
 
-      if (state.currentTaskId == item.id) {
-        state = state.copyWith(
+      if (!_disposed && state.currentTaskId == item.id) {
+        _safeSetState(state.copyWith(
           status: CreationWizardStatus.error,
           errorMessage: 'Generation timed out. Please try again.',
-        );
+        ));
       }
     } finally {
       // Always disable wake lock when polling completes
@@ -615,11 +636,13 @@ class CreationController extends Notifier<CreationState> {
   Future<void> _updateItem(CreationItem item) async {
     await _repository.saveCreation(item);
 
+    if (_disposed) return;
+
     final currentList = List<CreationItem>.from(state.creations);
     final index = currentList.indexWhere((i) => i.id == item.id);
     if (index != -1) {
       currentList[index] = item;
-      state = state.copyWith(creations: currentList);
+      _safeSetState(state.copyWith(creations: currentList));
     }
   }
 
