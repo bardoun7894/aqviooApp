@@ -85,11 +85,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Start animation sequence
     _logoController.forward();
 
-    // Navigate after animation
-    Future.delayed(const Duration(seconds: 3), () {
+    // Wait for auth state to resolve, then navigate
+    _waitForAuthAndNavigate();
+  }
+
+  Future<void> _waitForAuthAndNavigate() async {
+    // Minimum display time for splash animation
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+
+    // Wait for auth state to settle (up to 5 seconds)
+    final authState = ref.read(authStateProvider);
+    if (authState.isLoading) {
+      try {
+        await ref
+            .read(authStateProvider.future)
+            .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      } catch (_) {
+        // On any error, proceed to login
+      }
       if (!mounted) return;
-      _navigate();
-    });
+    }
+
+    _navigate();
   }
 
   void _navigate() {
@@ -100,6 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       RemoteConfigService().ensureKeysInFirestore();
       context.go('/home');
     } else {
+      // Auth resolved to false OR timed out - go to login either way
       context.go('/login');
     }
   }

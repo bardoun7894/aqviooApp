@@ -28,16 +28,19 @@ final GlobalKey<NavigatorState> rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final adminAuthState = ref.watch(adminAuthControllerProvider);
+  // Use a ChangeNotifier that listens to both auth streams so GoRouter
+  // is created ONCE and only re-evaluates redirect when auth changes.
+  final authNotifier = _RouterAuthNotifier(ref);
+  ref.onDispose(() => authNotifier.dispose());
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: kIsWeb ? '/admin/login' : '/splash',
-    refreshListenable: GoRouterRefreshStream(
-      ref.watch(authRepositoryProvider).authStateChanges,
-    ),
+    refreshListenable: authNotifier,
     redirect: (context, state) {
+      // Read current values at redirect time (not at GoRouter creation time)
+      final authState = ref.read(authStateProvider);
+      final adminAuthState = ref.read(adminAuthControllerProvider);
       final isLoggedIn = authState.value == true;
       final isAdminLoggedIn = adminAuthState.isAuthenticated;
       final isAdminLoading = adminAuthState.isLoading;
@@ -102,6 +105,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Mobile app routes handling (only for non-admin routes)
       if (authState.isLoading) {
+        // While loading, allow splash and login screens (don't force redirect)
+        if (isSplash || isLogin || isSignup) return null;
+        // For any other route, go to splash while we figure out auth
         return '/splash';
       }
 
@@ -238,19 +244,11 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen(
-          (dynamic _) => notifyListeners(),
-        );
+class _RouterAuthNotifier extends ChangeNotifier {
+  _RouterAuthNotifier(this._ref) {
+    _ref.listen(authStateProvider, (_, __) => notifyListeners());
+    _ref.listen(adminAuthControllerProvider, (_, __) => notifyListeners());
   }
 
-  late final dynamic _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
+  final Ref _ref;
 }

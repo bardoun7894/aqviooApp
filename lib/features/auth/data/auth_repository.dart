@@ -232,12 +232,13 @@ class FirebaseAuthRepository implements AuthRepository {
 
     // If currently signed in as guest, convert guest account to permanent account
     // so the user keeps the same UID, balance, and creations.
-    if (currentUser != null && currentUser.isAnonymous) {
+    final wasAnonymous = currentUser != null && currentUser.isAnonymous;
+    if (wasAnonymous) {
       final credential = EmailAuthProvider.credential(
         email: email,
         password: password,
       );
-      userCredential = await currentUser.linkWithCredential(credential);
+      userCredential = await currentUser!.linkWithCredential(credential);
     } else {
       userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -257,6 +258,24 @@ class FirebaseAuthRepository implements AuthRepository {
         phoneNumber: phoneNumber,
         isAnonymous: false,
       );
+
+      // If upgrading from guest, reset balance to auth initial (10 SAR)
+      if (wasAnonymous) {
+        try {
+          await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .collection('data')
+              .doc('credits')
+              .set({
+            'balance': 10.0,
+            'hasGeneratedFirst': false,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (e) {
+          print('ℹ️ Note: Credit reset on upgrade failed: $e');
+        }
+      }
     }
 
     return userCredential;
@@ -305,14 +324,46 @@ class FirebaseAuthRepository implements AuthRepository {
       // Check if credits exist separately - wrapped in a quiet try-catch
       try {
         final creditsDoc = userDoc.collection('data').doc('credits');
-        // Use a 2-second timeout and prefer cache to avoid blocking on unstable networks
         final creditsSnap = await creditsDoc
             .get(const GetOptions(source: Source.serverAndCache))
             .timeout(const Duration(seconds: 2));
 
         if (!creditsSnap.exists) {
+          // Check if this DEVICE already received initial credits.
+          // Prevents creating multiple accounts on same device for free credits.
+          final deviceId = await _getOrCreateDeviceId();
+          double initialBalance;
+
+          try {
+            final deviceCreditDoc = await _firestore
+                .collection('device_credits')
+                .doc(deviceId)
+                .get()
+                .timeout(const Duration(seconds: 2));
+
+            if (deviceCreditDoc.exists &&
+                (deviceCreditDoc.data()?['initialCreditsGranted'] as bool? ??
+                    false)) {
+              // Device already received credits — new account gets 0
+              initialBalance = 0.0;
+            } else {
+              // New device — give initial credits
+              initialBalance = isAnonymous ? 4.0 : 10.0;
+              await _firestore.collection('device_credits').doc(deviceId).set({
+                'deviceId': deviceId,
+                'initialCreditsGranted': true,
+                'grantedAmount': initialBalance,
+                'grantedToUserId': user.uid,
+                'grantedAt': FieldValue.serverTimestamp(),
+              });
+            }
+          } catch (_) {
+            // If device check fails (offline), fall back to giving credits
+            initialBalance = isAnonymous ? 4.0 : 10.0;
+          }
+
           await creditsDoc.set({
-            'balance': 100.0,
+            'balance': initialBalance,
             'hasGeneratedFirst': false,
             'lastUpdated': FieldValue.serverTimestamp(),
           }).timeout(

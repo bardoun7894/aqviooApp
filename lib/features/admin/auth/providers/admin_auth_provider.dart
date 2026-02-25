@@ -39,9 +39,12 @@ class AdminAuthController extends StateNotifier<AdminAuthState> {
 
   static const String _cacheAdminIdKey = 'cached_admin_id';
 
-  // Initialize with isLoading: true so router waits for auth check
-  AdminAuthController() : super(const AdminAuthState(isLoading: true)) {
-    _checkAuthState();
+  // On web, start loading and check admin auth.
+  // On mobile, skip the Firestore admin check entirely (not needed).
+  AdminAuthController() : super(AdminAuthState(isLoading: kIsWeb)) {
+    if (kIsWeb) {
+      _checkAuthState();
+    }
   }
 
   /// Check if user is already authenticated

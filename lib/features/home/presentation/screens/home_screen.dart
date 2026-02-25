@@ -14,6 +14,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../generated/app_localizations.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../auth/presentation/widgets/guest_upgrade_sheet.dart';
 import '../../../../core/utils/style_utils.dart';
 import '../../../../core/widgets/generating_skeleton_card.dart';
 
@@ -348,58 +349,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
 
           if (isAnonymous) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Text(
-                AppLocalizations.of(context)!.insufficientCredits,
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.guestCreditsUsed,
-                    style: GoogleFonts.outfit(),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppLocalizations.of(context)!.guestUpgradePrompt,
-                    style: GoogleFonts.outfit(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(AppLocalizations.of(context)!.cancel),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.push('/login');
-                  },
-                  child: Text(AppLocalizations.of(context)!.login),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.push('/signup');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context)!.signUp,
-                    style: GoogleFonts.outfit(
-                        color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
+            return GuestUpgradeSheet(
+              title: AppLocalizations.of(context)!.insufficientCredits,
+              subtitle:
+                  '${AppLocalizations.of(context)!.guestCreditsUsed}\n${AppLocalizations.of(context)!.guestUpgradePrompt}',
+              onSignUp: () {
+                Navigator.pop(context);
+                context.push('/signup');
+              },
+              onLogIn: () {
+                Navigator.pop(context);
+                context.push('/login');
+              },
             );
           }
 

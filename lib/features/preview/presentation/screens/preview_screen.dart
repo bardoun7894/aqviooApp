@@ -12,6 +12,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/file_utils.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../auth/data/auth_repository.dart';
+import '../../../auth/presentation/widgets/guest_upgrade_sheet.dart';
 import '../../../creation/presentation/providers/creation_provider.dart';
 import '../../../creation/domain/models/creation_config.dart';
 
@@ -52,6 +54,22 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+      if (isAnonymous && mounted) {
+        Future.delayed(const Duration(seconds: 4), () {
+          if (mounted) {
+            GuestUpgradeSheet.show(
+              context,
+              title: 'Love what you created?',
+              subtitle:
+                  'Sign up to safely save this ${widget.isImage ? 'image' : 'video'} and get more free credits!',
+            );
+          }
+        });
+      }
+    });
 
     if (widget.videoUrl != null && !widget.isImage) {
       _initializePlayer();
@@ -337,6 +355,17 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen>
   }
 
   Future<void> _handleDownload() async {
+    final isAnonymous = ref.read(authRepositoryProvider).isAnonymous;
+    if (isAnonymous) {
+      GuestUpgradeSheet.show(
+        context,
+        title: 'Save your masterpiece!',
+        subtitle:
+            'Sign up for a free account to save your creations to your device forever.',
+      );
+      return;
+    }
+
     if (widget.videoUrl == null || _isDownloading) return;
 
     setState(() => _isDownloading = true);

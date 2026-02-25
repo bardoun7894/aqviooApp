@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/creation/domain/models/creation_config.dart';
 import '../services/cache_manager.dart';
 
@@ -67,11 +68,13 @@ class CreditsController extends StateNotifier<CreditsState> {
   }
 
   Future<void> _handleAuthChange(User? user) async {
+    // Always cancel existing listener and reset when user changes
+    _creditsSubscription?.cancel();
+    _creditsSubscription = null;
+
     if (user == null) {
       // User logged out - clear cache and stop listener
       print('💰 Credits: User logged out, clearing cache');
-      _creditsSubscription?.cancel();
-      _creditsSubscription = null;
       await CacheManager.clearUserCache();
       _lastLoadedUserId = null;
       state = const CreditsState(
@@ -82,13 +85,11 @@ class CreditsController extends StateNotifier<CreditsState> {
     } else {
       // User logged in or changed
       try {
-        if (_lastLoadedUserId != user.uid) {
-          print(
-              '💰 Credits: New user detected, setting up cache for ${user.uid}');
-          await CacheManager.setCurrentUser(user.uid);
-          // Start real-time listener for this user
-          _startCreditsListener();
-        }
+        print('💰 Credits: User detected (${user.uid}), setting up credits');
+        _lastLoadedUserId = null; // Reset so _loadBalance sets it fresh
+        await CacheManager.setCurrentUser(user.uid);
+        // Start real-time listener for this user
+        _startCreditsListener();
         await _loadBalance();
       } catch (e) {
         print('⚠️ Credits: Error during auth change handler: $e');
@@ -262,10 +263,9 @@ class CreditsController extends StateNotifier<CreditsState> {
           isLoading: false,
         );
       } else if (doc != null && !doc.exists) {
-        // Doc definitely doesn't exist on server
-        print('💰 Credits: No credits document found, creating new one');
-        final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
-        final initialBalance = isAnonymous ? 4.0 : Pricing.initialBalance;
+        // Doc doesn't exist — check device before giving initial credits
+        print('💰 Credits: No credits document found, checking device');
+        final initialBalance = await _getDeviceAwareInitialBalance();
 
         try {
           await _userCreditsDoc?.set({
@@ -300,10 +300,9 @@ class CreditsController extends StateNotifier<CreditsState> {
             isLoading: false,
           );
         } else {
-          // No cache, no server - use guest default as last resort
-          final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
-          state = CreditsState(
-            balance: isAnonymous ? 4.0 : Pricing.initialBalance,
+          // No cache, no server — give 0 and let them buy
+          state = const CreditsState(
+            balance: 0,
             hasGeneratedFirst: false,
             isLoading: false,
           );
@@ -437,6 +436,47 @@ class CreditsController extends StateNotifier<CreditsState> {
   /// Reload balance from server
   Future<void> refreshBalance() async {
     await _loadBalance();
+  }
+
+  /// Check if this device already received initial credits.
+  /// Returns 0 if device already credited, otherwise 4 (guest) or 10 (auth).
+  Future<double> _getDeviceAwareInitialBalance() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final deviceId = prefs.getString('device_installation_id');
+      if (deviceId == null || deviceId.isEmpty) return 0.0;
+
+      final deviceDoc = await _firestore
+          .collection('device_credits')
+          .doc(deviceId)
+          .get()
+          .timeout(const Duration(seconds: 2));
+
+      if (deviceDoc.exists &&
+          (deviceDoc.data()?['initialCreditsGranted'] as bool? ?? false)) {
+        // Device already received credits — new account gets 0
+        print('💰 Credits: Device already credited, initial balance = 0');
+        return 0.0;
+      }
+
+      // New device — give initial credits and mark device
+      final isAnonymous = _auth.currentUser?.isAnonymous ?? false;
+      final amount = isAnonymous ? 4.0 : Pricing.initialBalance;
+
+      await _firestore.collection('device_credits').doc(deviceId).set({
+        'deviceId': deviceId,
+        'initialCreditsGranted': true,
+        'grantedAmount': amount,
+        'grantedToUserId': _userId,
+        'grantedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('💰 Credits: New device, initial balance = $amount');
+      return amount;
+    } catch (e) {
+      print('💰 Credits: Device check failed, defaulting to 0: $e');
+      return 0.0;
+    }
   }
 }
 

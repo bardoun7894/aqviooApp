@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/remote_config_service.dart';
@@ -29,6 +30,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   // State
   bool _obscurePassword = true;
+  bool _guestAlreadyUsed = true; // default hidden until checked
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -44,6 +46,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       curve: Curves.easeOut,
     );
     _fadeController.forward();
+    _checkGuestUsed();
+  }
+
+  Future<void> _checkGuestUsed() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _guestAlreadyUsed = prefs.getBool('guest_used_once') ?? false;
+    });
   }
 
   @override
@@ -210,10 +221,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   // Main Card
                   _buildCompactCard(context, isLoading, l10n, isDark),
 
-                  const SizedBox(height: 16),
-
-                  // Guest Login
-                  _buildCompactGuestLogin(context, isLoading, l10n, isDark),
+                  // Guest Login (hidden if already used on this device)
+                  if (!_guestAlreadyUsed) ...[
+                    const SizedBox(height: 16),
+                    _buildCompactGuestLogin(context, isLoading, l10n, isDark),
+                  ],
 
                   const SizedBox(height: 12),
 
