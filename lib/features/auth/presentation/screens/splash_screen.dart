@@ -93,6 +93,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Minimum display time for splash animation
     await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
+    //s
 
     // Wait for auth state to settle (up to 5 seconds)
     final authState = ref.read(authStateProvider);
