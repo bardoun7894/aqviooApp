@@ -111,7 +111,8 @@ class TransactionService {
     Map<String, dynamic>? metadata,
   }) async {
     try {
-      final docRef = await _firestore.collection(_collection).add({
+      final docRef = _firestore.collection(_collection).doc(orderId);
+      await docRef.set({
         'userId': userId,
         'userName': userName,
         'userEmail': userEmail,
@@ -123,7 +124,7 @@ class TransactionService {
         'orderId': orderId,
         'createdAt': FieldValue.serverTimestamp(),
         'metadata': metadata,
-      });
+      }, SetOptions(merge: true));
 
       debugPrint('Transaction created: ${docRef.id}');
       return docRef.id;

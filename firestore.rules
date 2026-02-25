@@ -29,6 +29,24 @@ service cloud.firestore {
                            exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
     
+    // App configuration (API keys, settings)
+    // All authenticated users can read (needed for API keys at runtime)
+    // Only admins can write (manage keys from admin dashboard)
+    match /config/{document} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                     exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Guest-device usage lock (one-time guest usage per device install)
+    // Requires authenticated context (including anonymous auth)
+    match /guest_devices/{deviceId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null &&
+                             request.resource.data.deviceId == deviceId;
+      allow delete: if false;
+    }
+    
     // Public collections (if any)
     match /public/{document=**} {
       allow read: if true;

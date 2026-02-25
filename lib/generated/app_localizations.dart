@@ -374,6 +374,30 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get login;
 
+  /// No description provided for @guestCreditsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have used your free guest credits.'**
+  String get guestCreditsUsed;
+
+  /// No description provided for @guestUpgradePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in or create an account to unlock more credits and keep creating.'**
+  String get guestUpgradePrompt;
+
+  /// No description provided for @guestLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest mode was already used on this device. Please log in or create an account.'**
+  String get guestLimitExceeded;
+
+  /// No description provided for @accountCreatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created successfully'**
+  String get accountCreatedSuccessfully;
+
   /// No description provided for @email.
   ///
   /// In en, this message translates to:

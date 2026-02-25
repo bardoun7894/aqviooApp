@@ -14,6 +14,22 @@ import '../widgets/magic_animation.dart';
 class MagicLoadingScreen extends ConsumerWidget {
   const MagicLoadingScreen({super.key});
 
+  String _sanitizeErrorMessage(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return 'Something went wrong. Please try again later.';
+    }
+    final cleaned = raw
+        .replaceFirst(
+            RegExp(r'^(Exception|KieAIException|ApiException):\s*'), '')
+        .trim();
+    if (cleaned.isEmpty ||
+        cleaned.contains('HTTP') ||
+        cleaned.contains('Trace')) {
+      return 'Something went wrong. Please try again later.';
+    }
+    return cleaned;
+  }
+
   String _translateStepMessage(
       String? key, BuildContext context, bool isImage) {
     if (key == null) {
@@ -86,7 +102,7 @@ class MagicLoadingScreen extends ConsumerWidget {
               ),
             ),
             content: Text(
-              next.errorMessage ?? 'Unknown error occurred',
+              _sanitizeErrorMessage(next.errorMessage),
               style: GoogleFonts.outfit(),
             ),
             actions: [

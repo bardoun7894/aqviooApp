@@ -153,6 +153,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get guestCreditsUsed => 'You have used your free guest credits.';
+
+  @override
+  String get guestUpgradePrompt =>
+      'Log in or create an account to unlock more credits and keep creating.';
+
+  @override
+  String get guestLimitExceeded =>
+      'Guest mode was already used on this device. Please log in or create an account.';
+
+  @override
+  String get accountCreatedSuccessfully => 'Account created successfully';
+
+  @override
   String get email => 'Email';
 
   @override

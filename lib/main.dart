@@ -14,6 +14,7 @@ import 'firebase_options.dart';
 import 'services/payment/tap_payment_service.dart';
 import 'core/services/cache_manager.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/remote_config_service.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
@@ -32,9 +33,13 @@ void main() async {
           exceptionStr.contains('ExoPlaybackException') ||
           exceptionStr.contains('PlatformException(VideoError');
 
-      if (isImageError || isVideoError) {
+      // Suppress RenderFlex overflow errors - these are benign layout warnings
+      final isOverflowError = exceptionStr.contains('overflowed by') ||
+          exceptionStr.contains('RenderFlex');
+
+      if (isImageError || isVideoError || isOverflowError) {
         if (kDebugMode) {
-          debugPrint('⚠️ Suppressed media error: ${details.exception}');
+          debugPrint('⚠️ Suppressed error: ${details.exception}');
         }
         return; // Don't propagate
       }
@@ -88,52 +93,47 @@ void main() async {
         }
       }
 
-      // Check AI API Keys
-      String openAiKey = '';
-
-      if (dotenv.isInitialized) {
-        openAiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
-      }
-
-      if (kDebugMode) {
-        if (!dotenv.isInitialized) {
-          debugPrint(
-              '⚠️ Warning: dotenv not initialized. Using empty API keys.');
-        } else {
-          if (openAiKey.isEmpty) {
-            debugPrint('⚠️ Warning: OPENAI_API_KEY is missing');
-          }
+      // Load API keys from Firestore (managed by admin via Settings dashboard)
+      try {
+        await RemoteConfigService().loadKeys();
+        if (kDebugMode) {
+          debugPrint('✅ RemoteConfigService: Keys loaded');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ RemoteConfigService: Failed to load keys: $e');
         }
       }
 
       // Initialize Tap Payments SDK (Android and Web only - iOS uses IAP)
       if (!kIsWeb && !Platform.isIOS) {
-        final tapSecretKey =
-            dotenv.isInitialized ? (dotenv.env['TAP_SECRET_KEY'] ?? '') : '';
-        final tapPublicKey =
-            dotenv.isInitialized ? (dotenv.env['TAP_PUBLIC_KEY'] ?? '') : '';
-        final tapMerchantId =
-            dotenv.isInitialized ? (dotenv.env['TAP_MERCHANT_ID'] ?? '') : '';
+        final remoteConfig = RemoteConfigService();
+        final tapSecretKey = remoteConfig.tapSecretKey;
+        final tapPublicKey = remoteConfig.tapPublicKey;
+        final tapMerchantId = remoteConfig.tapMerchantId;
+        final tapTestMode = remoteConfig.tapTestMode;
         if (kDebugMode) {
           debugPrint(
-              '🔵 Tap SECRET_KEY from env: ${tapSecretKey.isNotEmpty ? "${tapSecretKey.substring(0, 10)}..." : "empty"}');
+              '🔵 Tap SECRET_KEY: ${tapSecretKey.isNotEmpty ? "${tapSecretKey.substring(0, 10)}..." : "empty"}');
           debugPrint(
-              '🔵 Tap PUBLIC_KEY from env: ${tapPublicKey.isNotEmpty ? "${tapPublicKey.substring(0, 10)}..." : "empty"}');
+              '🔵 Tap PUBLIC_KEY: ${tapPublicKey.isNotEmpty ? "${tapPublicKey.substring(0, 10)}..." : "empty"}');
           debugPrint(
-              '🔵 Tap MERCHANT_ID from env: ${tapMerchantId.isNotEmpty ? tapMerchantId : "empty"}');
+              '🔵 Tap MERCHANT_ID: ${tapMerchantId.isNotEmpty ? tapMerchantId : "empty"}');
+          debugPrint('🔵 Tap TEST_MODE: $tapTestMode');
         }
         if (tapSecretKey.isNotEmpty && tapPublicKey.isNotEmpty) {
           TapPaymentService().initialize(
             secretKey: tapSecretKey,
             publicKey: tapPublicKey,
             merchantId: tapMerchantId,
-            isProduction: true,
+            isProduction: !tapTestMode,
           );
           if (kDebugMode) {
             debugPrint('🔵 Tap Payment initialized successfully');
           }
         } else {
-          debugPrint('❌ Tap Payment keys are empty!');
+          debugPrint(
+              '⚠️ Tap Payment keys not configured. Admin must set them in Settings.');
         }
       } else if (!kIsWeb && Platform.isIOS && kDebugMode) {
         debugPrint('🍎 iOS: Skipping Tap Payment - using IAP only');

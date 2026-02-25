@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../core/services/remote_config_service.dart';
 import '../../features/creation/domain/models/creation_config.dart';
 
 /// Custom exception for Kie AI errors with user-friendly messages
@@ -242,18 +242,30 @@ class KieAIService {
           );
         }
       } else if (response.statusCode == 401) {
-        throw KieAIException('Invalid API key. Please contact support.');
-      } else if (response.statusCode == 402) {
+        debugPrint('❌ 401 Unauthorized - API key issue');
         throw KieAIException(
-            'Insufficient credits. Please top up your account.');
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails: 'HTTP 401: Invalid API key for $model',
+        );
+      } else if (response.statusCode == 402) {
+        debugPrint('❌ 402 Payment Required - API credits issue');
+        throw KieAIException(
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails: 'HTTP 402: Insufficient API credits for $model',
+        );
       } else if (response.statusCode == 429) {
+        debugPrint('🚫 429 Response body: ${response.body}');
+        debugPrint('🚫 429 Response headers: ${response.headers}');
         throw KieAIException(
           'Too many requests. Please wait a moment and try again.',
+          technicalDetails: 'HTTP 429: ${response.body}',
           isRetryable: true,
         );
       } else {
+        debugPrint(
+            '❌ HTTP ${response.statusCode} Response body: ${response.body}');
         throw KieAIException(
-          'Server error. Please try again later.',
+          'Something went wrong. Please try again later.',
           technicalDetails: 'HTTP ${response.statusCode}: ${response.body}',
           isRetryable: response.statusCode >= 500,
         );
@@ -441,7 +453,8 @@ class KieAIService {
       ).timeout(
         _pollingTimeout, // Duration(seconds: 60)
         onTimeout: () {
-          throw TimeoutException('Task status check timed out after ${_pollingTimeout.inSeconds}s');
+          throw TimeoutException(
+              'Task status check timed out after ${_pollingTimeout.inSeconds}s');
         },
       );
 
@@ -456,7 +469,9 @@ class KieAIService {
             try {
               final resultJson = jsonDecode(taskData['resultJson']);
               final resultUrls = resultJson['resultUrls'];
-              if (resultUrls != null && resultUrls is List && resultUrls.isNotEmpty) {
+              if (resultUrls != null &&
+                  resultUrls is List &&
+                  resultUrls.isNotEmpty) {
                 return {
                   'state': 'success',
                   'videoUrl': resultUrls[0],
@@ -624,18 +639,31 @@ class KieAIService {
           );
         }
       } else if (response.statusCode == 401) {
-        throw KieAIException('Invalid API key. Please contact support.');
-      } else if (response.statusCode == 402) {
+        debugPrint('❌ 401 Unauthorized - API key issue (image)');
         throw KieAIException(
-            'Insufficient credits. Please top up your account.');
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails: 'HTTP 401: Invalid API key for image generation',
+        );
+      } else if (response.statusCode == 402) {
+        debugPrint('❌ 402 Payment Required - API credits issue (image)');
+        throw KieAIException(
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails:
+              'HTTP 402: Insufficient API credits for image generation',
+        );
       } else if (response.statusCode == 429) {
+        debugPrint('🚫 429 Response body: ${response.body}');
+        debugPrint('🚫 429 Response headers: ${response.headers}');
         throw KieAIException(
           'Too many requests. Please wait a moment and try again.',
+          technicalDetails: 'HTTP 429: ${response.body}',
           isRetryable: true,
         );
       } else {
+        debugPrint(
+            '❌ HTTP ${response.statusCode} Response body: ${response.body}');
         throw KieAIException(
-          'Server error. Please try again later.',
+          'Something went wrong. Please try again later.',
           technicalDetails: 'HTTP ${response.statusCode}: ${response.body}',
           isRetryable: response.statusCode >= 500,
         );
@@ -676,10 +704,10 @@ class KieAIService {
   String _getUserFriendlyError(String technicalError) {
     if (technicalError.contains('401') ||
         technicalError.contains('Unauthorized')) {
-      return 'Invalid API key. Please check your configuration.';
+      return 'Service is temporarily unavailable. Please try again later.';
     } else if (technicalError.contains('402') ||
         technicalError.contains('Insufficient')) {
-      return 'Insufficient credits. Please top up your account.';
+      return 'Service is temporarily unavailable. Please try again later.';
     } else if (technicalError.contains('422') ||
         technicalError.contains('Validation')) {
       return 'Invalid request. Please check your settings.';
@@ -708,6 +736,14 @@ class KieAIService {
     File? imageFile,
   }) async {
     try {
+      // Validate API key is present
+      if (_apiKey.isEmpty) {
+        throw KieAIException(
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails: 'KIE_API_KEY is empty or not configured',
+        );
+      }
+
       // Check connectivity first (skip for web platform as InternetAddress is not available)
       if (!kIsWeb) {
         try {
@@ -736,12 +772,18 @@ class KieAIService {
       } else {
         return await _generateImageContent(config, enhancedPrompt);
       }
+    } on KieAIException {
+      rethrow;
     } catch (e) {
       debugPrint('Error in generateContent: $e');
       if (e is UnimplementedError) {
-        throw Exception(e.message ?? 'This feature is coming soon.');
+        throw KieAIException(e.message ?? 'This feature is coming soon.');
       }
-      throw Exception(_getUserFriendlyError(e.toString()));
+      throw KieAIException(
+        _getUserFriendlyError(e.toString()),
+        technicalDetails: e.toString(),
+        isRetryable: true,
+      );
     }
   }
 
@@ -840,12 +882,16 @@ class KieAIService {
   }
 }
 
-// Provider
+// Provider - uses RemoteConfigService for API key (fetched from Firestore)
 final kieAIServiceProvider = Provider<KieAIService>((ref) {
-  // Get API key from .env file
-  final apiKey = dotenv.env['KIE_API_KEY'] ?? '';
+  final config = ref.watch(remoteConfigServiceProvider);
+  final apiKey = config.kieApiKey;
   if (apiKey.isEmpty) {
-    debugPrint('Warning: KIE_API_KEY not found in .env file');
+    debugPrint(
+        '⚠️ Warning: KIE_API_KEY not configured. Admin must set it in Settings.');
+  } else if (kDebugMode) {
+    debugPrint(
+        '✅ KIE_API_KEY loaded (${apiKey.length} chars, starts with: ${apiKey.substring(0, 4)}...)');
   }
   return KieAIService(apiKey: apiKey);
 });

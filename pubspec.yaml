@@ -2,7 +2,7 @@ name: akvioo
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -16,10 +16,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number used as the build suffix.
-version: 1.0.0+15
+version: 1.0.0+28
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -38,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State Management
-  flutter_riverpod: ^2.6.1 
+  flutter_riverpod: ^2.6.1
 
   # Navigation d
   go_router: ^14.0.0
@@ -56,7 +56,7 @@ dependencies:
   chewie: ^1.8.1
   image_picker: ^1.1.1
   country_code_picker: ^3.0.0
-  
+
   # Animation Packages
   flutter_staggered_animations: ^1.1.1
 
@@ -80,8 +80,8 @@ dependencies:
     sdk: flutter
 
   # Payments - Official Tap Payments Gateway
-  checkout_flutter: ^1.0.4  # Official Tap Checkout SDK from developers.tap.company
-  crypto: ^3.0.6  # For hash string generation required by Tap Checkout
+  checkout_flutter: ^1.0.4 # Official Tap Checkout SDK from developers.tap.company
+  crypto: ^3.0.6 # For hash string generation required by Tap Checkout
   wakelock_plus: ^1.4.0
 
   # Admin Dashboard (Web)
@@ -109,7 +109,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -147,5 +146,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-
-

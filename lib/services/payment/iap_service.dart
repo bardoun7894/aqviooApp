@@ -29,6 +29,10 @@ class IAPService {
   List<ProductDetails> get products => _products;
 
   Future<void> initialize() async {
+    // Prevent duplicate listeners when screen reopens
+    await _subscription?.cancel();
+    _subscription = null;
+
     _isAvailable = await _iap.isAvailable();
 
     if (_isAvailable) {
@@ -48,6 +52,7 @@ class IAPService {
         _listenToPurchaseUpdated(purchaseDetailsList);
       }, onDone: () {
         _subscription?.cancel();
+        _subscription = null;
       }, onError: (error) {
         debugPrint('IAP Error: $error');
       });
@@ -60,8 +65,10 @@ class IAPService {
           await _iap.queryProductDetails(_kProductIds);
 
       if (response.notFoundIDs.isNotEmpty) {
-        debugPrint('⚠️ IAP: Products not found in App Store: ${response.notFoundIDs}');
-        debugPrint('⚠️ IAP: This usually means products need screenshots uploaded in App Store Connect');
+        debugPrint(
+            '⚠️ IAP: Products not found in App Store: ${response.notFoundIDs}');
+        debugPrint(
+            '⚠️ IAP: This usually means products need screenshots uploaded in App Store Connect');
       }
 
       if (response.error != null) {
@@ -71,7 +78,8 @@ class IAPService {
       _products = response.productDetails;
 
       if (_products.isEmpty) {
-        debugPrint('⚠️ IAP: No products loaded. Check App Store Connect configuration.');
+        debugPrint(
+            '⚠️ IAP: No products loaded. Check App Store Connect configuration.');
       } else {
         debugPrint('✅ IAP: Loaded ${_products.length} products successfully');
         // Sort by price
@@ -117,5 +125,7 @@ class IAPService {
 
   void dispose() {
     _subscription?.cancel();
+    _subscription = null;
+    onPurchaseUpdated = null;
   }
 }

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -24,6 +26,39 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture photos for video creation</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aqvioo uses your location to provide region-specific content and optimize video delivery speeds by connecting to the nearest server. For example, users in Saudi Arabia will connect to regional servers for faster processing.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aqvioo uses your microphone for voice-to-text conversion when creating video prompts. When you tap the microphone icon, your spoken words are converted to text so you can quickly describe the video you want to create. For example, you can say "a sunset over the ocean" and it will be typed into the prompt field for you.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select images for video creation</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Aqvioo uses speech recognition to convert your spoken words into text prompts for video creation. When you tap the microphone button, your speech is transcribed in real-time so you can quickly input video ideas by speaking instead of typing. For example, saying "a car driving through the desert" will automatically fill in the text field.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -34,19 +69,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to capture photos for video creation</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Aqvioo uses your microphone for voice-to-text conversion when creating video prompts. When you tap the microphone icon, your spoken words are converted to text so you can quickly describe the video you want to create. For example, you can say "a sunset over the ocean" and it will be typed into the prompt field for you.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Aqvioo uses speech recognition to convert your spoken words into text prompts for video creation. When you tap the microphone button, your speech is transcribed in real-time so you can quickly input video ideas by speaking instead of typing. For example, saying "a car driving through the desert" will automatically fill in the text field.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs photo library access to select images for video creation</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Aqvioo uses your location to provide region-specific content and optimize video delivery speeds by connecting to the nearest server. For example, users in Saudi Arabia will connect to regional servers for faster processing.</string>
 </dict>
 </plist>

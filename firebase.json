@@ -1,44 +1,6 @@
 {
-          "flutter": {
-                    "platforms": {
-                              "android": {
-                                        "default": {
-                                                  "projectId": "beldify-b445b",
-                                                  "appId": "1:651649539964:android:802828cdb6df4de826cef9",
-                                                  "fileOutput": "android/app/google-services.json"
-                                        }
-                              },
-                              "ios": {
-                                        "default": {
-                                                  "projectId": "beldify-b445b",
-                                                  "appId": "1:651649539964:ios:60a0c21c677f49f626cef9",
-                                                  "uploadDebugSymbols": false,
-                                                  "fileOutput": "ios/Runner/GoogleService-Info.plist"
-                                        }
-                              },
-                              "macos": {
-                                        "default": {
-                                                  "projectId": "beldify-b445b",
-                                                  "appId": "1:651649539964:ios:d03878f1e09ed0f126cef9",
-                                                  "uploadDebugSymbols": false,
-                                                  "fileOutput": "macos/Runner/GoogleService-Info.plist"
-                                        }
-                              },
-                              "dart": {
-                                        "lib/firebase_options.dart": {
-                                                  "projectId": "beldify-b445b",
-                                                  "configurations": {
-                                                            "android": "1:651649539964:android:802828cdb6df4de826cef9",
-                                                            "ios": "1:651649539964:ios:60a0c21c677f49f626cef9",
-                                                            "macos": "1:651649539964:ios:d03878f1e09ed0f126cef9",
-                                                            "web": "1:651649539964:web:3ebd906b5765c3d226cef9",
-                                                            "windows": "1:651649539964:web:6e6beaafceed3f7626cef9"
-                                                  }
-                                        }
-                              }
-                    }
-          },
-          "firestore": {
-                    "rules": "firestore.rules"
-          }
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
 }

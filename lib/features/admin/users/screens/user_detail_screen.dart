@@ -179,7 +179,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: reason,
+                initialValue: reason,
                 onChanged: (value) => setDialogState(() => reason = value!),
                 style: GoogleFonts.outfit(
                   color: isDark ? AppColors.white : AppColors.textPrimary,

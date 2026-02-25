@@ -361,8 +361,13 @@ class CreationController extends Notifier<CreationState> {
           currentStepMessage: "magicComplete",
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ Generation error: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+      debugPrint('❌ Generation config: outputType=${state.config.outputType}, '
+          'promptLength=${state.config.prompt.length}, '
+          'videoStyle=${state.config.videoStyle?.name ?? "none"}, '
+          'aspectRatio=${state.config.videoAspectRatio ?? state.config.imageSize ?? "default"}');
       state = state.copyWith(
         status: CreationWizardStatus.error,
         errorMessage: _friendlyErrorMessage(e),
@@ -381,8 +386,16 @@ class CreationController extends Notifier<CreationState> {
     generateVideo();
   }
 
+  /// Set error state from external callers (e.g., credit deduction failure)
+  void setError(String message) {
+    state = state.copyWith(
+      status: CreationWizardStatus.error,
+      errorMessage: message,
+    );
+  }
+
   String _friendlyErrorMessage(Object error) {
-    final e = error.toString();
+    final e = _sanitizeErrorMessage(error.toString());
     if (e.contains('SocketException') || e.contains('Network is unreachable')) {
       return 'No internet connection. Please check your network.';
     }
@@ -392,14 +405,20 @@ class CreationController extends Notifier<CreationState> {
     if (e.contains('insufficient_quota')) {
       return 'You have run out of credits. Please upgrade your plan.';
     }
-    if (e.contains('KieAIException')) {
-      // Extract message from KieAIException string if possible, or just return it
-      // Assuming clean string is better
-      return e
-          .replaceFirst('Exception: ', '')
-          .replaceFirst('KieAIException: ', '');
+    if (e.isNotEmpty &&
+        !e.contains('HTTP') &&
+        !e.contains('Stack') &&
+        !e.contains('Trace')) {
+      return e;
     }
-    return 'Something went wrong. Please try again.\n($e)';
+    return 'Something went wrong. Please try again later.';
+  }
+
+  String _sanitizeErrorMessage(String raw) {
+    return raw
+        .replaceFirst(
+            RegExp(r'^(Exception|KieAIException|ApiException):\s*'), '')
+        .trim();
   }
 
   Future<void> _pollTask(CreationItem item) async {

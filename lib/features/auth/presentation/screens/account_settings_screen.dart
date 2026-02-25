@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -191,7 +190,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             left: -100,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size = MediaQuery.of(context).size.width > 600 ? 600.0 : 400.0;
+                final size =
+                    MediaQuery.of(context).size.width > 600 ? 600.0 : 400.0;
                 return Container(
                   width: size,
                   height: size,
@@ -212,7 +212,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             right: -50,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size = MediaQuery.of(context).size.width > 600 ? 450.0 : 300.0;
+                final size =
+                    MediaQuery.of(context).size.width > 600 ? 450.0 : 300.0;
                 return Container(
                   width: size,
                   height: size,
@@ -245,47 +246,47 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         physics: const BouncingScrollPhysics(),
                         child: Column(
-                      children: [
-                        const SizedBox(height: 24),
+                          children: [
+                            const SizedBox(height: 24),
 
-                        // Profile Card
-                        // Profile Card
-                        _buildProfileCard(context, user),
+                            // Profile Card
+                            // Profile Card
+                            _buildProfileCard(context, user),
 
-                        const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                        // Settings Section
-                        _buildSettingsSection(context, ref),
+                            // Settings Section
+                            _buildSettingsSection(context, ref),
 
-                        const SizedBox(height: 24),
+                            const SizedBox(height: 24),
 
-                        // Danger Zone
-                        _buildDangerZone(context, ref),
+                            // Danger Zone
+                            _buildDangerZone(context, ref),
 
-                        if (kDebugMode) ...[
-                          const SizedBox(height: 24),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: _buildSettingsTile(
-                              icon: Icons.bug_report_rounded,
-                              title: 'Simulate Crash (Debug)',
-                              subtitle: 'Throw test exception',
-                              iconColor: Colors.purple,
-                              onTap: () {
-                                throw Exception(
-                                    'Manual Test Crash from AccountSettings');
-                              },
-                            ),
-                          ),
-                        ],
+                            if (kDebugMode) ...[
+                              const SizedBox(height: 24),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: _buildSettingsTile(
+                                  icon: Icons.bug_report_rounded,
+                                  title: 'Simulate Crash (Debug)',
+                                  subtitle: 'Throw test exception',
+                                  iconColor: Colors.purple,
+                                  onTap: () {
+                                    throw Exception(
+                                        'Manual Test Crash from AccountSettings');
+                                  },
+                                ),
+                              ),
+                            ],
 
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  ),
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

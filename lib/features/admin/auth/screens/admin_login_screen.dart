@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -113,7 +112,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
 
     // Listen for auth state changes
     ref.listen<AdminAuthState>(adminAuthControllerProvider, (previous, next) {
-      debugPrint('🔐 Login Screen: Auth state changed - isAuthenticated=${next.isAuthenticated}, hasUser=${next.adminUser != null}, error=${next.errorMessage}');
+      debugPrint(
+          '🔐 Login Screen: Auth state changed - isAuthenticated=${next.isAuthenticated}, hasUser=${next.adminUser != null}, error=${next.errorMessage}');
       if (next.errorMessage != null) {
         debugPrint('🔐 Login Screen: Showing error snackbar');
         _showSnackBar(next.errorMessage!, isError: true);
@@ -137,7 +137,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
           child: Center(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 480),
                   child: Column(
@@ -276,7 +277,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
                 height: 20,
                 child: Checkbox(
                   value: _rememberMe,
-                  onChanged: (value) => setState(() => _rememberMe = value ?? false),
+                  onChanged: (value) =>
+                      setState(() => _rememberMe = value ?? false),
                   activeColor: AppColors.primaryPurple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
@@ -289,7 +291,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
                 style: GoogleFonts.outfit(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  color:
+                      isDark ? AppColors.mediumGray : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -315,7 +318,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
                 _showSnackBar('Password reset feature coming soon!');
               },
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 minimumSize: Size.zero,
               ),
               child: Text(

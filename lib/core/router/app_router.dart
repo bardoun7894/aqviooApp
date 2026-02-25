@@ -21,6 +21,7 @@ import '../../features/admin/users/screens/users_list_screen.dart';
 import '../../features/admin/users/screens/user_detail_screen.dart';
 import '../../features/admin/content/screens/content_viewer_screen.dart';
 import '../../features/admin/payments/screens/payments_screen.dart';
+import '../../features/admin/settings/screens/admin_settings_screen.dart';
 import '../widgets/error_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey =
@@ -228,6 +229,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/payments',
         builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/settings',
+        builder: (context, state) => const AdminSettingsScreen(),
       ),
     ],
   );

@@ -97,7 +97,7 @@ void main() {
           service.getUserFriendlyError('SocketException: Failed host lookup'),
           contains('Network error'));
       expect(service.getUserFriendlyError('HTTP 401: Unauthorized'),
-          contains('Invalid API key'));
+          contains('temporarily unavailable'));
       expect(service.getUserFriendlyError('HTTP 429: Too Many Requests'),
           contains('Too many requests'));
     });

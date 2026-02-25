@@ -50,6 +50,9 @@ mixin SafeApiCaller {
 
         // Check for specific status codes that might need retry (e.g., 429, 5xx)
         if (response.statusCode == 429) {
+          debugPrint(
+              '🚫 429 from ${serviceName ?? "unknown"}: ${response.body}');
+          debugPrint('🚫 429 headers: ${response.headers}');
           throw ApiException(
             'Too many requests. Please wait a moment and try again.',
             statusCode: 429,
@@ -63,11 +66,12 @@ mixin SafeApiCaller {
             isRetryable: true,
           );
         } else if (response.statusCode == 401) {
-          final servicePrefix = serviceName != null ? '$serviceName: ' : '';
+          debugPrint('❌ 401 Unauthorized from ${serviceName ?? "unknown"}');
           throw ApiException(
-            '${servicePrefix}Unauthorized. Please check your API key.',
+            'Service is temporarily unavailable. Please try again later.',
             statusCode: 401,
-            isRetryable: false, // Usually not retryable without auth fix
+            technicalDetails: '${serviceName ?? "API"}: HTTP 401 Unauthorized',
+            isRetryable: false,
           );
         }
 
@@ -144,8 +148,11 @@ mixin SafeApiCaller {
         throw ApiException(
           'No internet connection. Please check your Wi-Fi or mobile data.',
           isRetryable: true,
+          technicalDetails: 'All DNS lookups failed',
         );
       }
+    } on ApiException {
+      rethrow; // Don't catch our own intentional throw
     } catch (_) {
       throw ApiException(
         'No internet connection. Please check your Wi-Fi or mobile data.',
@@ -164,9 +171,9 @@ mixin SafeApiCaller {
     }
 
     if (errorMsg.contains('401') || errorMsg.contains('Unauthorized')) {
-      return 'Invalid API key. Please check your configuration.';
+      return 'Service is temporarily unavailable. Please try again later.';
     } else if (errorMsg.contains('402') || errorMsg.contains('Insufficient')) {
-      return 'Insufficient credits. Please top up your account.';
+      return 'Service is temporarily unavailable. Please try again later.';
     } else if (errorMsg.contains('429') || errorMsg.contains('Rate')) {
       return 'Too many requests. Please wait a moment and try again.';
     } else if (errorMsg.contains('SocketException') ||

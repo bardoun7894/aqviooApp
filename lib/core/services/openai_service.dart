@@ -1,18 +1,19 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'remote_config_service.dart';
 import '../utils/safe_api_caller.dart';
 
 class OpenAIService with SafeApiCaller {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
 
-  String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
+  String get _apiKey => RemoteConfigService().openaiApiKey;
 
   Future<String> enhancePrompt(String userPrompt,
       {String languageCode = 'en'}) async {
     if (_apiKey.isEmpty) {
-      throw Exception('OpenAI API key not found in environment variables');
+      throw ApiException(
+          'Prompt enhancement is temporarily unavailable. Please try again later.');
     }
 
     final isArabic = languageCode == 'ar';
@@ -96,9 +97,11 @@ Now enhance this prompt:''';
             'OpenAI API Error: ${errorData['error']['message'] ?? 'Unknown error'}',
             statusCode: response.statusCode);
       }
+    } on ApiException {
+      rethrow; // Already has a user-friendly message
     } catch (e) {
-      // Re-throw localized/friendly error message
-      throw Exception(getUserFriendlyError(e));
+      // Convert to ApiException with clean user-friendly message
+      throw ApiException(getUserFriendlyError(e));
     }
   }
 

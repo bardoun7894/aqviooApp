@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_extensions.dart';
+import '../../../../core/services/remote_config_service.dart';
 import '../../data/auth_repository.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -95,6 +96,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final authState = ref.read(authStateProvider);
 
     if (authState.value == true) {
+      // User is authenticated - ensure API keys are synced to Firestore
+      RemoteConfigService().ensureKeysInFirestore();
       context.go('/home');
     } else {
       context.go('/login');

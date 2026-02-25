@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:akvioo/features/auth/data/auth_repository.dart';
-import 'package:akvioo/core/providers/credits_provider.dart' show Pricing;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,13 +33,29 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _promptController = TextEditingController();
   final _picker = ImagePicker();
-  final _openAIService = OpenAIService();
+  // OpenAI service accessed via Riverpod provider in _enhancePrompt()
   final stt.SpeechToText _speech = stt.SpeechToText();
   File? _selectedImage;
   bool _isEnhancing = false;
   bool _isListening = false;
   bool _speechAvailable = false;
   int? _selectedSuggestionIndex; // Track selected quick suggestion
+
+  String _sanitizeErrorMessage(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return 'Something went wrong. Please try again later.';
+    }
+    final cleaned = raw
+        .replaceFirst(
+            RegExp(r'^(Exception|KieAIException|ApiException):\s*'), '')
+        .trim();
+    if (cleaned.isEmpty ||
+        cleaned.contains('HTTP') ||
+        cleaned.contains('Trace')) {
+      return 'Something went wrong. Please try again later.';
+    }
+    return cleaned;
+  }
 
   @override
   void initState() {
@@ -123,7 +138,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final locale = AppLocalizations.of(context)?.localeName ?? 'en';
       final languageCode = locale.split('_').first;
-      final enhancedText = await _openAIService.enhancePrompt(
+      final openAIService = ref.read(openAIServiceProvider);
+      final enhancedText = await openAIService.enhancePrompt(
         currentText,
         languageCode: languageCode,
       );
@@ -146,10 +162,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
 
+      // Extract clean error message without "Exception: " prefix
+      final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!
-              .failedToEnhancePrompt(e.toString())),
+          content: Text(
+              AppLocalizations.of(context)!.failedToEnhancePrompt(errorMsg)),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -343,12 +361,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'You have used your free guest credits.',
+                    AppLocalizations.of(context)!.guestCreditsUsed,
                     style: GoogleFonts.outfit(),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign up to get more free credits and continue creating!',
+                    AppLocalizations.of(context)!.guestUpgradePrompt,
                     style: GoogleFonts.outfit(color: AppColors.textSecondary),
                   ),
                 ],
@@ -357,6 +375,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/login');
+                  },
+                  child: Text(AppLocalizations.of(context)!.login),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -442,30 +467,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    // Deduct credits
-    await creditsController.deductCreditsForGeneration(outputType);
-
-    // Update prompt in config
+    // Update prompt in config before starting generation
     ref.read(creationControllerProvider.notifier).updatePrompt(prompt);
 
-    // Start video generation with error handling
-    try {
-      ref.read(creationControllerProvider.notifier).generateVideo();
+    // Navigate to loading screen first - it handles all state changes including errors
+    if (!mounted) return;
+    context.push('/magic-loading');
 
-      if (!mounted) return;
-      // Navigate to magic loading screen
-      context.push('/magic-loading');
+    // Deduct credits then start generation
+    try {
+      await creditsController.deductCreditsForGeneration(outputType);
     } catch (e) {
-      debugPrint('Error starting generation: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.errorMessage(e.toString())),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      debugPrint('Error deducting credits: $e');
+      ref.read(creationControllerProvider.notifier).setError(
+            'Unable to process credits. Please try again.',
+          );
+      return;
+    }
+
+    // Start generation - await it so errors are properly caught
+    try {
+      await ref.read(creationControllerProvider.notifier).generateVideo();
+    } catch (e) {
+      debugPrint('Error during generation: $e');
+      // Refund credits since generation failed
+      try {
+        await creditsController.addBalance(
+          outputType == OutputType.video
+              ? Pricing.videoCost
+              : Pricing.imageCost,
+        );
+        debugPrint('Credits refunded after generation failure');
+      } catch (refundError) {
+        debugPrint('Error refunding credits: $refundError');
+      }
     }
   }
 
@@ -474,15 +509,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // ignore: unused_local_variable
     final creationState = ref.watch(creationControllerProvider);
 
-    // Listen for state changes
+    // Listen for state changes - only show errors that did NOT originate
+    // from an active generation (the magic loading screen handles those)
     ref.listen<CreationState>(
       creationControllerProvider,
       (previous, next) {
-        if (next.status == CreationWizardStatus.error) {
+        if (next.status == CreationWizardStatus.error &&
+            previous?.status != CreationWizardStatus.generatingScript &&
+            previous?.status != CreationWizardStatus.generatingVideo &&
+            previous?.status != CreationWizardStatus.generatingAudio) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)!
-                  .errorMessage(next.errorMessage ?? '')),
+                  .errorMessage(_sanitizeErrorMessage(next.errorMessage))),
               backgroundColor: Colors.red,
             ),
           );
@@ -912,150 +951,176 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // Bottom Row: Image Upload, Settings, Generate
                       Row(
                         children: [
-                          // Image Upload
-                          // Image Upload / Preview
-                          GestureDetector(
-                            onTap: _selectedImage != null
-                                ? () {
-                                    context.push(
-                                      '/preview',
-                                      extra: {
-                                        'videoUrl': _selectedImage!.path,
-                                        'thumbnailUrl': null,
-                                        'prompt': _promptController.text,
-                                        'isImage': true,
-                                      },
-                                    );
-                                  }
-                                : _pickImage,
-                            onLongPress: _pickImage, // Allow changing image
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              padding: _selectedImage != null
-                                  ? EdgeInsets.zero
-                                  : const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primaryPurple.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      AppColors.primaryPurple.withOpacity(0.15),
-                                ),
-                                image: _selectedImage != null
-                                    ? DecorationImage(
-                                        image: FileImage(_selectedImage!),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                              ),
-                              child: _selectedImage != null
-                                  ? Center(
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.3),
-                                          shape: BoxShape.circle,
+                          // Left side controls - expanded and scrollable to prevent overflow
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Image Upload
+                                  // Image Upload / Preview
+                                  GestureDetector(
+                                    onTap: _selectedImage != null
+                                        ? () {
+                                            context.push(
+                                              '/preview',
+                                              extra: {
+                                                'videoUrl':
+                                                    _selectedImage!.path,
+                                                'thumbnailUrl': null,
+                                                'prompt':
+                                                    _promptController.text,
+                                                'isImage': true,
+                                              },
+                                            );
+                                          }
+                                        : _pickImage,
+                                    onLongPress:
+                                        _pickImage, // Allow changing image
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      padding: _selectedImage != null
+                                          ? EdgeInsets.zero
+                                          : const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryPurple
+                                            .withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.primaryPurple
+                                              .withOpacity(0.15),
                                         ),
-                                        child: const Icon(
-                                          Icons.fullscreen_rounded,
-                                          size: 16,
-                                          color: Colors.white,
+                                        image: _selectedImage != null
+                                            ? DecorationImage(
+                                                image:
+                                                    FileImage(_selectedImage!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
+                                      ),
+                                      child: _selectedImage != null
+                                          ? Center(
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black
+                                                      .withOpacity(0.3),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.fullscreen_rounded,
+                                                  size: 16,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.image_outlined,
+                                              size: 18,
+                                              color: AppColors.primaryPurple,
+                                            ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  // Speech-to-Text Button
+                                  GestureDetector(
+                                    onTap: _toggleListening,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: _isListening
+                                            ? AppColors.primaryPurple
+                                                .withOpacity(0.2)
+                                            : AppColors.primaryPurple
+                                                .withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: _isListening
+                                              ? AppColors.primaryPurple
+                                                  .withOpacity(0.5)
+                                              : AppColors.primaryPurple
+                                                  .withOpacity(0.15),
                                         ),
                                       ),
-                                    )
-                                  : Icon(
-                                      Icons.image_outlined,
-                                      size: 18,
-                                      color: AppColors.primaryPurple,
+                                      child: Icon(
+                                        _isListening
+                                            ? Icons.mic
+                                            : Icons.mic_outlined,
+                                        size: 18,
+                                        color: AppColors.primaryPurple,
+                                      ),
                                     ),
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  // Current Aspect Ratio Badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryPurple
+                                          .withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: AppColors.primaryPurple
+                                            .withOpacity(0.2),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      ref
+                                                  .watch(
+                                                      creationControllerProvider)
+                                                  .config
+                                                  .videoAspectRatio ==
+                                              'landscape'
+                                          ? '16:9'
+                                          : '9:16',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primaryPurple,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 8),
+
+                                  // Settings Icon Button
+                                  GestureDetector(
+                                    onTap: _showAdvancedSettings,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryPurple
+                                            .withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: AppColors.primaryPurple
+                                              .withOpacity(0.15),
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.tune_rounded,
+                                        size: 16,
+                                        color: AppColors.primaryPurple,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
 
                           const SizedBox(width: 8),
-
-                          // Speech-to-Text Button
-                          GestureDetector(
-                            onTap: _toggleListening,
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: _isListening
-                                    ? AppColors.primaryPurple.withOpacity(0.2)
-                                    : AppColors.primaryPurple.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _isListening
-                                      ? AppColors.primaryPurple.withOpacity(0.5)
-                                      : AppColors.primaryPurple
-                                          .withOpacity(0.15),
-                                ),
-                              ),
-                              child: Icon(
-                                _isListening ? Icons.mic : Icons.mic_outlined,
-                                size: 18,
-                                color: AppColors.primaryPurple,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          // Current Aspect Ratio Badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryPurple.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: AppColors.primaryPurple.withOpacity(0.2),
-                              ),
-                            ),
-                            child: Text(
-                              ref
-                                          .watch(creationControllerProvider)
-                                          .config
-                                          .videoAspectRatio ==
-                                      'landscape'
-                                  ? '16:9'
-                                  : '9:16',
-                              style: GoogleFonts.outfit(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryPurple,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 8),
-
-                          // Settings Icon Button
-                          GestureDetector(
-                            onTap: _showAdvancedSettings,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.primaryPurple.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color:
-                                      AppColors.primaryPurple.withOpacity(0.15),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.tune_rounded,
-                                size: 16,
-                                color: AppColors.primaryPurple,
-                              ),
-                            ),
-                          ),
-
-                          const Spacer(),
 
                           // Generate Button
                           Material(

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 // Toggle this to switch between Mock and Firebase
 const bool useMockAuth = false;
@@ -37,6 +39,7 @@ class MockAuthRepository implements AuthRepository {
   final _authStateController = StreamController<bool>.broadcast();
   bool _isLoggedIn = false;
   bool _isAnonymous = false;
+  bool _guestUsedOnce = false;
 
   MockAuthRepository() {
     // Emit initial state immediately to avoid stuck splash screen
@@ -57,9 +60,16 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInAnonymously() async {
+    if (_guestUsedOnce) {
+      throw FirebaseAuthException(
+        code: 'guest-limit-exceeded',
+        message: 'Guest access has already been used on this device.',
+      );
+    }
     await Future.delayed(const Duration(seconds: 1));
     _isLoggedIn = true;
     _isAnonymous = true;
+    _guestUsedOnce = true;
     _authStateController.add(true);
   }
 
@@ -132,6 +142,9 @@ class MockAuthRepository implements AuthRepository {
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _deviceIdKey = 'device_installation_id';
+  static const String _guestUsedKey = 'guest_used_once';
+  static const String _guestDevicesCollection = 'guest_devices';
 
   FirebaseAuthRepository(this._firebaseAuth);
 
@@ -147,11 +160,64 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signInAnonymously() async {
+    final prefs = await SharedPreferences.getInstance();
+    final usedLocally = prefs.getBool(_guestUsedKey) ?? false;
+    if (usedLocally) {
+      throw FirebaseAuthException(
+        code: 'guest-limit-exceeded',
+        message:
+            'Guest mode can only be used once on this device. Please log in or create an account.',
+      );
+    }
+
+    final deviceId = await _getOrCreateDeviceId();
+
     final userCredential = await _firebaseAuth.signInAnonymously();
     // Save anonymous user to Firestore
     if (userCredential.user != null) {
+      // Server-side consistency check after sign-in (requires auth)
+      try {
+        final guestDoc = await _firestore
+            .collection(_guestDevicesCollection)
+            .doc(deviceId)
+            .get(const GetOptions(source: Source.serverAndCache));
+        final alreadyUsed =
+            (guestDoc.data()?['guestUsedOnce'] as bool?) ?? false;
+        if (alreadyUsed) {
+          await _firebaseAuth.signOut();
+          throw FirebaseAuthException(
+            code: 'guest-limit-exceeded',
+            message:
+                'Guest mode can only be used once on this device. Please log in or create an account.',
+          );
+        }
+      } catch (_) {
+        // If check fails due to network/rules, continue with local enforcement.
+      }
+
       await _saveUserToFirestore(userCredential.user!, isAnonymous: true);
+
+      // Mark guest mode as used once for this device
+      await _firestore.collection(_guestDevicesCollection).doc(deviceId).set({
+        'deviceId': deviceId,
+        'guestUsedOnce': true,
+        'lastGuestUid': userCredential.user!.uid,
+        'firstGuestAt': FieldValue.serverTimestamp(),
+        'lastGuestAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await prefs.setBool(_guestUsedKey, true);
     }
+  }
+
+  Future<String> _getOrCreateDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(_deviceIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final id = const Uuid().v4();
+    await prefs.setString(_deviceIdKey, id);
+    return id;
   }
 
   @override
@@ -161,20 +227,35 @@ class FirebaseAuthRepository implements AuthRepository {
     required String name,
     String? phoneNumber,
   }) async {
-    final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+    final currentUser = _firebaseAuth.currentUser;
+    UserCredential userCredential;
+
+    // If currently signed in as guest, convert guest account to permanent account
+    // so the user keeps the same UID, balance, and creations.
+    if (currentUser != null && currentUser.isAnonymous) {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      userCredential = await currentUser.linkWithCredential(credential);
+    } else {
+      userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    }
+
     // Update display name
     await userCredential.user?.updateDisplayName(name);
 
-    // Save user to Firestore
+    // Save user to Firestore as non-anonymous account
     if (userCredential.user != null) {
       await _saveUserToFirestore(
         userCredential.user!,
         displayName: name,
         email: email,
         phoneNumber: phoneNumber,
+        isAnonymous: false,
       );
     }
 

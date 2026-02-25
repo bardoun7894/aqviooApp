@@ -153,6 +153,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get login => 'تسجيل الدخول';
 
   @override
+  String get guestCreditsUsed => 'لقد استهلكت رصيد الزائر المجاني.';
+
+  @override
+  String get guestUpgradePrompt =>
+      'سجّل الدخول أو أنشئ حسابًا للحصول على رصيد إضافي ومتابعة الإنشاء.';
+
+  @override
+  String get guestLimitExceeded =>
+      'تم استخدام وضع الزائر مسبقًا على هذا الجهاز. يرجى تسجيل الدخول أو إنشاء حساب.';
+
+  @override
+  String get accountCreatedSuccessfully => 'تم إنشاء الحساب بنجاح';
+
+  @override
   String get email => 'البريد الإلكتروني';
 
   @override

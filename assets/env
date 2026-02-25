@@ -1,0 +1,15 @@
+# API Keys - Managed via Firestore Admin Dashboard
+# Go to /admin/settings to update these keys.
+# This file is kept for backward compatibility with dotenv but is no longer the primary source.
+
+OPENAI_API_KEY=
+KIE_API_KEY=
+
+# Tap Payments Gateway Keys
+TAP_SECRET_KEY=
+TAP_PUBLIC_KEY=
+TAP_SECRET_KEY_TEST=
+TAP_MERCHANT_ID=
+TAP_TEST_MODE=false
+
+

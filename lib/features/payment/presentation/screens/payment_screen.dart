@@ -70,6 +70,7 @@ class PaymentScreen extends ConsumerStatefulWidget {
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   int _selectedPackageIndex = 1; // Default to popular package
   bool _isProcessing = false;
+  final Set<String> _processedPurchaseTokens = <String>{};
 
   // IAP Product IDs mapping to index
   final Map<int, String> _productIds = {
@@ -106,6 +107,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    if (!kIsWeb && Platform.isIOS) {
+      final iapService = IAPService();
+      iapService.onPurchaseUpdated = null;
+      iapService.dispose();
+    }
+    super.dispose();
+  }
+
   void _handleIAPUpdate(PurchaseDetails purchaseDetails) async {
     if (purchaseDetails.status == PurchaseStatus.pending) {
       if (!mounted) return;
@@ -117,6 +128,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         _showErrorSnackBar(purchaseDetails.error?.message ?? 'Purchase failed');
       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
           purchaseDetails.status == PurchaseStatus.restored) {
+        final purchaseToken = purchaseDetails.purchaseID ??
+            '${purchaseDetails.productID}_${purchaseDetails.transactionDate ?? ''}';
+        if (_processedPurchaseTokens.contains(purchaseToken)) {
+          debugPrint('IAP duplicate purchase update ignored: $purchaseToken');
+          if (!mounted) return;
+          setState(() => _isProcessing = false);
+          return;
+        }
+        _processedPurchaseTokens.add(purchaseToken);
+
         // Find which package was bought to know how much to credit
         // In a real app, verify receipt on backend.
         // Here we trust the productID to add credits.
@@ -452,8 +473,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (!kIsWeb && !Platform
-                          .isIOS) // Only show Tap secure badge on Android
+                      if (!kIsWeb &&
+                          !Platform
+                              .isIOS) // Only show Tap secure badge on Android
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -789,9 +811,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       if (paymentResult.success && paymentResult.chargeId != null) {
         try {
           // Verify transaction via API for additional security with timeout
-          final verification = await TapPaymentService().verifyTransaction(
+          final verification = await TapPaymentService()
+              .verifyTransaction(
             paymentResult.chargeId!,
-          ).timeout(
+          )
+              .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
               throw TimeoutException('Payment verification timed out');

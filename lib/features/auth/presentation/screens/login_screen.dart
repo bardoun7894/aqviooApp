@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/remote_config_service.dart';
 import '../providers/auth_provider.dart';
 import '../../../../generated/app_localizations.dart';
 
@@ -128,6 +127,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (mounted) {
       final state = ref.read(authControllerProvider);
       if (!state.hasError && !state.isLoading) {
+        // Ensure API keys are synced to Firestore after auth
+        RemoteConfigService().ensureKeysInFirestore();
         context.go('/home');
       }
     }
@@ -179,7 +180,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         String errorMessage = 'Authentication failed';
         if (next.error is FirebaseAuthException) {
           final e = next.error as FirebaseAuthException;
-          errorMessage = _getErrorMessage(e.code);
+          if (e.code == 'guest-limit-exceeded') {
+            errorMessage = l10n.guestLimitExceeded;
+          } else {
+            errorMessage = _getErrorMessage(e.code);
+          }
         }
         _showSnackBar(errorMessage, isError: true);
       }
@@ -240,6 +245,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         return 'Incorrect password';
       case 'too-many-requests':
         return 'Too many attempts. Try again later';
+      case 'guest-limit-exceeded':
+        return 'Authentication failed';
       default:
         return 'Authentication failed';
     }

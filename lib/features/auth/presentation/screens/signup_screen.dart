@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:country_code_picker/country_code_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/remote_config_service.dart';
 import '../providers/auth_provider.dart';
 import '../services/ip_location_service.dart';
 import '../../../../generated/app_localizations.dart';
@@ -243,9 +242,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
         String errorMessage = 'Signup failed';
         if (next.error is FirebaseAuthException) {
           final e = next.error as FirebaseAuthException;
-          errorMessage = _getErrorMessage(e.code);
+          if (e.code == 'guest-limit-exceeded') {
+            errorMessage = l10n.guestLimitExceeded;
+          } else {
+            errorMessage = _getErrorMessage(e.code);
+          }
         }
         _showSnackBar(errorMessage, isError: true);
+        return;
+      }
+
+      // On successful signup completion, navigate to home
+      if (previous?.isLoading == true && next.hasValue && !next.hasError) {
+        _showSnackBar(l10n.accountCreatedSuccessfully);
+        RemoteConfigService().ensureKeysInFirestore();
+        context.go('/home');
       }
     });
 

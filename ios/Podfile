@@ -4,14 +4,6 @@ platform :ios, '16.6'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-# Disable the new CocoaPods Xcode integration that causes -G flag issues
-# This flag was introduced in CocoaPods 1.13+ and causes linker errors
-ENV['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'true'
-
-# Note: Codemagic uses latest Xcode which supports the latest Firebase SDK
-# Only pin if needed for compatibility
-# $FirebaseSDKVersion = '11.0.0'
-
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -39,121 +31,13 @@ target 'Runner' do
   use_frameworks!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-
   target 'RunnerTests' do
     inherit! :search_paths
   end
 end
 
 post_install do |installer|
-  # Fix BoringSSL-GRPC -G flag issue (Xcode 16 compatibility)
-  # The -GCC_WARN_INHIBIT_ALL_WARNINGS flag is misread as -G by Xcode 16's clang
-  # This removes the problematic flag from BoringSSL-GRPC source files
-  installer.pods_project.targets.each do |target|
-    if target.name == 'BoringSSL-GRPC'
-      target.source_build_phase.files.each do |file|
-        if file.settings && file.settings['COMPILER_FLAGS']
-          flags = file.settings['COMPILER_FLAGS'].split
-          flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
-          file.settings['COMPILER_FLAGS'] = flags.join(' ')
-        end
-      end
-    end
-  end
-
-  # Fix gRPC-Core C++ template issue (Xcode 16.3 compatibility)
-  # Xcode 16.3's Clang is stricter about C++ template syntax
-  # Need to add <> after CallSeqFactory template call
-  base_dir = File.dirname(__FILE__)
-  grpc_file_path = File.join(base_dir, "Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h")
-  puts "Looking for gRPC-Core file at: #{grpc_file_path}"
-  if File.exist?(grpc_file_path)
-    puts "Found gRPC-Core basic_seq.h, patching..."
-    file_content = File.read(grpc_file_path)
-    # Fix all occurrences of CallSeqFactory without template args
-    modified = file_content.gsub(/Traits::template CallSeqFactory\(/, 'Traits::template CallSeqFactory<>(')
-    if modified != file_content
-      File.write(grpc_file_path, modified)
-      puts "Successfully patched gRPC-Core basic_seq.h for Xcode 16.3 compatibility"
-    else
-      puts "No changes needed in gRPC-Core basic_seq.h"
-    end
-  else
-    puts "Warning: gRPC-Core basic_seq.h not found at #{grpc_file_path}"
-  end
-
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-
-    # Fix CocoaPods "-G" option incompatibility
-    # This error occurs when a target's deployment target doesn't support the -G flag
-    target.build_configurations.each do |config|
-      # Disable -G flag generation
-      config.build_settings['COCOAPODS_DISABLE_DETERMINISTIC_UUIDS'] = 'YES'
-
-      # Ensure minimum iOS deployment target
-      deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
-      if deployment_target && deployment_target.to_f < 14.0
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      end
-
-      # Force strip -G from build settings if it appears
-      %w[OTHER_LDFLAGS GCC_PREPROCESSOR_DEFINITIONS].each do |key|
-        value = config.build_settings[key]
-        next unless value
-
-        if value.is_a?(String)
-          # Remove -G flag and arguments
-          config.build_settings[key] = value.gsub(/-G\s+\S*/, '').gsub(/\s+/, ' ').strip
-        elsif value.is_a?(Array)
-          config.build_settings[key] = value.reject { |v| v.to_s.start_with?('-G') }
-        end
-      end
-    end
-  end
-
-  # Fix Swift 6 compatibility issues in Firebase pods
-  base_dir = File.dirname(__FILE__)
-
-  # Patch all Firebase Swift files to remove Swift 6 syntax
-  ['FirebaseSharedSwift', 'FirebaseCoreInternal', 'FirebaseAuth', 'FirebaseCore', 'FirebaseFirestore', 'FirebaseFirestoreInternal'].each do |pod_name|
-    pod_dir = File.join(base_dir, "Pods/#{pod_name}")
-    if File.exist?(pod_dir)
-      Dir.glob(File.join(pod_dir, "**/*.swift")).each do |swift_file|
-        begin
-          File.chmod(0644, swift_file) rescue nil
-          content = File.read(swift_file)
-          original_content = content.dup
-
-          # Remove Swift 6 access-controlled imports (internal import, private import)
-          content.gsub!(/\binternal\s+import\b/, 'import')
-          content.gsub!(/\bprivate\s+import\b/, 'import')
-          content.gsub!(/\bpublic\s+import\b/, 'import')
-          content.gsub!(/\bpackage\s+import\b/, 'import')
-
-          # Remove problematic @available(swift, deprecated:...) blocks wrapped in #if !FIREBASE_CI
-          # These cause parsing issues in Swift 5.7
-          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\(\s*swift,\s*deprecated:[^)]+\)\s*\n\s*#endif[^\n]*\n/m, '')
-
-          # Also handle multi-line @available blocks
-          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\(\s*\*,\s*\n[^#]+#endif[^\n]*\n/m, '')
-          content.gsub!(/#if !FIREBASE_CI\s*\n\s*@available\([^)]+\)\s*\n\s*#endif[^\n]*\n/m, '')
-
-          # Remove all Swift 6 concurrency keywords
-          content.gsub!(/\bconsuming\s+/, '')
-          content.gsub!(/\bborrowing\s+/, '')
-          content.gsub!(/\bsending\s+/, '')
-          content.gsub!(/\bnonisolated\(unsafe\)\s+/, '')
-          content.gsub!(/\bnonisolated\s+/, '')
-          content.gsub!(/\bunsafe_Sendable/, 'Sendable')
-
-          # Only write if content changed
-          File.write(swift_file, content) if content != original_content
-        rescue => e
-          # Silently skip files that can't be fixed
-        end
-      end
-      puts "Patched all Swift files in #{pod_name} for Swift 5.9 compatibility"
-    end
   end
 end

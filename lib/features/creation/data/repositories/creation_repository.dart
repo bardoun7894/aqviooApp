@@ -8,12 +8,14 @@ class CreationRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static const String _cacheKey = 'cached_creations';
+  static const String _cacheKeyPrefix = 'cached_creations';
+  static const int _defaultFetchLimit = 100;
 
   String? get _userId => _auth.currentUser?.uid;
 
   /// Get creations with cache-first strategy
-  Future<List<CreationItem>> getCreations() async {
+  Future<List<CreationItem>> getCreations(
+      {int limit = _defaultFetchLimit}) async {
     final uid = _userId;
     if (uid == null) return [];
 
@@ -38,6 +40,7 @@ class CreationRepository {
           .doc(uid)
           .collection('creations')
           .orderBy('createdAt', descending: true)
+          .limit(limit)
           .get(const GetOptions(source: Source.serverAndCache));
 
       final creations =
@@ -140,8 +143,10 @@ class CreationRepository {
   // Cache methods
   Future<List<CreationItem>> _getCachedCreations() async {
     try {
+      final uid = _userId;
+      if (uid == null) return [];
       final prefs = await SharedPreferences.getInstance();
-      final cachedJson = prefs.getString(_cacheKey);
+      final cachedJson = prefs.getString(_cacheKeyForUser(uid));
 
       if (cachedJson != null) {
         final List<dynamic> decoded = json.decode(cachedJson);
@@ -157,9 +162,11 @@ class CreationRepository {
 
   Future<void> _cacheCreations(List<CreationItem> creations) async {
     try {
+      final uid = _userId;
+      if (uid == null) return;
       final prefs = await SharedPreferences.getInstance();
       final encoded = json.encode(creations.map((c) => c.toMap()).toList());
-      await prefs.setString(_cacheKey, encoded);
+      await prefs.setString(_cacheKeyForUser(uid), encoded);
     } catch (e) {
       print('Error caching creations: $e');
     }
@@ -168,8 +175,10 @@ class CreationRepository {
   /// Clear local cache
   Future<void> clearCache() async {
     try {
+      final uid = _userId;
+      if (uid == null) return;
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_cacheKey);
+      await prefs.remove(_cacheKeyForUser(uid));
     } catch (e) {
       print('Error clearing cache: $e');
     }
@@ -196,6 +205,7 @@ class CreationRepository {
           .get();
 
       // Find and delete expired ones
+      final batch = _firestore.batch();
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final createdAt = data['createdAt'];
@@ -208,11 +218,15 @@ class CreationRepository {
         }
 
         if (creationDate != null && creationDate.isBefore(cutoffDate)) {
-          await doc.reference.delete();
+          batch.delete(doc.reference);
           deletedCount++;
           print(
               '🗑️ Deleted expired creation: ${doc.id} (created: $creationDate)');
         }
+      }
+
+      if (deletedCount > 0) {
+        await batch.commit();
       }
 
       // Update cache to remove expired items
@@ -229,4 +243,6 @@ class CreationRepository {
 
     return deletedCount;
   }
+
+  String _cacheKeyForUser(String uid) => '${_cacheKeyPrefix}_$uid';
 }

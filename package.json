@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "@perplexity-ai/mcp-server": "^0.5.1",
-    "@upstash/context7-mcp": "^1.0.29",
-    "firecrawl-mcp": "^3.6.2"
+    "firebase-admin": "^13.6.1"
   }
 }

@@ -92,7 +92,10 @@ class CreditsController extends StateNotifier<CreditsState> {
         await _loadBalance();
       } catch (e) {
         print('⚠️ Credits: Error during auth change handler: $e');
-        // loadBalance already has internal catch, but this catches listener setup
+        // Ensure we exit loading state even on error to prevent stuck UI
+        if (state.isLoading) {
+          state = state.copyWith(isLoading: false);
+        }
       }
     }
   }
@@ -334,16 +337,36 @@ class CreditsController extends StateNotifier<CreditsState> {
       if (userId == null) throw Exception('User not logged in');
 
       final cost = getCost(outputType);
-      final newBalance = state.balance - cost;
+      final docRef = _userCreditsDoc;
+      if (docRef == null) throw Exception('Credits document not available');
 
-      if (newBalance < 0) throw Exception('Insufficient balance');
+      late final double newBalance;
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        final data = snapshot.data() as Map<String, dynamic>?;
 
-      // Update Firestore - write both fields to keep in sync
-      await _userCreditsDoc?.update({
-        'balance': newBalance,
-        'credits': newBalance.floor(), // Legacy field
-        'hasGeneratedFirst': true,
-        'lastUpdated': FieldValue.serverTimestamp(),
+        final balanceVal = (data?['balance'] as num?)?.toDouble() ?? 0.0;
+        final creditsVal = (data?['credits'] as num?)?.toDouble() ?? 0.0;
+        final currentBalance = (data == null ||
+                (!data.containsKey('balance') && !data.containsKey('credits')))
+            ? Pricing.initialBalance
+            : (balanceVal > creditsVal ? balanceVal : creditsVal);
+
+        newBalance = currentBalance - cost;
+        if (newBalance < 0) {
+          throw Exception('Insufficient balance');
+        }
+
+        transaction.set(
+          docRef,
+          {
+            'balance': newBalance,
+            'credits': newBalance.floor(),
+            'hasGeneratedFirst': true,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
       });
 
       // Update cache
@@ -367,13 +390,32 @@ class CreditsController extends StateNotifier<CreditsState> {
       final userId = _userId;
       if (userId == null) throw Exception('User not logged in');
 
-      final newBalance = state.balance + amount;
+      final docRef = _userCreditsDoc;
+      if (docRef == null) throw Exception('Credits document not available');
 
-      // Update Firestore - write both fields
-      await _userCreditsDoc?.update({
-        'balance': newBalance,
-        'credits': newBalance.floor(), // Legacy field
-        'lastUpdated': FieldValue.serverTimestamp(),
+      late final double newBalance;
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        final data = snapshot.data() as Map<String, dynamic>?;
+
+        final balanceVal = (data?['balance'] as num?)?.toDouble() ?? 0.0;
+        final creditsVal = (data?['credits'] as num?)?.toDouble() ?? 0.0;
+        final currentBalance = (data == null ||
+                (!data.containsKey('balance') && !data.containsKey('credits')))
+            ? Pricing.initialBalance
+            : (balanceVal > creditsVal ? balanceVal : creditsVal);
+
+        newBalance = currentBalance + amount;
+
+        transaction.set(
+          docRef,
+          {
+            'balance': newBalance,
+            'credits': newBalance.floor(),
+            'lastUpdated': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
       });
 
       // Update cache
