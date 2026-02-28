@@ -11,7 +11,7 @@ class Pricing {
   static const double videoCost = 2.99; // SAR per video
   static const double imageCost = 1.99; // SAR per image
   static const double initialBalance = 10.0; // SAR for new users
-  static const String currency = '﷼'; // Saudi Riyal symbol
+  static const String currency = 'ريال'; // Saudi Riyal symbol
   static const String currencyCode = 'SAR';
 }
 

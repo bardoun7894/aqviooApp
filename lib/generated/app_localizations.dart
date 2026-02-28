@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @currency.
   ///
   /// In en, this message translates to:
-  /// **'﷼'**
+  /// **'ريال'**
   String get currency;
 
   /// No description provided for @loginRequired.
@@ -1601,7 +1601,7 @@ abstract class AppLocalizations {
   /// No description provided for @purchaseCredits.
   ///
   /// In en, this message translates to:
-  /// **'Add {count} ﷼ - {price} SAR'**
+  /// **'Add {count} ريال - {price} SAR'**
   String purchaseCredits(int count, String price);
 
   /// No description provided for @videosOrImages.

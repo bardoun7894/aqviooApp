@@ -59,8 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   void dispose() {
-    _identifierController.dispose();
-    _passwordController.dispose();
+    // Note: TextEditingControllers are NOT disposed here because GoRouter's
+    // redirect can remove this screen mid-frame while TextFields still hold
+    // references, causing "used after disposed" errors. They'll be GC'd safely.
     _identifierFocusNode.dispose();
     _passwordFocusNode.dispose();
     _fadeController.dispose();

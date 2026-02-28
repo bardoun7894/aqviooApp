@@ -70,11 +70,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _phoneController.dispose();
+    // Note: TextEditingControllers are NOT disposed here because GoRouter's
+    // redirect can remove this screen mid-frame while TextFields still hold
+    // references, causing "used after disposed" errors. They'll be GC'd safely.
     _nameFocusNode.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();

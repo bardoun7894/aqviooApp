@@ -195,7 +195,7 @@
   "size": "Size",
   "costSection": "💰 Cost",
   "cost": "2.99",
-  "currency": "﷼",
+  "currency": "ريال",
   "loginRequired": "Login Required",
   "pleaseLoginToGenerate": "Please login to generate your video.",
   "generateMagic": "Generate Magic",
@@ -283,7 +283,7 @@
   "quickSuggestions": "Quick Suggestions",
   "buyCredits": "Add Balance",
   "currentBalance": "Current Balance",
-  "creditBalance": "{count} ﷼",
+  "creditBalance": "{count} ريال",
   "@creditBalance": {
     "placeholders": {
       "count": {
@@ -291,7 +291,7 @@
       }
     }
   },
-  "purchaseCredits": "Add {count} ﷼ - {price} SAR",
+  "purchaseCredits": "Add {count} ريال - {price} SAR",
   "@purchaseCredits": {
     "placeholders": {
       "count": {

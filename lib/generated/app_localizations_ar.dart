@@ -546,7 +546,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cost => '2.99';
 
   @override
-  String get currency => '﷼';
+  String get currency => 'ريال';
 
   @override
   String get loginRequired => 'تسجيل الدخول مطلوب';
@@ -781,7 +781,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String purchaseCredits(int count, String price) {
-    return 'إضافة $count ﷼ - $price ريال';
+    return 'إضافة $count ريال - $price ريال';
   }
 
   @override

@@ -1,56 +1,418 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - allow users to read/write their own document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // User's sub-collections (data, creations, etc.)
-      match /{subcollection}/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-    
-    // Transactions collection - users can read/write their own transactions
-    match /transactions/{transactionId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-    }
-    
-    // Admin collection - users can read their own admin status
-    match /admins/{adminId} {
-      allow read: if request.auth != null && (request.auth.uid == adminId || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
-      allow write: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    
-    // Audit logs - admins only
-    match /audit_logs/{logId} {
-      allow read, write: if request.auth != null && 
-                           exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-    
-    // App configuration (API keys, settings)
-    // All authenticated users can read (needed for API keys at runtime)
-    // Only admins can write (manage keys from admin dashboard)
-    match /config/{document} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-                     exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+
+    // --- Helper Functions ---
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Guest-device usage lock (one-time guest usage per device install)
-    // Requires authenticated context (including anonymous auth)
+    // Check if user is the owner of the data (by comparing UIDs)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user has 'admin' user role
+    // Priority: Custom Claims > Super Admin UID/Email > Firestore Document
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email == 'mbardouni44@gmail.com' ||
+        request.auth.token.email == 'sanadpsy@gmail.com' ||
+        request.auth.uid == 'LUAqWpsZf8S8Qf020gaWB9wRSD82' ||
+        request.auth.uid == '45VN8ZuxncaU65FIjx4PN6YSGP02' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
+    // Check if user has 'therapist' user role
+    function isTherapist() {
+      return isAuthenticated() && (
+        request.auth.token.therapist == true ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'therapist'
+      );
+    }
+
+    // --- Collection Rules ---
+
+    // Users Collection
+    match /users/{userId} {
+      // Admin can list/query all users
+      allow list: if isAdmin();
+      // Authenticated users can read any profile (needed for community/chat)
+      // Owner and Admin can write
+      allow get: if isAuthenticated();
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+
+      // Mood Entries Subcollection
+      match /mood_entries/{entryId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Test Results Subcollection
+      match /test_results/{resultId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update, delete: if isAdmin();
+      }
+
+      // Engagement Subcollection
+      match /engagement/{docId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Bookmarks Subcollection
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // Challenge Completions Subcollection
+      match /challenge_completions/{completionId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // ===== Aqvioo App Subcollections =====
+
+      // User data subcollection (credits, settings, etc.)
+      match /data/{document=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
+      // User creations subcollection (generated videos/images)
+      match /creations/{creationId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Therapists Collection (Public Profiles)
+    match /therapists/{therapistId} {
+      allow read: if true;
+      allow create: if isAdmin() || (isAuthenticated() && request.auth.uid == therapistId);
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == therapistId);
+      allow delete: if isAdmin();
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow get: if isAuthenticated() && (
+        resource.data.client_id == request.auth.uid ||
+        resource.data.therapist_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        request.resource.data.client_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.client_id == request.auth.uid ||
+        resource.data.therapist_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Therapist Availabilities
+    match /therapist_availability/{slotId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        request.resource.data.therapist_id == request.auth.uid || isAdmin()
+      );
+      allow update, delete: if isAuthenticated() && (
+        resource.data.therapist_id == request.auth.uid || isAdmin()
+      );
+    }
+
+    // AI Chats (Private)
+    match /ai_chats/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+
+      match /messages/{msgId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Therapist Chats (Direct Messaging)
+    match /therapist_chats/{chatId} {
+      allow get: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        resource.data.therapist_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        resource.data.therapist_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      match /messages/{msgId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Call Invites
+    match /call_invites/{inviteId} {
+      allow get: if isAuthenticated() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.callee_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        request.resource.data.caller_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.callee_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Community Posts
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (
+        request.resource.data.author_id == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isAuthenticated() && (
+        resource.data.author_id == request.auth.uid ||
+        isAdmin() ||
+        (request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['reactions', 'comments_count', 'report_count', 'updated_at']))
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.author_id == request.auth.uid || isAdmin()
+      );
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isAuthenticated() && (
+          resource.data.author_id == request.auth.uid || isAdmin()
+        );
+      }
+
+      match /user_reactions/{userId} {
+        allow read: if true;
+        allow write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow get: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+    }
+
+    // Content (Read Only mostly, Admin CMS)
+    match /content/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Daily Quotes (Public read, Admin CMS)
+    match /daily_quotes/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Psychological Tests (Public read, Admin write)
+    match /psychological_tests/{testId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Payment Records (Private)
+    match /payments/{paymentId} {
+      allow get: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // Support Chats (Admin inbox)
+    match /support_chats/{chatId} {
+      allow list: if isAdmin();
+      allow get, read, write: if isAuthenticated() && (
+        request.auth.uid == chatId || isAdmin()
+      );
+
+      match /messages/{messageId} {
+        allow read, create: if isAuthenticated() && (
+          request.auth.uid == chatId || isAdmin()
+        );
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // User FCM Tokens (Push notifications)
+    match /user_fcm_tokens/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // Subscription Products (Public catalog)
+    match /subscription_products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Payment Verifications (Bank transfer verification)
+    match /payment_verifications/{verificationId} {
+      allow get: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Daily Challenges
+    match /daily_challenges/{challengeId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // System Settings
+    match /system_settings/api_keys {
+      allow read, write: if isAdmin();
+    }
+    match /system_settings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // User Profiles (for Google Sign-In sync / legacy)
+    match /user_profiles/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    // Therapist Weekly Availability
+    match /therapist_weekly_availability/{therapistId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (
+        request.auth.uid == therapistId || isAdmin()
+      );
+    }
+
+    // Activity Logs
+    match /activity_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Reviews
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.user_id);
+      allow delete: if isAdmin();
+    }
+
+    // Therapist Profiles
+    match /therapist_profiles/{therapistId} {
+      allow read: if true;
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == therapistId);
+    }
+
+    // Assessments
+    match /assessments/{assessmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid || isAdmin()
+      );
+      allow list: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Connectivity Test
+    match /_connectivity_test/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Collection Group Queries
+    match /{path=**}/mood_entries/{entryId} {
+      allow read: if isAdmin();
+    }
+
+    // ===== Aqvioo App Collections =====
+
+    // Transactions collection - payment records
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Admin collection
+    match /admins/{adminId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == adminId || isAdmin()
+      );
+      allow write: if isAdmin();
+    }
+
+    // Audit logs
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // App configuration (API keys, settings)
+    match /config/{document} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Device credits tracking (prevents multi-account abuse)
+    match /device_credits/{deviceId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Guest-device usage lock
     match /guest_devices/{deviceId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null &&
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() &&
                              request.resource.data.deviceId == deviceId;
       allow delete: if false;
     }
-    
-    // Public collections (if any)
+
+    // Public collections
     match /public/{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAuthenticated();
+    }
+
+    // Collection Group query for creations (admin dashboard)
+    match /{path=**}/creations/{creationId} {
+      allow read: if isAdmin();
+    }
+
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

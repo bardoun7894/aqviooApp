@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../../core/utils/currency_utils.dart';
 import '../../../../generated/app_localizations.dart';
 import '../../../../services/payment/tap_payment_service.dart';
 import '../../../../services/payment/transaction_service.dart';
@@ -278,13 +279,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
-                          style: GoogleFonts.outfit(
+                        CurrencyUtils.buildPriceRow(
+                          creditsState.balance,
+                          amountStyle: GoogleFonts.outfit(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
+                          symbolColor: Colors.white,
+                          isBold: true,
                         ),
                       ],
                     ),
@@ -381,13 +384,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      Text(
-                                        '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
-                                        style: GoogleFonts.outfit(
+                                      CurrencyUtils.buildPriceRow(
+                                        package.amount,
+                                        amountStyle: GoogleFonts.outfit(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.textPrimary,
                                         ),
+                                        symbolSize: 14,
+                                        symbolColor: AppColors.textPrimary,
+                                        isBold: true,
                                       ),
                                       if (package.badge != null) ...[
                                         const SizedBox(width: 8),
@@ -433,13 +439,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             ),
 
                             // Price
-                            Text(
-                              '${package.price.toStringAsFixed(0)} ${Pricing.currency}',
-                              style: GoogleFonts.outfit(
+                            CurrencyUtils.buildPriceRow(
+                              package.price,
+                              amountStyle: GoogleFonts.outfit(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primaryPurple,
                               ),
+                              symbolSize: 14,
+                              symbolColor: AppColors.primaryPurple,
+                              isBold: true,
                             ),
                           ],
                         ),
@@ -647,13 +656,16 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             color: AppColors.textSecondary,
                           ),
                         ),
-                        Text(
-                          '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
-                          style: GoogleFonts.outfit(
+                        CurrencyUtils.buildPriceRow(
+                          package.amount,
+                          amountStyle: GoogleFonts.outfit(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                             color: AppColors.primaryPurple,
                           ),
+                          symbolSize: 13,
+                          symbolColor: AppColors.primaryPurple,
+                          isBold: true,
                         ),
                       ],
                     ),
@@ -938,12 +950,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             fontSize: 13,
                           ),
                         ),
-                        Text(
-                          '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
-                          style: GoogleFonts.outfit(
+                        CurrencyUtils.buildPriceRow(
+                          package.amount,
+                          amountStyle: GoogleFonts.outfit(
                             color: const Color(0xFF2ACE82),
                             fontWeight: FontWeight.bold,
                           ),
+                          symbolSize: 12,
+                          symbolColor: const Color(0xFF2ACE82),
+                          isBold: true,
                         ),
                       ],
                     ),
@@ -1379,13 +1394,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     color: AppColors.primaryPurple.withValues(alpha: 0.2),
                   ),
                 ),
-                child: Text(
-                  '+${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
-                  style: GoogleFonts.outfit(
+                child: CurrencyUtils.buildPriceRow(
+                  package.amount,
+                  prefix: '+',
+                  amountStyle: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryPurple,
                   ),
+                  symbolSize: 14,
+                  symbolColor: AppColors.primaryPurple,
+                  isBold: true,
                 ),
               ),
 

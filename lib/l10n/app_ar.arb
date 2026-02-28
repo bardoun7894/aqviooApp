@@ -175,7 +175,7 @@
   "size": "الحجم",
   "costSection": "💰 التكلفة",
   "cost": "2.99",
-  "currency": "﷼",
+  "currency": "ريال",
   "loginRequired": "تسجيل الدخول مطلوب",
   "pleaseLoginToGenerate": "يرجى تسجيل الدخول لإنشاء الفيديو الخاص بك.",
   "generateMagic": "إنشاء السحر",
@@ -249,8 +249,8 @@
   "quickSuggestions": "اقتراحات سريعة",
   "buyCredits": "إضافة رصيد",
   "currentBalance": "الرصيد الحالي",
-  "creditBalance": "{count} ﷼",
-  "purchaseCredits": "إضافة {count} ﷼ - {price} ريال",
+  "creditBalance": "{count} ريال",
+  "purchaseCredits": "إضافة {count} ريال - {price} ريال",
   "videosOrImages": "{videos} فيديو أو {images} صورة",
   "popularBadge": "الأكثر شعبية",
   "bestValueBadge": "أفضل قيمة",

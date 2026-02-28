@@ -19,7 +19,8 @@
       "Bash(curl -s -X POST \\\\\n  -H \"Content-Type: application/json\" \\\\\n  -H \"x-auth-token: OoezjE5Da9MSfnJr6IDmfhT3KRRBeNvCa0tkb02Sfb0\" \\\\\n  \"https://api.codemagic.io/builds\" \\\\\n  -d '{\n    \"appId\": \"6934b14196d1a24cab7ab437\",\n    \"workflowId\": \"default\",\n    \"branch\": \"main\"\n  }' 2>&1 | python3 -m json.tool 2>&1)",
       "mcp__app-store-connect__get_app_info",
       "mcp__app-store-connect__list_app_store_version_localizations",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(firebase auth:export:*)"
     ],
     "deny": [],
     "ask": []

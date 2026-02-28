@@ -23,6 +23,8 @@ import '../../../creation/domain/models/creation_item.dart';
 import '../../../creation/domain/models/creation_config.dart';
 import '../../../../core/services/openai_service.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../../core/widgets/riyal_symbol.dart';
+import '../../../../core/utils/currency_utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -100,7 +102,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _promptController.dispose();
+    // Note: _promptController is NOT disposed here because GoRouter's
+    // redirect can remove this screen mid-frame while TextFields still hold
+    // references, causing "used after disposed" errors. It'll be GC'd safely.
     super.dispose();
   }
 
@@ -680,10 +684,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
+                RiyalSymbol(
+                  fontSize: 10,
+                  color: AppColors.primaryPurple,
+                  isBold: true,
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  '${creditsState.balance.toStringAsFixed(2)} ${Pricing.currency}',
+                  creditsState.balance.toStringAsFixed(2),
                   style: GoogleFonts.outfit(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
