@@ -24,7 +24,7 @@ class PaymentTransaction {
   final String paymentMethod;
   final TransactionStatus status;
   final String? orderId;
-  final String? tabbyPaymentId;
+  final String? externalPaymentId;
   final DateTime createdAt;
   final DateTime? completedAt;
   final Map<String, dynamic>? metadata;
@@ -40,7 +40,7 @@ class PaymentTransaction {
     required this.paymentMethod,
     required this.status,
     this.orderId,
-    this.tabbyPaymentId,
+    this.externalPaymentId,
     required this.createdAt,
     this.completedAt,
     this.metadata,
@@ -56,13 +56,13 @@ class PaymentTransaction {
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
       currency: data['currency'] ?? 'SAR',
       credits: data['credits'] as int? ?? 0,
-      paymentMethod: data['paymentMethod'] ?? 'Tabby',
+      paymentMethod: data['paymentMethod'] ?? 'Tap',
       status: TransactionStatus.values.firstWhere(
         (e) => e.name == data['status'],
         orElse: () => TransactionStatus.pending,
       ),
       orderId: data['orderId'],
-      tabbyPaymentId: data['tabbyPaymentId'],
+      externalPaymentId: data['tabbyPaymentId'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
       metadata: data['metadata'] as Map<String, dynamic>?,
@@ -80,7 +80,7 @@ class PaymentTransaction {
       'paymentMethod': paymentMethod,
       'status': status.name,
       'orderId': orderId,
-      'tabbyPaymentId': tabbyPaymentId,
+      'externalPaymentId': externalPaymentId,
       'createdAt': Timestamp.fromDate(createdAt),
       'completedAt':
           completedAt != null ? Timestamp.fromDate(completedAt!) : null,
@@ -107,7 +107,7 @@ class TransactionService {
     required String currency,
     required int credits,
     required String orderId,
-    String paymentMethod = 'Tabby',
+    String paymentMethod = 'Tap',
     Map<String, dynamic>? metadata,
   }) async {
     try {
@@ -138,18 +138,19 @@ class TransactionService {
   Future<void> updateTransactionStatus({
     required String transactionId,
     required TransactionStatus status,
-    String? tabbyPaymentId,
+    String? externalPaymentId,
   }) async {
     try {
       final updates = <String, dynamic>{
         'status': status.name,
       };
 
-      if (tabbyPaymentId != null) {
-        updates['tabbyPaymentId'] = tabbyPaymentId;
+      if (externalPaymentId != null) {
+        updates['externalPaymentId'] = externalPaymentId;
       }
 
       if (status == TransactionStatus.completed ||
+          status == TransactionStatus.captured ||
           status == TransactionStatus.authorized) {
         updates['completedAt'] = FieldValue.serverTimestamp();
       }
@@ -217,6 +218,7 @@ class TransactionService {
       final snapshot =
           await _firestore.collection(_collection).where('status', whereIn: [
         TransactionStatus.completed.name,
+        TransactionStatus.captured.name,
         TransactionStatus.authorized.name,
       ]).get();
 

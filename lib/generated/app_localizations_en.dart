@@ -829,6 +829,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securePaymentTap => 'Secure payment powered by Tap';
 
   @override
+  String get securePaymentApple => 'Secure payment via Apple';
+
+  @override
+  String get confirmPurchaseTitle => 'Confirm Purchase';
+
+  @override
+  String get confirmPurchaseInfo =>
+      'You will be charged via Apple Pay for this purchase.';
+
+  @override
+  String get packageDetails => 'Package Details';
+
+  @override
+  String generatesApprox(String videos, String images) {
+    return 'Generates approximately $videos videos or $images images';
+  }
+
+  @override
+  String get confirmAndPay => 'Confirm & Pay';
+
+  @override
   String firstPayment(String amount) {
     return 'First payment: $amount SAR';
   }

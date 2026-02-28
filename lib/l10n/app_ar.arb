@@ -264,6 +264,18 @@
   "continueToPayment": "المتابعة للدفع",
   "addedToBalance": "تمت إضافته لرصيدك",
   "securePaymentTap": "دفع آمن عبر تاب",
+  "securePaymentApple": "دفع آمن عبر Apple",
+  "confirmPurchaseTitle": "تأكيد الشراء",
+  "confirmPurchaseInfo": "سيتم الدفع عبر Apple Pay لهذا الشراء.",
+  "packageDetails": "تفاصيل الباقة",
+  "generatesApprox": "تنتج تقريباً {videos} فيديو أو {images} صور",
+  "@generatesApprox": {
+    "placeholders": {
+      "videos": { "type": "String" },
+      "images": { "type": "String" }
+    }
+  },
+  "confirmAndPay": "تأكيد والدفع",
   "firstPayment": "الدفعة الأولى: {amount} ريال",
   "paymentSuccessTitle": "تم الدفع بنجاح!",
   "creditsAdded": "تمت إضافة {count} رصيد إلى حسابك",

@@ -238,7 +238,7 @@ class FirebaseAuthRepository implements AuthRepository {
         email: email,
         password: password,
       );
-      userCredential = await currentUser!.linkWithCredential(credential);
+      userCredential = await currentUser.linkWithCredential(credential);
     } else {
       userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email,

@@ -99,7 +99,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 'amount': amount,
                 'credits': purchasedCredits,
                 'status': 'estimated',
-                'paymentMethod': 'Tabby',
+                'paymentMethod': 'Tap',
                 'createdAt': data['lastUpdated'] ?? Timestamp.now(),
               });
             }
@@ -250,7 +250,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  hasRealTransactions ? 'Total Revenue' : 'Total Revenue (Estimated)',
+                  hasRealTransactions
+                      ? 'Total Revenue'
+                      : 'Total Revenue (Estimated)',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     color: Colors.white.withOpacity(0.9),
@@ -278,7 +280,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        hasRealTransactions ? Icons.check_circle : Icons.info_outline,
+                        hasRealTransactions
+                            ? Icons.check_circle
+                            : Icons.info_outline,
                         size: 14,
                         color: Colors.white,
                       ),
@@ -357,11 +361,14 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.mediumGray
+                          : AppColors.textSecondary,
                       size: 20,
                     ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14, horizontal: 16),
                   ),
                 ),
               ),
@@ -395,7 +402,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 underline: const SizedBox(),
                 icon: Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
+                  color:
+                      isDark ? AppColors.mediumGray : AppColors.textSecondary,
                 ),
                 style: GoogleFonts.outfit(
                   fontSize: 14,

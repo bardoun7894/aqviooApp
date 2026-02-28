@@ -1682,6 +1682,42 @@ abstract class AppLocalizations {
   /// **'Secure payment powered by Tap'**
   String get securePaymentTap;
 
+  /// No description provided for @securePaymentApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payment via Apple'**
+  String get securePaymentApple;
+
+  /// No description provided for @confirmPurchaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Purchase'**
+  String get confirmPurchaseTitle;
+
+  /// No description provided for @confirmPurchaseInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be charged via Apple Pay for this purchase.'**
+  String get confirmPurchaseInfo;
+
+  /// No description provided for @packageDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Package Details'**
+  String get packageDetails;
+
+  /// No description provided for @generatesApprox.
+  ///
+  /// In en, this message translates to:
+  /// **'Generates approximately {videos} videos or {images} images'**
+  String generatesApprox(String videos, String images);
+
+  /// No description provided for @confirmAndPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & Pay'**
+  String get confirmAndPay;
+
   /// No description provided for @firstPayment.
   ///
   /// In en, this message translates to:

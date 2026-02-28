@@ -379,7 +379,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${contentType} costs ${cost.toStringAsFixed(2)} ${Pricing.currency}',
+                  '$contentType costs ${cost.toStringAsFixed(2)} ${Pricing.currency}',
                   style: GoogleFonts.outfit(),
                 ),
                 const SizedBox(height: 8),

@@ -561,7 +561,7 @@ class CreationController extends Notifier<CreationState> {
           // Handle timeout specifically - common when app is backgrounded
           consecutiveTimeouts++;
           debugPrint(
-              'Polling timeout ${consecutiveTimeouts}/$maxConsecutiveTimeouts for ${item.id}: $e');
+              'Polling timeout $consecutiveTimeouts/$maxConsecutiveTimeouts for ${item.id}: $e');
 
           if (consecutiveTimeouts >= maxConsecutiveTimeouts) {
             // After multiple timeouts, wait longer before next attempt

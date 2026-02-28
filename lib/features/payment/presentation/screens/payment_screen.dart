@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -139,8 +138,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         _processedPurchaseTokens.add(purchaseToken);
 
         // Find which package was bought to know how much to credit
-        // In a real app, verify receipt on backend.
-        // Here we trust the productID to add credits.
         final productID = purchaseDetails.productID;
         final packageIndex = _productIds.entries
             .firstWhere((entry) => entry.value == productID,
@@ -150,9 +147,56 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         if (packageIndex != -1) {
           final package = creditPackages[packageIndex];
           try {
+            // Create transaction record in Firestore for iOS purchases
+            final user = FirebaseAuth.instance.currentUser;
+            final orderId =
+                'IAP_${purchaseDetails.purchaseID ?? DateTime.now().millisecondsSinceEpoch}';
+            String? transactionId;
+
+            if (user != null) {
+              try {
+                transactionId = await TransactionService().createTransaction(
+                  userId: user.uid,
+                  userName: user.displayName ?? 'User',
+                  userEmail: user.email ?? 'N/A',
+                  amount: package.price,
+                  currency: 'SAR',
+                  credits: package.amount.toInt(),
+                  orderId: orderId,
+                  paymentMethod: 'Apple IAP',
+                  metadata: {
+                    'balanceAmount': package.amount,
+                    'packagePrice': package.price,
+                    'videosCount': package.videosCount,
+                    'imagesCount': package.imagesCount,
+                    'productId': productID,
+                    'purchaseId': purchaseDetails.purchaseID,
+                    'transactionDate': purchaseDetails.transactionDate,
+                  },
+                );
+              } catch (e) {
+                debugPrint('⚠️ IAP: Failed to create transaction record: $e');
+              }
+            }
+
+            // Add balance
             await ref
                 .read(creditsControllerProvider.notifier)
                 .addBalance(package.amount);
+
+            // Mark transaction as captured
+            if (transactionId != null) {
+              try {
+                await TransactionService().updateTransactionStatus(
+                  transactionId: transactionId,
+                  status: TransactionStatus.captured,
+                  externalPaymentId: purchaseDetails.purchaseID,
+                );
+              } catch (e) {
+                debugPrint('⚠️ IAP: Failed to update transaction status: $e');
+              }
+            }
+
             if (mounted) {
               setState(() => _isProcessing = false);
               _showSuccessDialog(package);
@@ -473,20 +517,20 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (!kIsWeb &&
-                          !Platform
-                              .isIOS) // Only show Tap secure badge on Android
+                      if (!kIsWeb) // Show platform-specific secure badge
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.lock_outline,
+                            Icon(
+                              Platform.isIOS ? Icons.apple : Icons.lock_outline,
                               size: 16,
                               color: AppColors.textSecondary,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              l10n.securePaymentTap,
+                              Platform.isIOS
+                                  ? l10n.securePaymentApple
+                                  : l10n.securePaymentTap,
                               style: GoogleFonts.outfit(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
@@ -520,6 +564,218 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       debugPrint('⚠️ Payment: No product ID for index $_selectedPackageIndex');
       return;
     }
+
+    final l10n = AppLocalizations.of(context)!;
+    final package = creditPackages[_selectedPackageIndex];
+
+    // Show confirmation dialog before Apple Pay
+    final shouldProceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header icon
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryPurple,
+                      const Color(0xFF9D6BFF),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.shopping_bag_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Title
+              Text(
+                l10n.confirmPurchaseTitle,
+                style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Package details card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F5FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Amount row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.balanceToAdd,
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Divider(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                        height: 1,
+                      ),
+                    ),
+                    // Total row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.total,
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${package.price.toStringAsFixed(0)} SAR',
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Generates info
+              Text(
+                l10n.generatesApprox(
+                  '${package.videosCount}',
+                  '${package.imagesCount}',
+                ),
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // Confirm button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2ACE82),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.apple, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.confirmAndPay,
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Cancel button
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  l10n.cancel,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+
+              // Secure badge
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    size: 12,
+                    color: AppColors.textHint,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    l10n.securePaymentApple,
+                    style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (shouldProceed != true) return;
 
     setState(() => _isProcessing = true);
 
@@ -978,46 +1234,79 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   void _showErrorDialog({required String title, required String message}) {
-    if (!kIsWeb && Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: Text(
-          title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          message,
-          style: GoogleFonts.outfit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'OK',
-              style: GoogleFonts.outfit(color: AppColors.primaryPurple),
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.red.shade400,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1025,109 +1314,118 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   void _showSuccessDialog(CreditPackage package) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (!kIsWeb && Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => CupertinoAlertDialog(
-          title: Text(l10n.paymentSuccessTitle),
-          content: Column(
-            children: [
-              const SizedBox(height: 10),
-              const Icon(
-                CupertinoIcons.check_mark_circled_solid,
-                color: CupertinoColors.activeGreen,
-                size: 50,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${package.amount.toStringAsFixed(0)} ${Pricing.currency} ${l10n.addedToBalance}',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                context.pop(); // Close payment screen
-              },
-              isDefaultAction: true,
-              child: Text(l10n.startCreatingButton),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                shape: BoxShape.circle,
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success icon with green gradient ring
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2ACE82).withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF2ACE82),
+                  size: 56,
+                ),
               ),
-              child: Icon(
-                Icons.check_circle,
-                color: Colors.green.shade600,
-                size: 64,
+              const SizedBox(height: 20),
+              Text(
+                l10n.paymentSuccessTitle,
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              l10n.paymentSuccessTitle,
-              style: GoogleFonts.outfit(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${package.amount.toStringAsFixed(0)} ${Pricing.currency} ${l10n.addedToBalance}',
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                  context.pop(); // Close payment screen
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 8),
+
+              // Amount badge
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryPurple.withValues(alpha: 0.1),
+                      const Color(0xFF9D6BFF).withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Text(
-                  l10n.startCreatingButton,
+                  '+${package.amount.toStringAsFixed(0)} ${Pricing.currency}',
                   style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryPurple,
                   ),
                 ),
               ),
-            ),
-          ],
+
+              Text(
+                l10n.addedToBalance,
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    context.pop(); // Close payment screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.startCreatingButton,
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

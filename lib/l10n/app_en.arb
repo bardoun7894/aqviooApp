@@ -325,6 +325,18 @@
   "continueToPayment": "Continue to Payment",
   "addedToBalance": "added to your balance",
   "securePaymentTap": "Secure payment powered by Tap",
+  "securePaymentApple": "Secure payment via Apple",
+  "confirmPurchaseTitle": "Confirm Purchase",
+  "confirmPurchaseInfo": "You will be charged via Apple Pay for this purchase.",
+  "packageDetails": "Package Details",
+  "generatesApprox": "Generates approximately {videos} videos or {images} images",
+  "@generatesApprox": {
+    "placeholders": {
+      "videos": { "type": "String" },
+      "images": { "type": "String" }
+    }
+  },
+  "confirmAndPay": "Confirm & Pay",
   "firstPayment": "First payment: {amount} SAR",
   "@firstPayment": {
     "placeholders": {
