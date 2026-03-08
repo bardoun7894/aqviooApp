@@ -16,10 +16,10 @@ class IAPService {
   // Product IDs configuration
   // These must match exactly what is in App Store Connect
   static const Set<String> _kProductIds = {
-    'credits_package_15',
-    'credits_package_30',
-    'credits_package_50',
-    'credits_package_100',
+    'aqvioo_credits_15',
+    'aqvioo_credits_30',
+    'aqvioo_credits_50',
+    'aqvioo_credits_100',
   };
 
   bool _isAvailable = false;

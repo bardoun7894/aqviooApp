@@ -74,10 +74,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   // IAP Product IDs mapping to index
   final Map<int, String> _productIds = {
-    0: 'credits_package_15',
-    1: 'credits_package_30',
-    2: 'credits_package_50',
-    3: 'credits_package_100',
+    0: 'aqvioo_credits_15',
+    1: 'aqvioo_credits_30',
+    2: 'aqvioo_credits_50',
+    3: 'aqvioo_credits_100',
   };
 
   @override
