@@ -2624,6 +2624,24 @@ abstract class AppLocalizations {
   /// **'This action cannot be undone. All your data will be permanently deleted.'**
   String get deleteAccountMessage;
 
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account. Please try again.'**
+  String get deleteAccountFailed;
+
+  /// No description provided for @typeToConfirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Type \"{confirmWord}\" to confirm deletion:'**
+  String typeToConfirmDelete(String confirmWord);
+
+  /// No description provided for @requiresRecentLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log out and log back in, then try deleting your account again.'**
+  String get requiresRecentLogin;
+
   /// No description provided for @paymentMobileOnly.
   ///
   /// In en, this message translates to:
@@ -3229,6 +3247,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Changes'**
   String get saveChanges;
+
+  /// No description provided for @storedForDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos and images are stored for 10 days'**
+  String get storedForDays;
+
+  /// No description provided for @noMatchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get noMatchesFound;
+
+  /// No description provided for @clearAllFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all filters'**
+  String get clearAllFilters;
+
+  /// No description provided for @fileDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'File deleted'**
+  String get fileDeleted;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @internalError.
+  ///
+  /// In en, this message translates to:
+  /// **'internal error, please try again later.'**
+  String get internalError;
+
+  /// No description provided for @tryAdjustingFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Try adjusting your filters or search query to find what you\'re looking for.'**
+  String get tryAdjustingFilters;
+
+  /// No description provided for @byContinuingAgree.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to our'**
+  String get byContinuingAgree;
+
+  /// No description provided for @andText.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get andText;
+
+  /// No description provided for @pleaseEnterEmailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email or phone'**
+  String get pleaseEnterEmailOrPhone;
+
+  /// No description provided for @pleaseEnterValidEmailOrPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email or phone number'**
+  String get pleaseEnterValidEmailOrPhone;
+
+  /// No description provided for @pleaseEnterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password'**
+  String get pleaseEnterPassword;
+
+  /// No description provided for @authenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed'**
+  String get authenticationFailed;
+
+  /// No description provided for @invalidEmailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get invalidEmailAddress;
+
+  /// No description provided for @accountDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account disabled'**
+  String get accountDisabled;
+
+  /// No description provided for @noAccountFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found'**
+  String get noAccountFound;
+
+  /// No description provided for @incorrectPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password'**
+  String get incorrectPassword;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again later'**
+  String get tooManyAttempts;
+
+  /// No description provided for @pleaseEnterName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your name'**
+  String get pleaseEnterName;
+
+  /// No description provided for @pleaseFillAllFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in all fields'**
+  String get pleaseFillAllFields;
+
+  /// No description provided for @pleaseEnterValidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get pleaseEnterValidEmail;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @pleaseEnterValidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid phone number'**
+  String get pleaseEnterValidPhone;
+
+  /// No description provided for @signupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signup failed'**
+  String get signupFailed;
+
+  /// No description provided for @emailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered'**
+  String get emailAlreadyRegistered;
+
+  /// No description provided for @signupMethodNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This signup method is not enabled'**
+  String get signupMethodNotEnabled;
+
+  /// No description provided for @passwordTooWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is too weak'**
+  String get passwordTooWeak;
+
+  /// No description provided for @signupFailedRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Signup failed. Please try again'**
+  String get signupFailedRetry;
+
+  /// No description provided for @searchCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country'**
+  String get searchCountry;
+
+  /// No description provided for @createFirstMagicVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first magic video now!'**
+  String get createFirstMagicVideo;
+
+  /// No description provided for @storeNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Store Not Available'**
+  String get storeNotAvailable;
+
+  /// No description provided for @storeNotAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app purchases are not available on this device. Please check your device settings and try again.'**
+  String get storeNotAvailableMessage;
+
+  /// No description provided for @productsNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Products Not Ready'**
+  String get productsNotReady;
+
+  /// No description provided for @productsNotReadyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Store products are temporarily unavailable. Please try again later or contact support.'**
+  String get productsNotReadyMessage;
+
+  /// No description provided for @productNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Not Available'**
+  String get productNotAvailable;
+
+  /// No description provided for @productNotAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This package is temporarily unavailable. Please try a different package or contact support.'**
+  String get productNotAvailableMessage;
+
+  /// No description provided for @purchaseFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed: {error}'**
+  String purchaseFailedMessage(String error);
+
+  /// No description provided for @paymentSuccessBalanceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment successful but failed to update balance. Please contact support.'**
+  String get paymentSuccessBalanceFailed;
+
+  /// No description provided for @paymentVerificationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment verification failed. Please contact support if amount was deducted.'**
+  String get paymentVerificationFailed;
+
+  /// No description provided for @paymentVerificationTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment verification timed out. Please check your balance or contact support.'**
+  String get paymentVerificationTimeout;
+
+  /// No description provided for @paymentVerificationFailedWithId.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment verification failed. Please contact support with charge ID: {chargeId}'**
+  String paymentVerificationFailedWithId(String chargeId);
+
+  /// No description provided for @notificationPreferencesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification preferences can be managed in your device Settings > Notifications > Aqvioo.'**
+  String get notificationPreferencesMessage;
+
+  /// No description provided for @somethingWentWrongTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again later.'**
+  String get somethingWentWrongTryAgain;
+
+  /// No description provided for @balanceAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance: {amount} SAR'**
+  String balanceAmount(String amount);
+
+  /// No description provided for @aqviooBalanceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Aqvioo AI Video/Image Generation Balance'**
+  String get aqviooBalanceDescription;
 }
 
 class _AppLocalizationsDelegate

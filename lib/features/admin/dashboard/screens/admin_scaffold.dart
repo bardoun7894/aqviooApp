@@ -505,7 +505,11 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
             Icons.notifications_outlined,
             color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
           ),
-          onPressed: () {},
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No new notifications')),
+            );
+          },
         ),
         Padding(
           padding: const EdgeInsets.only(right: 8),
@@ -622,23 +626,11 @@ class _AdminScaffoldState extends ConsumerState<AdminScaffold> {
           const SizedBox(width: 12),
 
           // Notifications
-          IconButton(
-            icon: Icon(
-              Icons.notifications_outlined,
-              color: isDark ? AppColors.mediumGray : AppColors.textSecondary,
-            ),
-            onPressed: () {
-              // TODO: Show notifications
-            },
-          ),
-
           const SizedBox(width: 12),
 
           // Admin Profile
           InkWell(
-            onTap: () {
-              // TODO: Show profile menu
-            },
+            onTap: () {},
             borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.all(4),

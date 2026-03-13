@@ -295,10 +295,13 @@ class CreationController extends Notifier<CreationState> {
       );
 
       // Call unified KieAI service
+      debugPrint(
+          '🚀 Calling generateContent: outputType=${config.outputType}, hasImage=${imageFile != null}, imagePath=${config.imagePath}');
       final result = await _kieAI.generateContent(
         config: config,
         imageFile: imageFile,
       );
+      debugPrint('🚀 generateContent result: $result');
 
       // Create new item - SAVE ORIGINAL PROMPT, not enhanced
       final newItem = CreationItem(
@@ -436,7 +439,7 @@ class CreationController extends Notifier<CreationState> {
         .trim();
   }
 
-  Future<void> _pollTask(CreationItem item) async {
+  Future<void> _pollTask(CreationItem item, {int fallbackDepth = 0}) async {
     if (item.taskId == null) return;
 
     final notificationService = NotificationService();
@@ -467,7 +470,10 @@ class CreationController extends Notifier<CreationState> {
         await Future.delayed(const Duration(seconds: 5));
 
         try {
-          final status = await _kieAI.checkTaskStatus(item.taskId!);
+          final status = await _kieAI.checkTaskStatus(item.taskId!,
+              model: item.generationModel);
+          debugPrint(
+              '🔄 Poll #$i for ${item.taskId} (model: ${item.generationModel}): $status');
 
           // Reset error counters on successful response
           if (status['isNetworkError'] != true) {
@@ -509,6 +515,37 @@ class CreationController extends Notifier<CreationState> {
             return;
           } else if (status['state'] == 'fail') {
             final errorMessage = status['error'] ?? 'Generation failed';
+
+            // Check if this is a retryable server-load error → auto-fallback to alternate model
+            // Only attempt fallback once (fallbackDepth == 0) to prevent infinite loops
+            final errLower = errorMessage.toLowerCase();
+            final isServerLoadError = errLower.contains('heavy load') ||
+                errLower.contains('not responding') ||
+                errLower.contains('overloaded') ||
+                errLower.contains('temporarily unavailable') ||
+                errLower.contains('try again later') ||
+                errLower.contains('service is currently');
+
+            if (isServerLoadError &&
+                fallbackDepth == 0 &&
+                item.generationModel != null) {
+              final fallbackResult = await _tryFallbackModel(item);
+              if (fallbackResult != null) {
+                // Fallback succeeded — new task created, poll with depth=1 (no further fallback)
+                _pollTask(fallbackResult, fallbackDepth: 1);
+
+                // Update wizard to reflect fallback
+                if (!_disposed && state.currentTaskId == item.id) {
+                  _safeSetState(state.copyWith(
+                    currentTaskId: fallbackResult.id,
+                    currentStepMessage: "creatingMasterpiece",
+                  ));
+                }
+                return;
+              }
+              // Fallback failed too — continue to mark as failed below
+            }
+
             final updatedItem = item.copyWith(
               status: CreationStatus.failed,
               errorMessage: errorMessage,
@@ -630,6 +667,96 @@ class CreationController extends Notifier<CreationState> {
       } catch (e) {
         debugPrint('Failed to disable wake lock: $e');
       }
+    }
+  }
+
+  /// Try generating with the alternate model when the primary fails during polling.
+  /// Sora → Veo 3.1 Fast, Veo → Sora (text-to-video only).
+  /// Returns a new CreationItem if fallback succeeded, null if it failed.
+  Future<CreationItem?> _tryFallbackModel(CreationItem item) async {
+    final currentModel = item.generationModel ?? '';
+    final isSora = currentModel.contains('sora');
+    final isVeo = currentModel.contains('veo');
+
+    if (!isSora && !isVeo) return null;
+
+    // Cannot fallback image-to-video Veo tasks to Sora (Sora is text-only)
+    if (isVeo && item.outputType == 'image_to_video') {
+      debugPrint('❌ Cannot fallback image-to-video task to Sora');
+      return null;
+    }
+
+    final targetModel = isSora ? 'veo3_fast' : KieAIService.MODEL_SORA2;
+    debugPrint(
+        '🔄 Auto-fallback: $currentModel failed, trying $targetModel...');
+
+    try {
+      Map<String, String> result;
+      if (isSora) {
+        // Sora failed → try Veo 3.1 Fast
+        final veoAspect =
+            (item.aspectRatio == 'portrait' || item.aspectRatio == '9:16')
+                ? '9:16'
+                : '16:9';
+        final taskId = await _kieAI.generateVideoWithVeo3(
+          prompt: item.prompt,
+          model: 'veo3_fast',
+          aspectRatio: veoAspect,
+        );
+        result = {'taskId': taskId, 'usedModel': 'veo3_fast'};
+      } else {
+        // Veo failed → try Sora 2 (text-to-video only)
+        final soraAspect =
+            (item.aspectRatio == '9:16' || item.aspectRatio == 'portrait')
+                ? 'portrait'
+                : 'landscape';
+        final taskId = await _kieAI.generateVideoWithSora2(
+          prompt: item.prompt,
+          aspectRatio: soraAspect,
+          nFrames: '10',
+          removeWatermark: true,
+        );
+        result = {'taskId': taskId, 'usedModel': KieAIService.MODEL_SORA2};
+      }
+
+      // Remove old failed item from list (replaced by new one)
+      await _repository.deleteCreation(item.id);
+
+      // Create new item for the fallback task
+      final newItem = CreationItem(
+        id: _uuid.v4(),
+        taskId: result['taskId'],
+        prompt: item.prompt,
+        type: item.type,
+        status: CreationStatus.processing,
+        createdAt: DateTime.now(),
+        duration: item.duration,
+        style: item.style,
+        aspectRatio: item.aspectRatio,
+        outputType: item.outputType,
+        generationModel: result['usedModel'],
+      );
+
+      await _repository.saveCreation(newItem);
+
+      // Update local list: replace old item with new one
+      if (!_disposed) {
+        final currentList = List<CreationItem>.from(state.creations);
+        final idx = currentList.indexWhere((i) => i.id == item.id);
+        if (idx != -1) {
+          currentList[idx] = newItem;
+        } else {
+          currentList.insert(0, newItem);
+        }
+        _safeSetState(state.copyWith(creations: currentList));
+      }
+
+      debugPrint(
+          '✅ Fallback task created: ${result['taskId']} (${result['usedModel']})');
+      return newItem;
+    } catch (e) {
+      debugPrint('❌ Fallback model also failed: $e');
+      return null;
     }
   }
 

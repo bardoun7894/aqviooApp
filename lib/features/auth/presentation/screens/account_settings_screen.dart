@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -262,26 +261,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
                             // Danger Zone
                             _buildDangerZone(context, ref),
-
-                            if (kDebugMode) ...[
-                              const SizedBox(height: 24),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: _buildSettingsTile(
-                                  icon: Icons.bug_report_rounded,
-                                  title: 'Simulate Crash (Debug)',
-                                  subtitle: 'Throw test exception',
-                                  iconColor: Colors.purple,
-                                  onTap: () {
-                                    throw Exception(
-                                        'Manual Test Crash from AccountSettings');
-                                  },
-                                ),
-                              ),
-                            ],
 
                             const SizedBox(height: 100),
                           ],
@@ -599,7 +578,23 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             title: l10n.notifications,
             subtitle: 'Enabled',
             iconColor: const Color(0xFFF59E0B),
-            onTap: () {},
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: Text(l10n.notifications),
+                  content: Text(l10n.notificationPreferencesMessage),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.ok),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           _buildDivider(),
           _buildSettingsTile(
@@ -817,49 +812,281 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             onTap: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  title: Text(
-                    l10n.deleteAccountTitle,
-                    style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.w700, color: Colors.red),
-                  ),
-                  content: Text(
-                    l10n.deleteAccountMessage,
-                    style: GoogleFonts.outfit(),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        l10n.cancel,
-                        style: GoogleFonts.outfit(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                builder: (context) {
+                  final confirmController = TextEditingController();
+                  final isArabic =
+                      Localizations.localeOf(context).languageCode == 'ar';
+                  final confirmWord = isArabic ? 'حذف' : 'DELETE';
+                  bool canDelete = false;
+
+                  return StatefulBuilder(
+                    builder: (context, setDialogState) {
+                      return AlertDialog(
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text(
-                        l10n.delete,
-                        style: GoogleFonts.outfit(
-                            color: Colors.white, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
+                            borderRadius: BorderRadius.circular(20)),
+                        title: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded,
+                                color: Colors.red, size: 28),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.deleteAccountTitle,
+                                style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.deleteAccountMessage,
+                              style: GoogleFonts.outfit(),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              l10n.typeToConfirmDelete(confirmWord),
+                              style: GoogleFonts.outfit(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: confirmController,
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  canDelete = value.trim() == confirmWord;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                hintText: confirmWord,
+                                hintStyle: GoogleFonts.outfit(
+                                  color: AppColors.textHint,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: Colors.red.withOpacity(0.3)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: Colors.red, width: 2),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                              ),
+                              style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(
+                              l10n.cancel,
+                              style: GoogleFonts.outfit(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: canDelete
+                                ? () async {
+                                    Navigator.pop(context);
+                                    await _deleteAccount();
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              disabledBackgroundColor:
+                                  Colors.red.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(
+                              l10n.delete,
+                              style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               );
             },
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.deleteAccountTitle,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final uid = user.uid;
+      final firestore = FirebaseFirestore.instance;
+
+      // 1. Delete user's creations subcollection
+      final creations = await firestore
+          .collection('users')
+          .doc(uid)
+          .collection('creations')
+          .get();
+      for (final doc in creations.docs) {
+        await doc.reference.delete();
+      }
+
+      // 2. Delete user's data subcollection (credits, etc.)
+      final dataCollection =
+          await firestore.collection('users').doc(uid).collection('data').get();
+      for (final doc in dataCollection.docs) {
+        await doc.reference.delete();
+      }
+
+      // 3. Delete user document itself
+      await firestore.collection('users').doc(uid).delete();
+
+      // 4. Delete Firebase Auth account
+      await user.delete();
+
+      // 5. Sign out and navigate to login
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss loading
+        await ref.read(authControllerProvider.notifier).signOut();
+        if (mounted) {
+          context.go('/login');
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss loading
+        if (e.code == 'requires-recent-login') {
+          // User needs to re-authenticate before deleting
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded,
+                      color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.requiresRecentLogin,
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(12),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline,
+                      color: Colors.white, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.deleteAccountFailed,
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFFDC2626),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(12),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Delete account error: $e');
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.deleteAccountFailed,
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(12),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildDivider() {

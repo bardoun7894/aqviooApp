@@ -530,6 +530,16 @@
   "logoutConfirmationMessage": "Are you sure you want to logout?",
   "deleteAccountTitle": "Delete Account",
   "deleteAccountMessage": "This action cannot be undone. All your data will be permanently deleted.",
+  "deleteAccountFailed": "Failed to delete account. Please try again.",
+  "typeToConfirmDelete": "Type \"{confirmWord}\" to confirm deletion:",
+  "@typeToConfirmDelete": {
+    "placeholders": {
+      "confirmWord": {
+        "type": "String"
+      }
+    }
+  },
+  "requiresRecentLogin": "Please log out and log back in, then try deleting your account again.",
   "paymentMobileOnly": "Payments are only available on the mobile app",
   "imagePreview": "Image Preview",
   "videoPreviewTitle": "Video Preview",
@@ -635,5 +645,76 @@
   "notificationGenerationFailedTitle": "Generation Failed",
   "notificationTimeoutTitle": "Generation Timed Out",
   "notificationTimeoutBody": "Please try again later.",
-  "saveChanges": "Save Changes"
+  "saveChanges": "Save Changes",
+  "storedForDays": "Videos and images are stored for 10 days",
+  "noMatchesFound": "No matches found",
+  "clearAllFilters": "Clear all filters",
+  "fileDeleted": "File deleted",
+  "pending": "Pending",
+  "internalError": "internal error, please try again later.",
+  "tryAdjustingFilters": "Try adjusting your filters or search query to find what you're looking for.",
+
+  "byContinuingAgree": "By continuing, you agree to our",
+  "andText": "and",
+  "pleaseEnterEmailOrPhone": "Please enter your email or phone",
+  "pleaseEnterValidEmailOrPhone": "Please enter a valid email or phone number",
+  "pleaseEnterPassword": "Please enter your password",
+  "authenticationFailed": "Authentication failed",
+  "invalidEmailAddress": "Invalid email address",
+  "accountDisabled": "Account disabled",
+  "noAccountFound": "No account found",
+  "incorrectPassword": "Incorrect password",
+  "tooManyAttempts": "Too many attempts. Try again later",
+
+  "pleaseEnterName": "Please enter your name",
+  "pleaseFillAllFields": "Please fill in all fields",
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "passwordMinLength": "Password must be at least 6 characters",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "pleaseEnterValidPhone": "Please enter a valid phone number",
+  "signupFailed": "Signup failed",
+  "emailAlreadyRegistered": "This email is already registered",
+  "signupMethodNotEnabled": "This signup method is not enabled",
+  "passwordTooWeak": "Password is too weak",
+  "signupFailedRetry": "Signup failed. Please try again",
+  "searchCountry": "Search country",
+
+  "createFirstMagicVideo": "Create your first magic video now!",
+
+  "storeNotAvailable": "Store Not Available",
+  "storeNotAvailableMessage": "In-app purchases are not available on this device. Please check your device settings and try again.",
+  "productsNotReady": "Products Not Ready",
+  "productsNotReadyMessage": "Store products are temporarily unavailable. Please try again later or contact support.",
+  "productNotAvailable": "Product Not Available",
+  "productNotAvailableMessage": "This package is temporarily unavailable. Please try a different package or contact support.",
+  "purchaseFailedMessage": "Purchase failed: {error}",
+  "@purchaseFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentSuccessBalanceFailed": "Payment successful but failed to update balance. Please contact support.",
+  "paymentVerificationFailed": "Payment verification failed. Please contact support if amount was deducted.",
+  "paymentVerificationTimeout": "Payment verification timed out. Please check your balance or contact support.",
+  "paymentVerificationFailedWithId": "Payment verification failed. Please contact support with charge ID: {chargeId}",
+  "@paymentVerificationFailedWithId": {
+    "placeholders": {
+      "chargeId": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPreferencesMessage": "Notification preferences can be managed in your device Settings > Notifications > Aqvioo.",
+  "somethingWentWrongTryAgain": "Something went wrong. Please try again later.",
+  "balanceAmount": "Balance: {amount} SAR",
+  "@balanceAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aqviooBalanceDescription": "Aqvioo AI Video/Image Generation Balance"
 }

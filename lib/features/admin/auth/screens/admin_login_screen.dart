@@ -310,28 +310,6 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen>
           ),
 
           const SizedBox(height: 16),
-
-          // Forgot Password
-          Center(
-            child: TextButton(
-              onPressed: () {
-                _showSnackBar('Password reset feature coming soon!');
-              },
-              style: TextButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                minimumSize: Size.zero,
-              ),
-              child: Text(
-                'Forgot Password?',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.primaryPurple,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -95,7 +95,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     final name = _nameController.text.trim();
 
     if (name.isEmpty) {
-      _showSnackBar('Please enter your name', isError: true);
+      _showSnackBar(AppLocalizations.of(context)!.pleaseEnterName,
+          isError: true);
       return;
     }
 
@@ -112,23 +113,25 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
+    final l10n = AppLocalizations.of(context)!;
+
     if (email.isEmpty || password.isEmpty) {
-      _showSnackBar('Please fill in all fields', isError: true);
+      _showSnackBar(l10n.pleaseFillAllFields, isError: true);
       return;
     }
 
     if (!_isValidEmail(email)) {
-      _showSnackBar('Please enter a valid email', isError: true);
+      _showSnackBar(l10n.pleaseEnterValidEmail, isError: true);
       return;
     }
 
     if (password.length < 6) {
-      _showSnackBar('Password must be at least 6 characters', isError: true);
+      _showSnackBar(l10n.passwordMinLength, isError: true);
       return;
     }
 
     if (password != confirmPassword) {
-      _showSnackBar('Passwords do not match', isError: true);
+      _showSnackBar(l10n.passwordsDoNotMatch, isError: true);
       return;
     }
 
@@ -146,23 +149,25 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
+    final l10n = AppLocalizations.of(context)!;
+
     if (name.isEmpty) {
-      _showSnackBar('Please enter your name', isError: true);
+      _showSnackBar(l10n.pleaseEnterName, isError: true);
       return;
     }
 
     if (!_isValidPhone(phone)) {
-      _showSnackBar('Please enter a valid phone number', isError: true);
+      _showSnackBar(l10n.pleaseEnterValidPhone, isError: true);
       return;
     }
 
     if (password.length < 6) {
-      _showSnackBar('Password must be at least 6 characters', isError: true);
+      _showSnackBar(l10n.passwordMinLength, isError: true);
       return;
     }
 
     if (password != confirmPassword) {
-      _showSnackBar('Passwords do not match', isError: true);
+      _showSnackBar(l10n.passwordsDoNotMatch, isError: true);
       return;
     }
 
@@ -237,13 +242,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
 
     ref.listen(authControllerProvider, (previous, next) {
       if (next.hasError) {
-        String errorMessage = 'Signup failed';
+        String errorMessage = l10n.signupFailed;
         if (next.error is FirebaseAuthException) {
           final e = next.error as FirebaseAuthException;
           if (e.code == 'guest-limit-exceeded') {
             errorMessage = l10n.guestLimitExceeded;
           } else {
-            errorMessage = _getErrorMessage(e.code);
+            errorMessage = _getErrorMessage(context, e.code);
           }
         }
         _showSnackBar(errorMessage, isError: true);
@@ -295,20 +300,21 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
     );
   }
 
-  String _getErrorMessage(String code) {
+  String _getErrorMessage(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context)!;
     switch (code) {
       case 'email-already-in-use':
-        return 'This email is already registered';
+        return l10n.emailAlreadyRegistered;
       case 'invalid-email':
-        return 'Invalid email address';
+        return l10n.invalidEmailAddress;
       case 'operation-not-allowed':
-        return 'This signup method is not enabled';
+        return l10n.signupMethodNotEnabled;
       case 'weak-password':
-        return 'Password is too weak';
+        return l10n.passwordTooWeak;
       case 'too-many-requests':
-        return 'Too many attempts. Try again later';
+        return l10n.tooManyAttempts;
       default:
-        return 'Signup failed. Please try again';
+        return l10n.signupFailedRetry;
     }
   }
 
@@ -452,7 +458,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
                     color: AppColors.textPrimary,
                   ),
                   searchDecoration: InputDecoration(
-                    hintText: 'Search country',
+                    hintText: AppLocalizations.of(context)!.searchCountry,
                     hintStyle: GoogleFonts.outfit(color: AppColors.textHint),
                     prefixIcon: const Icon(Icons.search),
                   ),
@@ -852,14 +858,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
       spacing: 4,
       children: [
         Text(
-          'By continuing, you agree to our',
+          l10n.byContinuingAgree,
           style: GoogleFonts.outfit(
             fontSize: 11,
             color: isDark ? AppColors.mediumGray : AppColors.textHint,
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () => context.push('/privacy-policy'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             minimumSize: Size.zero,
@@ -875,14 +881,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen>
           ),
         ),
         Text(
-          'and',
+          l10n.andText,
           style: GoogleFonts.outfit(
             fontSize: 11,
             color: isDark ? AppColors.mediumGray : AppColors.textHint,
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () => context.push('/privacy-policy'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
             minimumSize: Size.zero,

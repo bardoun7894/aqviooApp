@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "beldify-b445b"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

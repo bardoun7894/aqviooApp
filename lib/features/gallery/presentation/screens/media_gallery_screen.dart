@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../generated/app_localizations.dart';
 
 /// Custom gallery screen with Aqvioo design system
 /// Displays saved images and videos with glassmorphic UI
@@ -137,8 +138,8 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
                 child: _isLoading
                     ? _buildLoadingState()
                     : _filteredFiles.isEmpty
-                    ? _buildEmptyState()
-                    : _buildMediaGrid(),
+                        ? _buildEmptyState()
+                        : _buildMediaGrid(),
               ),
             ],
           ),
@@ -161,9 +162,9 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
             child: Text(
               'Media Gallery',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: const Color(0xFF1F2937),
-                fontWeight: FontWeight.bold,
-              ),
+                    color: const Color(0xFF1F2937),
+                    fontWeight: FontWeight.bold,
+                  ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -231,9 +232,9 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isSelected ? Colors.white : const Color(0xFF52525B),
-                fontWeight: FontWeight.w600,
-              ),
+                    color: isSelected ? Colors.white : const Color(0xFF52525B),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
@@ -383,9 +384,9 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
                         ? '${fileName.substring(0, 17)}...'
                         : fileName,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF1F2937),
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: const Color(0xFF1F2937),
+                          fontWeight: FontWeight.w600,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -401,9 +402,9 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
                       Text(
                         '$fileSize MB',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontSize: 11,
-                        ),
+                              color: const Color(0xFF6B7280),
+                              fontSize: 11,
+                            ),
                       ),
                     ],
                   ),
@@ -456,9 +457,9 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
           Text(
             'No media yet',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xFF1F2937),
-              fontWeight: FontWeight.bold,
-            ),
+                  color: const Color(0xFF1F2937),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -471,7 +472,7 @@ class _MediaGalleryScreenState extends ConsumerState<MediaGalleryScreen>
           ElevatedButton.icon(
             onPressed: () => context.go('/home'),
             icon: const Icon(Icons.add_circle_outline),
-            label: const Text('Create Now'),
+            label: Text(AppLocalizations.of(context)!.createNow),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryPurple,
               foregroundColor: Colors.white,

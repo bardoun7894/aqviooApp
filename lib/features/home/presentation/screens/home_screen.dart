@@ -23,8 +23,8 @@ import '../../../creation/domain/models/creation_item.dart';
 import '../../../creation/domain/models/creation_config.dart';
 import '../../../../core/services/openai_service.dart';
 import '../../../../core/providers/credits_provider.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/widgets/riyal_symbol.dart';
-import '../../../../core/utils/currency_utils.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -45,8 +45,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int? _selectedSuggestionIndex; // Track selected quick suggestion
 
   String _sanitizeErrorMessage(String? raw) {
+    final fallback = AppLocalizations.of(context)!.somethingWentWrongTryAgain;
     if (raw == null || raw.trim().isEmpty) {
-      return 'Something went wrong. Please try again later.';
+      return fallback;
     }
     final cleaned = raw
         .replaceFirst(
@@ -55,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (cleaned.isEmpty ||
         cleaned.contains('HTTP') ||
         cleaned.contains('Trace')) {
-      return 'Something went wrong. Please try again later.';
+      return fallback;
     }
     return cleaned;
   }
@@ -66,6 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Initialize speech recognition
     _initSpeech();
+
+    // Request notification permissions lazily (after login)
+    NotificationService().requestPermissions();
 
     // Initialize prompt from config if exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,19 +113,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _pickImage() async {
-    // SAFEGUARD: Prevent image picking for Video type (Image-to-Video not supported yet)
-    final outputType = ref.read(creationControllerProvider).config.outputType;
-    if (outputType == OutputType.video) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              "Image-to-Video is coming soon! Please use text prompt only."),
-          backgroundColor: AppColors.primaryPurple,
-        ),
-      );
-      return;
-    }
-
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
@@ -135,7 +126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _enhancePrompt() async {
     final currentText = _promptController.text.trim();
-    if (currentText.isEmpty) return;
+    if (currentText.isEmpty && _selectedImage == null) return;
     if (_isEnhancing) return;
 
     setState(() => _isEnhancing = true);
@@ -147,6 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final enhancedText = await openAIService.enhancePrompt(
         currentText,
         languageCode: languageCode,
+        imageFile: _selectedImage,
       );
       if (!mounted) return;
 
@@ -268,6 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     // Request microphone permission
     final permission = await Permission.microphone.request();
+    if (!mounted) return;
     if (!permission.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1395,7 +1388,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No creations yet',
+                AppLocalizations.of(context)!.noCreationsYet,
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -1404,7 +1397,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Create your first magic video now!',
+                AppLocalizations.of(context)!.createFirstMagicVideo,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: AppColors.textSecondary,

@@ -1324,6 +1324,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'This action cannot be undone. All your data will be permanently deleted.';
 
   @override
+  String get deleteAccountFailed =>
+      'Failed to delete account. Please try again.';
+
+  @override
+  String typeToConfirmDelete(String confirmWord) {
+    return 'Type \"$confirmWord\" to confirm deletion:';
+  }
+
+  @override
+  String get requiresRecentLogin =>
+      'Please log out and log back in, then try deleting your account again.';
+
+  @override
   String get paymentMobileOnly =>
       'Payments are only available on the mobile app';
 
@@ -1660,4 +1673,159 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveChanges => 'Save Changes';
+
+  @override
+  String get storedForDays => 'Videos and images are stored for 10 days';
+
+  @override
+  String get noMatchesFound => 'No matches found';
+
+  @override
+  String get clearAllFilters => 'Clear all filters';
+
+  @override
+  String get fileDeleted => 'File deleted';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get internalError => 'internal error, please try again later.';
+
+  @override
+  String get tryAdjustingFilters =>
+      'Try adjusting your filters or search query to find what you\'re looking for.';
+
+  @override
+  String get byContinuingAgree => 'By continuing, you agree to our';
+
+  @override
+  String get andText => 'and';
+
+  @override
+  String get pleaseEnterEmailOrPhone => 'Please enter your email or phone';
+
+  @override
+  String get pleaseEnterValidEmailOrPhone =>
+      'Please enter a valid email or phone number';
+
+  @override
+  String get pleaseEnterPassword => 'Please enter your password';
+
+  @override
+  String get authenticationFailed => 'Authentication failed';
+
+  @override
+  String get invalidEmailAddress => 'Invalid email address';
+
+  @override
+  String get accountDisabled => 'Account disabled';
+
+  @override
+  String get noAccountFound => 'No account found';
+
+  @override
+  String get incorrectPassword => 'Incorrect password';
+
+  @override
+  String get tooManyAttempts => 'Too many attempts. Try again later';
+
+  @override
+  String get pleaseEnterName => 'Please enter your name';
+
+  @override
+  String get pleaseFillAllFields => 'Please fill in all fields';
+
+  @override
+  String get pleaseEnterValidEmail => 'Please enter a valid email';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get pleaseEnterValidPhone => 'Please enter a valid phone number';
+
+  @override
+  String get signupFailed => 'Signup failed';
+
+  @override
+  String get emailAlreadyRegistered => 'This email is already registered';
+
+  @override
+  String get signupMethodNotEnabled => 'This signup method is not enabled';
+
+  @override
+  String get passwordTooWeak => 'Password is too weak';
+
+  @override
+  String get signupFailedRetry => 'Signup failed. Please try again';
+
+  @override
+  String get searchCountry => 'Search country';
+
+  @override
+  String get createFirstMagicVideo => 'Create your first magic video now!';
+
+  @override
+  String get storeNotAvailable => 'Store Not Available';
+
+  @override
+  String get storeNotAvailableMessage =>
+      'In-app purchases are not available on this device. Please check your device settings and try again.';
+
+  @override
+  String get productsNotReady => 'Products Not Ready';
+
+  @override
+  String get productsNotReadyMessage =>
+      'Store products are temporarily unavailable. Please try again later or contact support.';
+
+  @override
+  String get productNotAvailable => 'Product Not Available';
+
+  @override
+  String get productNotAvailableMessage =>
+      'This package is temporarily unavailable. Please try a different package or contact support.';
+
+  @override
+  String purchaseFailedMessage(String error) {
+    return 'Purchase failed: $error';
+  }
+
+  @override
+  String get paymentSuccessBalanceFailed =>
+      'Payment successful but failed to update balance. Please contact support.';
+
+  @override
+  String get paymentVerificationFailed =>
+      'Payment verification failed. Please contact support if amount was deducted.';
+
+  @override
+  String get paymentVerificationTimeout =>
+      'Payment verification timed out. Please check your balance or contact support.';
+
+  @override
+  String paymentVerificationFailedWithId(String chargeId) {
+    return 'Payment verification failed. Please contact support with charge ID: $chargeId';
+  }
+
+  @override
+  String get notificationPreferencesMessage =>
+      'Notification preferences can be managed in your device Settings > Notifications > Aqvioo.';
+
+  @override
+  String get somethingWentWrongTryAgain =>
+      'Something went wrong. Please try again later.';
+
+  @override
+  String balanceAmount(String amount) {
+    return 'Balance: $amount SAR';
+  }
+
+  @override
+  String get aqviooBalanceDescription =>
+      'Aqvioo AI Video/Image Generation Balance';
 }

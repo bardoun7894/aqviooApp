@@ -118,10 +118,10 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
 
       _creations = creationsList.take(10).toList();
 
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     } catch (e) {
       debugPrint('Error loading user data: $e');
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

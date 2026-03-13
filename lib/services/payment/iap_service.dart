@@ -107,33 +107,43 @@ class IAPService {
   }
 
   Future<void> _processPurchaseUpdate(PurchaseDetails purchaseDetails) async {
-    if (purchaseDetails.status == PurchaseStatus.pending) {
-      // Show pending UI if needed
-      onPurchaseUpdated?.call(purchaseDetails);
-    } else {
-      if (purchaseDetails.status == PurchaseStatus.error) {
-        debugPrint('Purchase error: ${purchaseDetails.error}');
-        onPurchaseUpdated?.call(purchaseDetails);
-      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-          purchaseDetails.status == PurchaseStatus.restored) {
-        // IMPORTANT: Notify the callback FIRST so credits are added,
-        // THEN complete the purchase. This prevents losing purchases
-        // if the app crashes between completePurchase and credit addition.
-        try {
-          onPurchaseUpdated?.call(purchaseDetails);
-        } catch (e) {
-          debugPrint('Error in purchase callback: $e');
-        }
+    debugPrint(
+        '📦 IAP: Purchase update - status=${purchaseDetails.status}, product=${purchaseDetails.productID}');
 
-        // Complete the purchase AFTER credits have been added
-        if (purchaseDetails.pendingCompletePurchase) {
-          try {
-            await _iap.completePurchase(purchaseDetails);
-          } catch (e) {
-            debugPrint('Error completing purchase: $e');
-            // Even if completePurchase fails, credits were already added.
-            // The purchase will be retried by StoreKit on next app launch.
-          }
+    if (purchaseDetails.status == PurchaseStatus.pending) {
+      onPurchaseUpdated?.call(purchaseDetails);
+    } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+      debugPrint('📦 IAP: Purchase canceled by user');
+      onPurchaseUpdated?.call(purchaseDetails);
+    } else if (purchaseDetails.status == PurchaseStatus.error) {
+      debugPrint(
+          '📦 IAP: Purchase error: ${purchaseDetails.error?.message} (code: ${purchaseDetails.error?.code})');
+      onPurchaseUpdated?.call(purchaseDetails);
+      // Complete errored purchases to clear them from the queue
+      if (purchaseDetails.pendingCompletePurchase) {
+        try {
+          await _iap.completePurchase(purchaseDetails);
+        } catch (e) {
+          debugPrint('📦 IAP: Error completing errored purchase: $e');
+        }
+      }
+    } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+        purchaseDetails.status == PurchaseStatus.restored) {
+      debugPrint('📦 IAP: Purchase successful - delivering credits');
+      // Notify the callback FIRST so credits are added,
+      // THEN complete the purchase.
+      try {
+        onPurchaseUpdated?.call(purchaseDetails);
+      } catch (e) {
+        debugPrint('📦 IAP: Error in purchase callback: $e');
+      }
+
+      if (purchaseDetails.pendingCompletePurchase) {
+        try {
+          await _iap.completePurchase(purchaseDetails);
+          debugPrint('📦 IAP: Purchase completed successfully');
+        } catch (e) {
+          debugPrint('📦 IAP: Error completing purchase: $e');
         }
       }
     }

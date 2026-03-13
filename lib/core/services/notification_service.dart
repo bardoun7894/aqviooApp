@@ -63,11 +63,11 @@ class NotificationService {
       // Android settings
       const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      // iOS settings
+      // iOS settings - permissions requested lazily via requestPermissions()
       const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
       );
 
       const initSettings = InitializationSettings(

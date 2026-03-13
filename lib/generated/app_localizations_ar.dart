@@ -556,7 +556,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'يرجى تسجيل الدخول لإنشاء الفيديو الخاص بك.';
 
   @override
-  String get generateMagic => 'إنشاء السحر';
+  String get generateMagic => 'أبدع';
 
   @override
   String get dialectSaudi => 'السعودية';
@@ -736,7 +736,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get viewAll => 'عرض الكل';
 
   @override
-  String get createMagic => 'إنشاء السحر';
+  String get createMagic => 'أبدع';
 
   @override
   String get productAd => 'إعلان منتج';
@@ -1318,6 +1318,18 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك بشكل دائم.';
 
   @override
+  String get deleteAccountFailed => 'فشل حذف الحساب. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String typeToConfirmDelete(String confirmWord) {
+    return 'اكتب \"$confirmWord\" لتأكيد الحذف:';
+  }
+
+  @override
+  String get requiresRecentLogin =>
+      'يرجى تسجيل الخروج ثم تسجيل الدخول مرة أخرى، ثم حاول حذف حسابك مجدداً.';
+
+  @override
   String get paymentMobileOnly => 'المدفوعات متاحة فقط على تطبيق الجوال';
 
   @override
@@ -1644,4 +1656,160 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get saveChanges => 'حفظ التغييرات';
+
+  @override
+  String get storedForDays => 'يتم تخزين الفيديوهات والصور لمدة 10 أيام';
+
+  @override
+  String get noMatchesFound => 'لا توجد نتائج';
+
+  @override
+  String get clearAllFilters => 'مسح جميع الفلاتر';
+
+  @override
+  String get fileDeleted => 'تم حذف الملف';
+
+  @override
+  String get pending => 'قيد الانتظار';
+
+  @override
+  String get internalError => 'خطأ داخلي، يرجى المحاولة لاحقاً.';
+
+  @override
+  String get tryAdjustingFilters =>
+      'حاول تعديل الفلاتر أو البحث للعثور على ما تبحث عنه.';
+
+  @override
+  String get byContinuingAgree => 'بالمتابعة، أنت توافق على';
+
+  @override
+  String get andText => 'و';
+
+  @override
+  String get pleaseEnterEmailOrPhone =>
+      'يرجى إدخال بريدك الإلكتروني أو رقم هاتفك';
+
+  @override
+  String get pleaseEnterValidEmailOrPhone =>
+      'يرجى إدخال بريد إلكتروني أو رقم هاتف صحيح';
+
+  @override
+  String get pleaseEnterPassword => 'يرجى إدخال كلمة المرور';
+
+  @override
+  String get authenticationFailed => 'فشل تسجيل الدخول';
+
+  @override
+  String get invalidEmailAddress => 'عنوان بريد إلكتروني غير صالح';
+
+  @override
+  String get accountDisabled => 'الحساب معطل';
+
+  @override
+  String get noAccountFound => 'لم يتم العثور على حساب';
+
+  @override
+  String get incorrectPassword => 'كلمة المرور غير صحيحة';
+
+  @override
+  String get tooManyAttempts => 'محاولات كثيرة جداً. حاول مرة أخرى لاحقاً';
+
+  @override
+  String get pleaseEnterName => 'يرجى إدخال اسمك';
+
+  @override
+  String get pleaseFillAllFields => 'يرجى ملء جميع الحقول';
+
+  @override
+  String get pleaseEnterValidEmail => 'يرجى إدخال بريد إلكتروني صحيح';
+
+  @override
+  String get passwordMinLength => 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+
+  @override
+  String get passwordsDoNotMatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get pleaseEnterValidPhone => 'يرجى إدخال رقم هاتف صحيح';
+
+  @override
+  String get signupFailed => 'فشل التسجيل';
+
+  @override
+  String get emailAlreadyRegistered => 'هذا البريد الإلكتروني مسجل بالفعل';
+
+  @override
+  String get signupMethodNotEnabled => 'طريقة التسجيل هذه غير مفعلة';
+
+  @override
+  String get passwordTooWeak => 'كلمة المرور ضعيفة جداً';
+
+  @override
+  String get signupFailedRetry => 'فشل التسجيل. يرجى المحاولة مرة أخرى';
+
+  @override
+  String get searchCountry => 'البحث عن دولة';
+
+  @override
+  String get createFirstMagicVideo => 'أنشئ أول فيديو سحري الآن!';
+
+  @override
+  String get storeNotAvailable => 'المتجر غير متاح';
+
+  @override
+  String get storeNotAvailableMessage =>
+      'عمليات الشراء داخل التطبيق غير متاحة على هذا الجهاز. يرجى التحقق من إعدادات الجهاز والمحاولة مرة أخرى.';
+
+  @override
+  String get productsNotReady => 'المنتجات غير جاهزة';
+
+  @override
+  String get productsNotReadyMessage =>
+      'منتجات المتجر غير متاحة مؤقتاً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.';
+
+  @override
+  String get productNotAvailable => 'المنتج غير متاح';
+
+  @override
+  String get productNotAvailableMessage =>
+      'هذه الباقة غير متاحة مؤقتاً. يرجى تجربة باقة أخرى أو التواصل مع الدعم.';
+
+  @override
+  String purchaseFailedMessage(String error) {
+    return 'فشل الشراء: $error';
+  }
+
+  @override
+  String get paymentSuccessBalanceFailed =>
+      'تم الدفع بنجاح لكن فشل تحديث الرصيد. يرجى التواصل مع الدعم.';
+
+  @override
+  String get paymentVerificationFailed =>
+      'فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.';
+
+  @override
+  String get paymentVerificationTimeout =>
+      'انتهت مهلة التحقق من الدفع. يرجى التحقق من رصيدك أو التواصل مع الدعم.';
+
+  @override
+  String paymentVerificationFailedWithId(String chargeId) {
+    return 'فشل التحقق من الدفع. يرجى التواصل مع الدعم مع رقم المعاملة: $chargeId';
+  }
+
+  @override
+  String get notificationPreferencesMessage =>
+      'يمكن إدارة إعدادات الإشعارات من إعدادات جهازك > الإشعارات > Aqvioo.';
+
+  @override
+  String get somethingWentWrongTryAgain =>
+      'حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.';
+
+  @override
+  String balanceAmount(String amount) {
+    return 'الرصيد: $amount ر.س';
+  }
+
+  @override
+  String get aqviooBalanceDescription =>
+      'رصيد Aqvioo لإنشاء الفيديو والصور بالذكاء الاصطناعي';
 }

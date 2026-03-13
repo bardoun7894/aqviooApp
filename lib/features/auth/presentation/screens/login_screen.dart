@@ -81,7 +81,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final identifier = _identifierController.text.trim();
 
     if (identifier.isEmpty) {
-      _showSnackBar('Please enter your email or phone', isError: true);
+      _showSnackBar(AppLocalizations.of(context)!.pleaseEnterEmailOrPhone,
+          isError: true);
       return;
     }
 
@@ -90,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     } else if (_isPhone(identifier)) {
       _signInWithPhone(identifier);
     } else {
-      _showSnackBar('Please enter a valid email or phone number',
+      _showSnackBar(AppLocalizations.of(context)!.pleaseEnterValidEmailOrPhone,
           isError: true);
     }
   }
@@ -99,7 +100,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final password = _passwordController.text.trim();
 
     if (password.isEmpty) {
-      _showSnackBar('Please enter your password', isError: true);
+      _showSnackBar(AppLocalizations.of(context)!.pleaseEnterPassword,
+          isError: true);
       return;
     }
 
@@ -114,7 +116,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final password = _passwordController.text.trim();
 
     if (password.isEmpty) {
-      _showSnackBar('Please enter your password', isError: true);
+      _showSnackBar(AppLocalizations.of(context)!.pleaseEnterPassword,
+          isError: true);
       return;
     }
 
@@ -189,13 +192,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.listen(authControllerProvider, (previous, next) {
       if (next.hasError) {
-        String errorMessage = 'Authentication failed';
+        String errorMessage = l10n.authenticationFailed;
         if (next.error is FirebaseAuthException) {
           final e = next.error as FirebaseAuthException;
           if (e.code == 'guest-limit-exceeded') {
             errorMessage = l10n.guestLimitExceeded;
           } else {
-            errorMessage = _getErrorMessage(e.code);
+            errorMessage = _getErrorMessage(context, e.code);
           }
         }
         _showSnackBar(errorMessage, isError: true);
@@ -246,22 +249,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  String _getErrorMessage(String code) {
+  String _getErrorMessage(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context)!;
     switch (code) {
       case 'invalid-email':
-        return 'Invalid email address';
+        return l10n.invalidEmailAddress;
       case 'user-disabled':
-        return 'Account disabled';
+        return l10n.accountDisabled;
       case 'user-not-found':
-        return 'No account found';
+        return l10n.noAccountFound;
       case 'wrong-password':
-        return 'Incorrect password';
+        return l10n.incorrectPassword;
       case 'too-many-requests':
-        return 'Too many attempts. Try again later';
+        return l10n.tooManyAttempts;
       case 'guest-limit-exceeded':
-        return 'Authentication failed';
+        return l10n.authenticationFailed;
       default:
-        return 'Authentication failed';
+        return l10n.authenticationFailed;
     }
   }
 
@@ -414,31 +418,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           isLoading: isLoading,
           isDark: isDark,
         ),
-
-        // Forgot Password (only for email)
-        if (showPassword) ...[
-          const SizedBox(height: 12),
-          Center(
-            child: TextButton(
-              onPressed: () {
-                _showSnackBar('Forgot password coming soon!');
-              },
-              style: TextButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                minimumSize: Size.zero,
-              ),
-              child: Text(
-                l10n.forgotPassword,
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: AppColors.primaryPurple,
-                ),
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -667,14 +646,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         runSpacing: 4,
         children: [
           Text(
-            'By continuing, you agree to our',
+            l10n.byContinuingAgree,
             style: GoogleFonts.outfit(
               fontSize: 11,
               color: isDark ? AppColors.mediumGray : AppColors.textHint,
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () => context.push('/privacy-policy'),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
               minimumSize: Size.zero,
@@ -690,14 +669,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
           Text(
-            'and',
+            l10n.andText,
             style: GoogleFonts.outfit(
               fontSize: 11,
               color: isDark ? AppColors.mediumGray : AppColors.textHint,
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () => context.push('/privacy-policy'),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
               minimumSize: Size.zero,

@@ -14,6 +14,16 @@ import '../../domain/models/creation_item.dart';
 import '../providers/creation_provider.dart';
 import '../../../../generated/app_localizations.dart';
 
+String _localizeErrorMessage(BuildContext context, String error) {
+  final l = error.toLowerCase();
+  if (l.contains('internal error') ||
+      l.contains('try again later') ||
+      l.contains('something went wrong')) {
+    return AppLocalizations.of(context)!.internalError;
+  }
+  return error;
+}
+
 class MyCreationsScreen extends ConsumerStatefulWidget {
   const MyCreationsScreen({super.key});
 
@@ -310,7 +320,8 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          'Videos and images are stored for 10 days',
+                                          AppLocalizations.of(context)!
+                                              .storedForDays,
                                           style: GoogleFonts.outfit(
                                             fontSize: 12,
                                             color: Colors.orange[800],
@@ -551,7 +562,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
             const SizedBox(height: 32),
             Text(
               hasActiveFilter
-                  ? 'No matches found'
+                  ? AppLocalizations.of(context)!.noMatchesFound
                   : AppLocalizations.of(context)!.noCreationsYet,
               style: GoogleFonts.outfit(
                 fontSize: 24,
@@ -562,7 +573,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
             const SizedBox(height: 12),
             Text(
               hasActiveFilter
-                  ? 'Try adjusting your filters or search query to find what you\'re looking for.'
+                  ? AppLocalizations.of(context)!.tryAdjustingFilters
                   : AppLocalizations.of(context)!.emptyGalleryDescription,
               textAlign: TextAlign.center,
               style: GoogleFonts.outfit(
@@ -618,7 +629,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
                     const SizedBox(width: 10),
                     Text(
                       hasActiveFilter
-                          ? 'Clear all filters'
+                          ? AppLocalizations.of(context)!.clearAllFilters
                           : AppLocalizations.of(context)!.createYourFirst,
                       style: GoogleFonts.outfit(
                         color: Colors.white,
@@ -650,10 +661,10 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
         displayLabel = AppLocalizations.of(context)!.images;
         break;
       case 'Processing':
-        displayLabel = 'Pending';
+        displayLabel = AppLocalizations.of(context)!.pending;
         break;
       case 'Failed':
-        displayLabel = 'Failed';
+        displayLabel = AppLocalizations.of(context)!.failed;
         break;
       default:
         displayLabel = label;
@@ -782,25 +793,25 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
   void _showDeleteDialog(CreationItem item) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
-          AppLocalizations.of(context)!.deleteConfirmation,
+          AppLocalizations.of(dialogContext)!.deleteConfirmation,
           style: GoogleFonts.outfit(
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          AppLocalizations.of(context)!.deleteCreationMsg,
+          AppLocalizations.of(dialogContext)!.deleteCreationMsg,
           style: GoogleFonts.outfit(),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(
-              AppLocalizations.of(context)!.cancel,
+              AppLocalizations.of(dialogContext)!.cancel,
               style: GoogleFonts.outfit(
                 color: AppColors.textSecondary,
               ),
@@ -808,7 +819,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 await ref
                     .read(creationControllerProvider.notifier)
@@ -853,7 +864,7 @@ class _MyCreationsScreenState extends ConsumerState<MyCreationsScreen> {
               ),
             ),
             child: Text(
-              AppLocalizations.of(context)!.delete,
+              AppLocalizations.of(dialogContext)!.delete,
               style: GoogleFonts.outfit(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -1176,7 +1187,8 @@ class _CreationCardState extends State<CreationCard>
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'File deleted',
+                                          AppLocalizations.of(context)!
+                                              .fileDeleted,
                                           style: GoogleFonts.outfit(
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
@@ -1250,7 +1262,7 @@ class _CreationCardState extends State<CreationCard>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      'File deleted',
+                                      AppLocalizations.of(context)!.fileDeleted,
                                       style: GoogleFonts.outfit(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -1458,25 +1470,6 @@ class _CreationCardState extends State<CreationCard>
                                   color: AppColors.textHint,
                                 ),
                               ),
-                              // Delete button
-                              if (widget.onDelete != null) ...[
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: widget.onDelete,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 18,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                           if (isFailed && item.errorMessage != null) ...[
@@ -1500,7 +1493,8 @@ class _CreationCardState extends State<CreationCard>
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      item.errorMessage!,
+                                      _localizeErrorMessage(
+                                          context, item.errorMessage!),
                                       style: GoogleFonts.outfit(
                                         color: Colors.red,
                                         fontSize: 12,
@@ -1813,7 +1807,7 @@ class _GridCreationCardState extends State<GridCreationCard> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'File deleted',
+                                    AppLocalizations.of(context)!.fileDeleted,
                                     style: GoogleFonts.outfit(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
@@ -1883,7 +1877,7 @@ class _GridCreationCardState extends State<GridCreationCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'File deleted',
+                                AppLocalizations.of(context)!.fileDeleted,
                                 style: GoogleFonts.outfit(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
@@ -1971,40 +1965,6 @@ class _GridCreationCardState extends State<GridCreationCard> {
                               Icons.fullscreen_rounded,
                               size: 16,
                               color: Colors.white,
-                            ),
-                          ),
-                        ),
-
-                      // Delete button (tap for delete confirmation)
-                      if (widget.onDelete != null)
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: GestureDetector(
-                            onTap: widget.onDelete,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.85),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.4),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 16,
-                                color: Colors.white,
-                              ),
                             ),
                           ),
                         ),

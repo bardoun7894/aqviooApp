@@ -20,7 +20,11 @@
       "mcp__app-store-connect__get_app_info",
       "mcp__app-store-connect__list_app_store_version_localizations",
       "Bash(head:*)",
-      "Bash(firebase auth:export:*)"
+      "Bash(firebase auth:export:*)",
+      "Bash(__NEW_LINE_86aad23845c967e2__ curl:*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(__NEW_LINE_88fd36fb0602a40a__ curl:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

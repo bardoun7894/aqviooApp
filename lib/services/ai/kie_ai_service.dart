@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/services/remote_config_service.dart';
 import '../../features/creation/domain/models/creation_config.dart';
 
@@ -136,7 +138,7 @@ class KieAIService {
 
   // ==================== VIDEO GENERATION (Sora 2 / Fallback) ====================
 
-  /// Generate video with automatic fallback if primary model is unavailable
+  /// Generate video with automatic fallback: Sora 2 → Veo 3.1 Fast
   /// Returns a Map with 'taskId' and 'usedModel'
   Future<Map<String, String>> generateVideoWithFallback({
     required String prompt,
@@ -144,8 +146,8 @@ class KieAIService {
     required String nFrames,
     bool removeWatermark = true,
   }) async {
+    // Try Sora 2 first
     try {
-      // Try Sora 2 first
       final taskId = await _generateVideoWithModel(
         model: MODEL_SORA2,
         prompt: prompt,
@@ -155,50 +157,77 @@ class KieAIService {
       );
       return {'taskId': taskId, 'usedModel': MODEL_SORA2};
     } catch (e) {
-      // Check for specific error indicating unavailability
-      final errorMsg = e.toString().toLowerCase();
-      if (errorMsg.contains('temporarily unavailable') ||
-          errorMsg.contains('maintenance') ||
-          errorMsg.contains('sora') || // Broad check for Sora issues
-          errorMsg.contains('503') ||
-          errorMsg.contains('404')) {
-        debugPrint(
-            '⚠️ Sora 2 unavailable, switching to fallback model: $MODEL_KLING');
+      // Don't fallback on permanent errors (bad API key, no credits, flagged content)
+      if (e is KieAIException && !e.isRetryable) rethrow;
+      debugPrint('⚠️ Sora 2 failed at creation: $e');
+      debugPrint('🔄 Falling back to Veo 3.1 Fast...');
+    }
 
-        try {
-          // Fallback to Kling
-          final taskId = await _generateVideoWithModel(
-            model: MODEL_KLING,
-            prompt: prompt,
-            aspectRatio: aspectRatio,
-            nFrames: nFrames,
-            removeWatermark: removeWatermark,
-          );
-          return {'taskId': taskId, 'usedModel': MODEL_KLING};
-        } catch (fallbackError) {
-          debugPrint('❌ Fallback to Kling failed: $fallbackError');
-          // If Kling fails, try Hailuo as last resort
-          debugPrint(
-              '⚠️ Kling unavailable, switching to second fallback: $MODEL_HAILUO');
-          try {
-            final taskId = await _generateVideoWithModel(
-              model: MODEL_HAILUO,
-              prompt: prompt,
-              aspectRatio: aspectRatio,
-              nFrames: nFrames,
-              removeWatermark: removeWatermark,
-            );
-            return {'taskId': taskId, 'usedModel': MODEL_HAILUO};
-          } catch (secondFallbackError) {
-            debugPrint(
-                '❌ Second fallback (Hailuo) failed: $secondFallbackError');
-            rethrow; // Throw original error if all fail, or maybe the last one?
-            // Throwing the last error might be more confusing if the user expects Sora.
-            // But usually best to show the last attempt's error.
-          }
-        }
+    // Fallback: Veo 3.1 Fast (text-to-video)
+    try {
+      final veoAspect = aspectRatio == 'portrait' ? '9:16' : '16:9';
+      final taskId = await generateVideoWithVeo3(
+        prompt: prompt,
+        model: 'veo3_fast',
+        aspectRatio: veoAspect,
+      );
+      return {'taskId': taskId, 'usedModel': 'veo3_fast'};
+    } catch (e) {
+      debugPrint('❌ Veo 3.1 Fast also failed: $e');
+      throw KieAIException(
+        'Video generation is temporarily unavailable. Please try again later.',
+        technicalDetails: 'Both Sora 2 and Veo 3.1 Fast failed: $e',
+        isRetryable: true,
+      );
+    }
+  }
+
+  /// Generate video trying Veo 3.1 Fast first, then Sora 2 as fallback
+  /// Used when Veo is the preferred model (e.g. image-to-video fallback for text)
+  Future<Map<String, String>> generateVideoVeoFirstWithFallback({
+    required String prompt,
+    required String aspectRatio,
+    List<String>? imageUrls,
+  }) async {
+    // Try Veo 3.1 Fast first
+    try {
+      final taskId = await generateVideoWithVeo3(
+        prompt: prompt,
+        imageUrls: imageUrls,
+        model: 'veo3_fast',
+        aspectRatio: aspectRatio,
+      );
+      return {'taskId': taskId, 'usedModel': 'veo3_fast'};
+    } catch (e) {
+      // Don't fallback on permanent errors (bad API key, no credits, flagged content)
+      if (e is KieAIException && !e.isRetryable) rethrow;
+      // Only fall back to Sora if there are no images (Sora is text-only)
+      if (imageUrls != null && imageUrls.isNotEmpty) {
+        debugPrint('❌ Cannot fall back to Sora for image-to-video');
+        rethrow;
       }
-      rethrow;
+      debugPrint('⚠️ Veo 3.1 Fast failed at creation: $e');
+      debugPrint('🔄 Falling back to Sora 2...');
+    }
+
+    // Fallback: Sora 2 (text-to-video only)
+    try {
+      final soraAspect = aspectRatio == '9:16' ? 'portrait' : 'landscape';
+      final taskId = await _generateVideoWithModel(
+        model: MODEL_SORA2,
+        prompt: prompt,
+        aspectRatio: soraAspect,
+        nFrames: '10',
+        removeWatermark: true,
+      );
+      return {'taskId': taskId, 'usedModel': MODEL_SORA2};
+    } catch (e) {
+      debugPrint('❌ Sora 2 also failed: $e');
+      throw KieAIException(
+        'Video generation is temporarily unavailable. Please try again later.',
+        technicalDetails: 'Both Veo 3.1 Fast and Sora 2 failed: $e',
+        isRetryable: true,
+      );
     }
   }
 
@@ -332,28 +361,40 @@ class KieAIService {
         requestBody['generationType'] = 'TEXT_2_VIDEO';
       }
 
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/veo/generate'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(requestBody),
-      );
+      final response = await _executeWithRetry(() => http.post(
+            Uri.parse('$_baseUrl/api/v1/veo/generate'),
+            headers: {
+              'Authorization': 'Bearer $_apiKey',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode(requestBody),
+          ));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 200) {
           return data['data']['taskId'];
         } else {
-          throw Exception('Veo3 API error: ${data['msg']}');
+          throw KieAIException(
+            _getUserFriendlyError(data['msg'] ?? 'Unknown error'),
+            technicalDetails: 'Veo3 API: ${data['msg']}',
+            isRetryable: true,
+          );
         }
+      } else if (response.statusCode == 401 || response.statusCode == 402) {
+        throw KieAIException(
+          'Service is temporarily unavailable. Please try again later.',
+          technicalDetails: 'HTTP ${response.statusCode}: ${response.body}',
+        );
       } else {
-        throw Exception(
-            'Veo3 HTTP error: ${response.statusCode} - ${response.body}');
+        throw KieAIException(
+          'Something went wrong. Please try again later.',
+          technicalDetails:
+              'Veo3 HTTP ${response.statusCode}: ${response.body}',
+          isRetryable: response.statusCode >= 500,
+        );
       }
-    } catch (e) {
-      debugPrint('Error generating video with Veo3: $e');
+    } on KieAIException {
       rethrow;
     }
   }
@@ -443,15 +484,17 @@ class KieAIService {
   }
 
   /// Check the status of a Veo3 task
+  /// Veo3 uses successFlag (0=processing, 1=success, -1=fail)
+  /// and response.resultUrls instead of state/resultJson
   Future<Map<String, dynamic>> checkVeo3TaskStatus(String taskId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/jobs/recordInfo?taskId=$taskId'),
+        Uri.parse('$_baseUrl/api/v1/veo/record-info?taskId=$taskId'),
         headers: {
           'Authorization': 'Bearer $_apiKey',
         },
       ).timeout(
-        _pollingTimeout, // Duration(seconds: 60)
+        _pollingTimeout,
         onTimeout: () {
           throw TimeoutException(
               'Task status check timed out after ${_pollingTimeout.inSeconds}s');
@@ -462,39 +505,31 @@ class KieAIService {
         final data = jsonDecode(response.body);
         if (data['code'] == 200) {
           final taskData = data['data'];
-          final state = taskData['state'];
+          final successFlag = taskData['successFlag'] ?? 0;
 
-          if (state == 'success') {
-            // Safely parse resultJson with try-catch
-            try {
-              final resultJson = jsonDecode(taskData['resultJson']);
-              final resultUrls = resultJson['resultUrls'];
-              if (resultUrls != null &&
-                  resultUrls is List &&
-                  resultUrls.isNotEmpty) {
+          if (successFlag == 1) {
+            // Success - extract video URL from response.resultUrls
+            final responseData = taskData['response'];
+            if (responseData != null && responseData['resultUrls'] != null) {
+              final resultUrls = responseData['resultUrls'] as List;
+              if (resultUrls.isNotEmpty) {
                 return {
                   'state': 'success',
                   'videoUrl': resultUrls[0],
                 };
-              } else {
-                return {
-                  'state': 'fail',
-                  'error': 'Video URL not found in response',
-                };
               }
-            } catch (parseError) {
-              debugPrint('Error parsing Veo3 result JSON: $parseError');
-              return {
-                'state': 'fail',
-                'error': 'Failed to parse video result',
-              };
             }
-          } else if (state == 'fail') {
             return {
               'state': 'fail',
-              'error': taskData['failMsg'],
+              'error': 'Video URL not found in response',
+            };
+          } else if (successFlag == -1) {
+            return {
+              'state': 'fail',
+              'error': taskData['errorMessage'] ?? 'Generation failed',
             };
           } else {
+            // successFlag == 0: still processing
             return {
               'state': 'waiting',
             };
@@ -507,7 +542,12 @@ class KieAIService {
       }
     } catch (e) {
       debugPrint('Error checking Veo3 task status: $e');
-      rethrow;
+      // Return waiting state on network errors to keep polling (consistent with Sora)
+      return {
+        'state': 'waiting',
+        'error': e.toString(),
+        'isNetworkError': true,
+      };
     }
   }
 
@@ -680,22 +720,67 @@ class KieAIService {
     }
   }
 
-  // ==================== HELPER: Image Upload (Future Feature) ====================
+  // ==================== HELPER: Image Upload via Kie.ai File Upload API ====================
 
-  /// Upload image to cloud storage (for Veo3 image-to-video)
-  ///
-  /// NOTE: Image-to-video (Veo3) requires accessible image URLs.
-  /// Kie AI stores generated content on their servers for 2 months.
-  /// We just download those URLs to phone for local viewing.
-  ///
-  /// For future: Add cloud storage (Firebase/AWS/etc) to enable image-to-video.
+  /// Upload a local image file to Kie.ai's temporary storage.
+  /// Returns a public URL that can be used with Veo 3.1 imageUrls.
+  /// Primary: Firebase Storage (production). Fallback: Kie.ai temp hosting.
   Future<String> uploadImageToStorage(File imageFile) async {
-    // Image-to-video feature disabled for MVP
-    // Can be enabled later by adding cloud storage
-    throw UnimplementedError(
-        'Image-to-video requires cloud storage for uploading input images. '
-        'This feature will be available in a future update. '
-        'For now, use text-only prompts or generate static images.');
+    final fileName = imageFile.path.split('/').last;
+
+    // Primary: Firebase Storage
+    try {
+      final fbFileName = '${const Uuid().v4()}_$fileName';
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('image_to_video')
+          .child(fbFileName);
+
+      debugPrint('📤 Uploading image to Firebase Storage: $fbFileName');
+      final uploadTask = await ref.putFile(imageFile);
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      debugPrint('✅ Image uploaded to Firebase: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('⚠️ Firebase Storage failed: $e');
+      debugPrint('📤 Falling back to Kie.ai upload...');
+    }
+
+    // Fallback: Kie.ai upload
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final base64Data = base64Encode(bytes);
+      final ext = fileName.split('.').last.toLowerCase();
+      final mimeType = ext == 'png' ? 'image/png' : 'image/jpeg';
+
+      final response = await http
+          .post(
+            Uri.parse('https://kieai.redpandaai.co/api/file-base64-upload'),
+            headers: {
+              'Authorization': 'Bearer $_apiKey',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'base64Data': 'data:$mimeType;base64,$base64Data',
+              'uploadPath': fileName,
+            }),
+          )
+          .timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true || data['code'] == 200) {
+          final downloadUrl = data['data']['downloadUrl'];
+          debugPrint('✅ Image uploaded to Kie.ai: $downloadUrl');
+          return downloadUrl;
+        }
+      }
+      throw KieAIException('Failed to upload image. Please try again.');
+    } catch (e) {
+      if (e is KieAIException) rethrow;
+      debugPrint('❌ Image upload error: $e');
+      throw KieAIException('Failed to upload image. Please try again.');
+    }
   }
 
   // ==================== ERROR HANDLING ====================
@@ -777,7 +862,7 @@ class KieAIService {
     } catch (e) {
       debugPrint('Error in generateContent: $e');
       if (e is UnimplementedError) {
-        throw KieAIException(e.message ?? 'This feature is coming soon.');
+        throw KieAIException(e.message ?? 'This feature is not available.');
       }
       throw KieAIException(
         _getUserFriendlyError(e.toString()),
@@ -792,12 +877,27 @@ class KieAIService {
     String enhancedPrompt,
     File? imageFile,
   ) async {
-    String taskId;
+    if (imageFile != null) {
+      // Image-to-video: Upload image, then Veo 3.1 Fast (with Veo quality fallback)
+      debugPrint('🖼️ Image-to-video: uploading image...');
+      final imageUrl = await uploadImageToStorage(imageFile);
+      debugPrint('🖼️ Image uploaded, URL: $imageUrl');
 
-    // For MVP: Only support text-to-video (Sora 2 / Fallback)
-    // Image-to-video (Veo3) requires cloud storage - disabled for now
-    if (imageFile == null) {
-      // Use Sora 2 with fallback to Kling/Hailuo
+      final veoAspect = config.videoAspectRatio == 'portrait' ? '9:16' : '16:9';
+      final result = await generateVideoVeoFirstWithFallback(
+        prompt: enhancedPrompt,
+        aspectRatio: veoAspect,
+        imageUrls: [imageUrl],
+      );
+
+      return {
+        'type': 'video_task',
+        'taskId': result['taskId']!,
+        'status': 'processing',
+        'usedModel': result['usedModel']!,
+      };
+    } else {
+      // Text-to-video: Sora 2 → Veo 3.1 Fast fallback
       final result = await generateVideoWithFallback(
         prompt: enhancedPrompt,
         aspectRatio: config.videoAspectRatio ?? 'landscape',
@@ -805,21 +905,12 @@ class KieAIService {
         removeWatermark: true,
       );
 
-      taskId = result['taskId']!;
-      final usedModel = result['usedModel'];
-
-      // Return taskId immediately for persistence
       return {
         'type': 'video_task',
-        'taskId': taskId,
+        'taskId': result['taskId']!,
         'status': 'processing',
-        'usedModel': usedModel,
+        'usedModel': result['usedModel']!,
       };
-    } else {
-      // Image-to-video is not available yet
-      throw UnimplementedError('Image-to-video is coming soon! '
-          'For now, please use text-only prompts. '
-          'Generated videos will be saved to your phone automatically.');
     }
   }
 
@@ -863,21 +954,40 @@ class KieAIService {
 
   /// Public method to check status of a task (works for both video and image)
   /// Attempts to check status using both video and image endpoints
-  Future<Map<String, dynamic>> checkTaskStatus(String taskId) async {
-    try {
-      // Try checking as a video task first (Sora 2)
-      final result = await checkSora2TaskStatus(taskId);
-      return result;
-    } catch (e) {
-      // If it fails, try checking as an image task (Nano Banana)
+  Future<Map<String, dynamic>> checkTaskStatus(String taskId,
+      {String? model}) async {
+    // If we know the model, go directly to the right endpoint
+    if (model != null && model.startsWith('veo')) {
+      return await checkVeo3TaskStatus(taskId);
+    }
+
+    // For known non-veo models, skip veo endpoint
+    if (model != null && !model.startsWith('veo')) {
       try {
-        final result = await checkImageTaskStatus(taskId);
-        return result;
-      } catch (imageError) {
-        // If both fail, rethrow the original error
-        debugPrint('Error checking task status: $e');
-        rethrow;
+        return await checkSora2TaskStatus(taskId);
+      } catch (_) {
+        try {
+          return await checkImageTaskStatus(taskId);
+        } catch (e) {
+          rethrow;
+        }
       }
+    }
+
+    // Unknown model - try all endpoints
+    try {
+      return await checkVeo3TaskStatus(taskId);
+    } catch (_) {}
+
+    try {
+      return await checkSora2TaskStatus(taskId);
+    } catch (_) {}
+
+    try {
+      return await checkImageTaskStatus(taskId);
+    } catch (e) {
+      debugPrint('Error checking task status (all endpoints failed): $e');
+      rethrow;
     }
   }
 }

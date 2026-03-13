@@ -131,14 +131,23 @@ class AppDrawer extends ConsumerWidget {
                 },
               ),
 
-              // About (placeholder)
               ListTile(
                 leading: const Icon(Icons.info_outline,
                     color: AppColors.primaryPurple),
                 title: Text(l10n.about),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Show about dialog
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'Aqvioo',
+                    applicationVersion: '1.0',
+                    applicationIcon: const Icon(Icons.auto_awesome,
+                        size: 48, color: AppColors.primaryPurple),
+                    children: [
+                      const Text(
+                          'Create professional promotional videos and images using AI.'),
+                    ],
+                  );
                 },
               ),
 

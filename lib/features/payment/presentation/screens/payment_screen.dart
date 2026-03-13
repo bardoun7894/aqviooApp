@@ -98,11 +98,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         _handleIAPUpdate(purchaseDetails);
       };
 
-      // Trigger rebuild to update UI if needed (though we use static list for now)
+      debugPrint(
+          '📦 IAP: Initialized - available=${iapService.isAvailable}, products=${iapService.products.length}');
+      for (final p in iapService.products) {
+        debugPrint('📦 IAP: Product ${p.id} - ${p.price}');
+      }
+
       if (mounted) setState(() {});
     } catch (e) {
-      debugPrint('⚠️ Payment: IAP initialization failed (iPad): $e');
-      // Don't block the UI if IAP fails - user can still see packages
+      debugPrint('⚠️ Payment: IAP initialization failed: $e');
       if (mounted) setState(() {});
     }
   }
@@ -121,96 +125,98 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     if (purchaseDetails.status == PurchaseStatus.pending) {
       if (!mounted) return;
       setState(() => _isProcessing = true);
-    } else {
-      if (purchaseDetails.status == PurchaseStatus.error) {
+    } else if (purchaseDetails.status == PurchaseStatus.canceled) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+    } else if (purchaseDetails.status == PurchaseStatus.error) {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      _showErrorSnackBar(purchaseDetails.error?.message ??
+          AppLocalizations.of(context)!.paymentFailed);
+    } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+        purchaseDetails.status == PurchaseStatus.restored) {
+      final purchaseToken = purchaseDetails.purchaseID ??
+          '${purchaseDetails.productID}_${purchaseDetails.transactionDate ?? ''}';
+      if (_processedPurchaseTokens.contains(purchaseToken)) {
+        debugPrint('IAP duplicate purchase update ignored: $purchaseToken');
         if (!mounted) return;
         setState(() => _isProcessing = false);
-        _showErrorSnackBar(purchaseDetails.error?.message ?? 'Purchase failed');
-      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-          purchaseDetails.status == PurchaseStatus.restored) {
-        final purchaseToken = purchaseDetails.purchaseID ??
-            '${purchaseDetails.productID}_${purchaseDetails.transactionDate ?? ''}';
-        if (_processedPurchaseTokens.contains(purchaseToken)) {
-          debugPrint('IAP duplicate purchase update ignored: $purchaseToken');
-          if (!mounted) return;
-          setState(() => _isProcessing = false);
-          return;
-        }
-        _processedPurchaseTokens.add(purchaseToken);
+        return;
+      }
+      _processedPurchaseTokens.add(purchaseToken);
 
-        // Find which package was bought to know how much to credit
-        final productID = purchaseDetails.productID;
-        final packageIndex = _productIds.entries
-            .firstWhere((entry) => entry.value == productID,
-                orElse: () => MapEntry(-1, ''))
-            .key;
+      // Find which package was bought to know how much to credit
+      final productID = purchaseDetails.productID;
+      final packageIndex = _productIds.entries
+          .firstWhere((entry) => entry.value == productID,
+              orElse: () => MapEntry(-1, ''))
+          .key;
 
-        if (packageIndex != -1) {
-          final package = creditPackages[packageIndex];
-          try {
-            // Create transaction record in Firestore for iOS purchases
-            final user = FirebaseAuth.instance.currentUser;
-            final orderId =
-                'IAP_${purchaseDetails.purchaseID ?? DateTime.now().millisecondsSinceEpoch}';
-            String? transactionId;
+      if (packageIndex != -1) {
+        final package = creditPackages[packageIndex];
+        try {
+          // Create transaction record in Firestore for iOS purchases
+          final user = FirebaseAuth.instance.currentUser;
+          final orderId =
+              'IAP_${purchaseDetails.purchaseID ?? DateTime.now().millisecondsSinceEpoch}';
+          String? transactionId;
 
-            if (user != null) {
-              try {
-                transactionId = await TransactionService().createTransaction(
-                  userId: user.uid,
-                  userName: user.displayName ?? 'User',
-                  userEmail: user.email ?? 'N/A',
-                  amount: package.price,
-                  currency: 'SAR',
-                  credits: package.amount.toInt(),
-                  orderId: orderId,
-                  paymentMethod: 'Apple IAP',
-                  metadata: {
-                    'balanceAmount': package.amount,
-                    'packagePrice': package.price,
-                    'videosCount': package.videosCount,
-                    'imagesCount': package.imagesCount,
-                    'productId': productID,
-                    'purchaseId': purchaseDetails.purchaseID,
-                    'transactionDate': purchaseDetails.transactionDate,
-                  },
-                );
-              } catch (e) {
-                debugPrint('⚠️ IAP: Failed to create transaction record: $e');
-              }
+          if (user != null) {
+            try {
+              transactionId = await TransactionService().createTransaction(
+                userId: user.uid,
+                userName: user.displayName ?? 'User',
+                userEmail: user.email ?? 'N/A',
+                amount: package.price,
+                currency: 'SAR',
+                credits: package.amount.toInt(),
+                orderId: orderId,
+                paymentMethod: 'Apple IAP',
+                metadata: {
+                  'balanceAmount': package.amount,
+                  'packagePrice': package.price,
+                  'videosCount': package.videosCount,
+                  'imagesCount': package.imagesCount,
+                  'productId': productID,
+                  'purchaseId': purchaseDetails.purchaseID,
+                  'transactionDate': purchaseDetails.transactionDate,
+                },
+              );
+            } catch (e) {
+              debugPrint('⚠️ IAP: Failed to create transaction record: $e');
             }
-
-            // Add balance
-            await ref
-                .read(creditsControllerProvider.notifier)
-                .addBalance(package.amount);
-
-            // Mark transaction as captured
-            if (transactionId != null) {
-              try {
-                await TransactionService().updateTransactionStatus(
-                  transactionId: transactionId,
-                  status: TransactionStatus.captured,
-                  externalPaymentId: purchaseDetails.purchaseID,
-                );
-              } catch (e) {
-                debugPrint('⚠️ IAP: Failed to update transaction status: $e');
-              }
-            }
-
-            if (mounted) {
-              setState(() => _isProcessing = false);
-              _showSuccessDialog(package);
-            }
-          } catch (e) {
-            debugPrint('Error adding credits: $e');
-            if (!mounted) return;
-            setState(() => _isProcessing = false);
           }
-        } else {
+
+          // Add balance
+          await ref
+              .read(creditsControllerProvider.notifier)
+              .addBalance(package.amount);
+
+          // Mark transaction as captured
+          if (transactionId != null) {
+            try {
+              await TransactionService().updateTransactionStatus(
+                transactionId: transactionId,
+                status: TransactionStatus.captured,
+                externalPaymentId: purchaseDetails.purchaseID,
+              );
+            } catch (e) {
+              debugPrint('⚠️ IAP: Failed to update transaction status: $e');
+            }
+          }
+
+          if (mounted) {
+            setState(() => _isProcessing = false);
+            _showSuccessDialog(package);
+          }
+        } catch (e) {
+          debugPrint('Error adding credits: $e');
           if (!mounted) return;
           setState(() => _isProcessing = false);
         }
+      } else {
+        if (!mounted) return;
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -838,24 +844,21 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       final errorString = e.toString();
       if (errorString.contains('IAP_NOT_AVAILABLE')) {
         _showErrorDialog(
-          title: 'Store Not Available',
-          message:
-              'In-app purchases are not available on this device. Please check your device settings and try again.',
+          title: l10n.storeNotAvailable,
+          message: l10n.storeNotAvailableMessage,
         );
       } else if (errorString.contains('PRODUCTS_NOT_CONFIGURED')) {
         _showErrorDialog(
-          title: 'Products Not Ready',
-          message:
-              'Store products are being configured. This usually takes a few hours after app approval. Please try again later or contact support.',
+          title: l10n.productsNotReady,
+          message: l10n.productsNotReadyMessage,
         );
       } else if (errorString.contains('PRODUCT_NOT_FOUND')) {
         _showErrorDialog(
-          title: 'Product Not Available',
-          message:
-              'This package is temporarily unavailable. Please try a different package or contact support.',
+          title: l10n.productNotAvailable,
+          message: l10n.productNotAvailableMessage,
         );
       } else {
-        _showErrorSnackBar('Purchase failed: ${e.toString()}');
+        _showErrorSnackBar(l10n.purchaseFailedMessage(e.toString()));
       }
     }
   }
@@ -1047,6 +1050,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         // Continue with payment even if record creation fails
       }
 
+      if (!mounted) return;
+
       // Get user name parts
       final nameParts = (user.displayName ?? 'User').split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : 'User';
@@ -1122,11 +1127,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             } catch (e) {
               debugPrint('❌ Failed to add balance: $e');
               if (!mounted) return;
-              _showErrorSnackBar(
-                isArabic
-                    ? 'تم الدفع بنجاح ولكن فشل تحديث الرصيد. يرجى التواصل مع الدعم.'
-                    : 'Payment successful but failed to update balance. Please contact support.',
-              );
+              _showErrorSnackBar(l10n.paymentSuccessBalanceFailed);
             }
           } else {
             // Verification failed
@@ -1142,11 +1143,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             }
 
             if (!mounted) return;
-            _showErrorSnackBar(
-              isArabic
-                  ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.'
-                  : 'Payment verification failed. Please contact support if amount was deducted.',
-            );
+            _showErrorSnackBar(l10n.paymentVerificationFailed);
           }
         } catch (e) {
           debugPrint('❌ Payment verification error: $e');
@@ -1154,12 +1151,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
           // Show user-friendly error
           final errorMsg = e is TimeoutException
-              ? (isArabic
-                  ? 'انتهت مهلة التحقق من الدفع. يرجى التحقق من رصيدك أو التواصل مع الدعم.'
-                  : 'Payment verification timed out. Please check your balance or contact support.')
-              : (isArabic
-                  ? 'فشل التحقق من الدفع. يرجى التواصل مع الدعم. رقم المعاملة: ${paymentResult.chargeId}'
-                  : 'Payment verification failed. Please contact support with charge ID: ${paymentResult.chargeId}');
+              ? l10n.paymentVerificationTimeout
+              : l10n.paymentVerificationFailedWithId(
+                  paymentResult.chargeId ?? '');
           _showErrorSnackBar(errorMsg);
         }
       } else if (paymentResult.success) {

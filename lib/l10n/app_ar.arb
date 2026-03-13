@@ -178,7 +178,7 @@
   "currency": "ريال",
   "loginRequired": "تسجيل الدخول مطلوب",
   "pleaseLoginToGenerate": "يرجى تسجيل الدخول لإنشاء الفيديو الخاص بك.",
-  "generateMagic": "إنشاء السحر",
+  "generateMagic": "أبدع",
   "dialectSaudi": "السعودية",
   "dialectEgyptian": "مصر",
   "dialectUAE": "الإمارات",
@@ -236,7 +236,7 @@
   "portrait": "رأسي",
   "recentProjects": "المشاريع الأخيرة",
   "viewAll": "عرض الكل",
-  "createMagic": "إنشاء السحر",
+  "createMagic": "أبدع",
   "productAd": "إعلان منتج",
   "socialReel": "ريل تواصل",
   "render3D": "تصيير ثلاثي الأبعاد",
@@ -431,6 +431,16 @@
   "logoutConfirmationMessage": "هل أنت متأكد أنك تريد تسجيل الخروج؟",
   "deleteAccountTitle": "حذف الحساب",
   "deleteAccountMessage": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك بشكل دائم.",
+  "deleteAccountFailed": "فشل حذف الحساب. يرجى المحاولة مرة أخرى.",
+  "typeToConfirmDelete": "اكتب \"{confirmWord}\" لتأكيد الحذف:",
+  "@typeToConfirmDelete": {
+    "placeholders": {
+      "confirmWord": {
+        "type": "String"
+      }
+    }
+  },
+  "requiresRecentLogin": "يرجى تسجيل الخروج ثم تسجيل الدخول مرة أخرى، ثم حاول حذف حسابك مجدداً.",
   "paymentMobileOnly": "المدفوعات متاحة فقط على تطبيق الجوال",
   "imagePreview": "معاينة الصورة",
   "videoPreviewTitle": "معاينة الفيديو",
@@ -536,5 +546,76 @@
   "notificationGenerationFailedTitle": "فشل الإنشاء",
   "notificationTimeoutTitle": "انتهت مهلة الإنشاء",
   "notificationTimeoutBody": "يرجى المحاولة مرة أخرى لاحقًا.",
-  "saveChanges": "حفظ التغييرات"
+  "saveChanges": "حفظ التغييرات",
+  "storedForDays": "يتم تخزين الفيديوهات والصور لمدة 10 أيام",
+  "noMatchesFound": "لا توجد نتائج",
+  "clearAllFilters": "مسح جميع الفلاتر",
+  "fileDeleted": "تم حذف الملف",
+  "pending": "قيد الانتظار",
+  "internalError": "خطأ داخلي، يرجى المحاولة لاحقاً.",
+  "tryAdjustingFilters": "حاول تعديل الفلاتر أو البحث للعثور على ما تبحث عنه.",
+
+  "byContinuingAgree": "بالمتابعة، أنت توافق على",
+  "andText": "و",
+  "pleaseEnterEmailOrPhone": "يرجى إدخال بريدك الإلكتروني أو رقم هاتفك",
+  "pleaseEnterValidEmailOrPhone": "يرجى إدخال بريد إلكتروني أو رقم هاتف صحيح",
+  "pleaseEnterPassword": "يرجى إدخال كلمة المرور",
+  "authenticationFailed": "فشل تسجيل الدخول",
+  "invalidEmailAddress": "عنوان بريد إلكتروني غير صالح",
+  "accountDisabled": "الحساب معطل",
+  "noAccountFound": "لم يتم العثور على حساب",
+  "incorrectPassword": "كلمة المرور غير صحيحة",
+  "tooManyAttempts": "محاولات كثيرة جداً. حاول مرة أخرى لاحقاً",
+
+  "pleaseEnterName": "يرجى إدخال اسمك",
+  "pleaseFillAllFields": "يرجى ملء جميع الحقول",
+  "pleaseEnterValidEmail": "يرجى إدخال بريد إلكتروني صحيح",
+  "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+  "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+  "pleaseEnterValidPhone": "يرجى إدخال رقم هاتف صحيح",
+  "signupFailed": "فشل التسجيل",
+  "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل",
+  "signupMethodNotEnabled": "طريقة التسجيل هذه غير مفعلة",
+  "passwordTooWeak": "كلمة المرور ضعيفة جداً",
+  "signupFailedRetry": "فشل التسجيل. يرجى المحاولة مرة أخرى",
+  "searchCountry": "البحث عن دولة",
+
+  "createFirstMagicVideo": "أنشئ أول فيديو سحري الآن!",
+
+  "storeNotAvailable": "المتجر غير متاح",
+  "storeNotAvailableMessage": "عمليات الشراء داخل التطبيق غير متاحة على هذا الجهاز. يرجى التحقق من إعدادات الجهاز والمحاولة مرة أخرى.",
+  "productsNotReady": "المنتجات غير جاهزة",
+  "productsNotReadyMessage": "منتجات المتجر غير متاحة مؤقتاً. يرجى المحاولة لاحقاً أو التواصل مع الدعم.",
+  "productNotAvailable": "المنتج غير متاح",
+  "productNotAvailableMessage": "هذه الباقة غير متاحة مؤقتاً. يرجى تجربة باقة أخرى أو التواصل مع الدعم.",
+  "purchaseFailedMessage": "فشل الشراء: {error}",
+  "@purchaseFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentSuccessBalanceFailed": "تم الدفع بنجاح لكن فشل تحديث الرصيد. يرجى التواصل مع الدعم.",
+  "paymentVerificationFailed": "فشل التحقق من الدفع. يرجى التواصل مع الدعم إذا تم خصم المبلغ.",
+  "paymentVerificationTimeout": "انتهت مهلة التحقق من الدفع. يرجى التحقق من رصيدك أو التواصل مع الدعم.",
+  "paymentVerificationFailedWithId": "فشل التحقق من الدفع. يرجى التواصل مع الدعم مع رقم المعاملة: {chargeId}",
+  "@paymentVerificationFailedWithId": {
+    "placeholders": {
+      "chargeId": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPreferencesMessage": "يمكن إدارة إعدادات الإشعارات من إعدادات جهازك > الإشعارات > Aqvioo.",
+  "somethingWentWrongTryAgain": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
+  "balanceAmount": "الرصيد: {amount} ر.س",
+  "@balanceAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aqviooBalanceDescription": "رصيد Aqvioo لإنشاء الفيديو والصور بالذكاء الاصطناعي"
 }

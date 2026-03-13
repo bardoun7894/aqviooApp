@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "firebase-admin": "^13.6.1"
+    "firebase-admin": "^13.6.1",
+    "skill": "^1.0.0"
   }
 }
